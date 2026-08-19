@@ -31,6 +31,39 @@ type TrackerItem = {
   status: string;
 };
 type ChatMessage = { role: "assistant" | "user"; content: string };
+type ApprovedSourceId = "greenhouse" | "lever" | "lever-eu" | "ashby";
+type ApprovedSourceMeta = {
+  id: ApprovedSourceId;
+  name: string;
+  docsUrl: string;
+  access: string;
+  account: string;
+  employer: string;
+  retrievedAt: string;
+  coverage: string;
+};
+type Job = {
+  id: string;
+  title: string;
+  company: string;
+  region: string;
+  country: string;
+  city: string;
+  workStyle: string;
+  industry: string;
+  description: string;
+  department?: string;
+  source?: string;
+  sourceUrl?: string;
+  applyUrl?: string;
+  publishedAt?: string;
+  compensation?: string;
+  isLive?: boolean;
+  trend?: number;
+  story?: string;
+  strengths?: string[];
+  gaps?: string[];
+};
 type WorkspaceView =
   | "Analyze"
   | "Recommendations"
@@ -84,9 +117,9 @@ const PROVIDERS = [
 ];
 const JOB_SOURCE_STATUS = [
   {
-    name: "Employer ATS feeds",
-    access: "Live-ready",
-    detail: "Greenhouse, Lever, licensed employer feeds",
+    name: "Employer ATS APIs",
+    access: "Available now",
+    detail: "Greenhouse, Lever, Lever EU, and Ashby published-job APIs",
   },
   {
     name: "Adzuna",
@@ -167,7 +200,7 @@ const COUNTRIES: Record<string, string[]> = {
   ],
 };
 
-const JOBS = [
+const JOBS: Job[] = [
   {
     id: "northstar-pa",
     title: "Senior Product Analyst",
@@ -419,6 +452,13 @@ export default function Home() {
   const [industry, setIndustry] = useState("All industries");
   const [roleFamily, setRoleFamily] = useState("All role families");
   const [timeRange, setTimeRange] = useState("Last 30 days");
+  const [approvedSource, setApprovedSource] =
+    useState<ApprovedSourceId>("greenhouse");
+  const [sourceReference, setSourceReference] = useState("");
+  const [sourceJobs, setSourceJobs] = useState<Job[] | null>(null);
+  const [sourceMeta, setSourceMeta] = useState<ApprovedSourceMeta | null>(null);
+  const [sourceLoading, setSourceLoading] = useState(false);
+  const [sourceError, setSourceError] = useState("");
   const [tracker, setTracker] = useState<TrackerItem[]>([]);
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -469,7 +509,8 @@ export default function Home() {
     : score;
   const recommendedJobs = useMemo(
     () =>
-      JOBS.filter((job) => region === "Worldwide" || job.region === region)
+      (sourceJobs || JOBS)
+        .filter((job) => region === "Worldwide" || job.region === region)
         .filter((job) => country === "All countries" || job.country === country)
         .filter(
           (job) =>
@@ -490,14 +531,61 @@ export default function Home() {
                   .replace("product analyst", "product"),
               ),
         )
-        .map((job) => ({
-          ...job,
-          match: scoreMatches(runMatch(job.description, resume)),
-        }))
+        .map((job) => {
+          const evidence = runMatch(job.description, resume);
+          const supported = evidence
+            .filter((item) => item.status !== "Gap")
+            .map((item) => item.keyword)
+            .slice(0, 5);
+          const gaps = evidence
+            .filter((item) => item.status === "Gap")
+            .map((item) => item.keyword)
+            .slice(0, 5);
+          const storyEvidence = evidence.find(
+            (item) =>
+              item.status === "Strong evidence" &&
+              item.evidence !== "No source evidence found.",
+          );
+          return {
+            ...job,
+            trend: job.trend || 0,
+            match: scoreMatches(evidence),
+            strengths: job.isLive ? supported : job.strengths || supported,
+            gaps: job.isLive ? gaps : job.gaps || gaps,
+            story: job.isLive
+              ? storyEvidence?.evidence ||
+                "Add a verified result that supports the strongest matched requirement."
+              : job.story || "Add a verified story before tailoring this role.",
+          };
+        })
         .sort((a, b) => b.match - a.match),
-    [country, industry, region, resume, roleQuery, workStyle],
+    [country, industry, region, resume, roleQuery, sourceJobs, workStyle],
   );
   const marketRows = useMemo(() => {
+    if (sourceJobs) {
+      const filtered = sourceJobs
+        .filter((job) => country === "All countries" || job.country === country)
+        .filter(
+          (job) =>
+            industry === "All industries" || job.industry === industry,
+        );
+      const grouped = new Map<string, Job[]>();
+      filtered.forEach((job) => {
+        const group = job.department || job.industry || "Other";
+        grouped.set(group, [...(grouped.get(group) || []), job]);
+      });
+      return [...grouped.entries()].map(([group, jobs]) => ({
+        industry: group,
+        role: "Published roles",
+        openings: jobs.length,
+        change: 0,
+        remote: Math.round(
+          (jobs.filter((job) => job.workStyle === "Remote").length /
+            Math.max(jobs.length, 1)) *
+            100,
+        ),
+      }));
+    }
     const factor =
       (REGION_FACTORS[region] || 1) * (country === "All countries" ? 1 : 0.24);
     const countryShift =
@@ -514,15 +602,15 @@ export default function Home() {
         openings: Math.round(item.openings * factor),
         change: Number((item.change + countryShift).toFixed(1)),
       }));
-  }, [country, industry, region, roleFamily]);
+  }, [country, industry, region, roleFamily, sourceJobs]);
   const totalOpenings = marketRows.reduce(
     (sum, item) => sum + item.openings,
     0,
   );
-  const weightedChange = marketRows.length
+  const weightedChange = marketRows.length && !sourceJobs
     ? marketRows.reduce((sum, item) => sum + item.change * item.openings, 0) /
       Math.max(totalOpenings, 1)
-    : 0;
+    : null;
   const remoteShare = marketRows.length
     ? marketRows.reduce((sum, item) => sum + item.remote, 0) / marketRows.length
     : 0;
@@ -531,6 +619,42 @@ export default function Home() {
   function updateRegion(next: string) {
     setRegion(next);
     setCountry("All countries");
+  }
+  async function connectApprovedSource(event: FormEvent) {
+    event.preventDefault();
+    if (!sourceReference.trim()) return;
+    setSourceLoading(true);
+    setSourceError("");
+    try {
+      const params = new URLSearchParams({
+        provider: approvedSource,
+        reference: sourceReference.trim(),
+      });
+      const response = await fetch(`/api/jobs?${params.toString()}`);
+      const payload = (await response.json()) as {
+        error?: string;
+        source?: ApprovedSourceMeta;
+        jobs?: Job[];
+      };
+      if (!response.ok || !payload.source || !payload.jobs) {
+        throw new Error(payload.error || "The approved source could not be loaded.");
+      }
+      setSourceMeta(payload.source);
+      setSourceJobs(payload.jobs.map((job) => ({ ...job, isLive: true })));
+    } catch (error) {
+      setSourceMeta(null);
+      setSourceJobs(null);
+      setSourceError(
+        error instanceof Error ? error.message : "The approved source could not be loaded.",
+      );
+    } finally {
+      setSourceLoading(false);
+    }
+  }
+  function useExampleJobs() {
+    setSourceJobs(null);
+    setSourceMeta(null);
+    setSourceError("");
   }
   async function loadFile(
     event: ChangeEvent<HTMLInputElement>,
@@ -575,7 +699,7 @@ export default function Home() {
     setTracker(next);
     window.localStorage.setItem("careerproof-tracker", JSON.stringify(next));
   }
-  function saveJob(job: (typeof JOBS)[number]) {
+  function saveJob(job: Job) {
     if (!tracker.some((item) => item.id === job.id))
       persistTracker([
         {
@@ -921,14 +1045,80 @@ export default function Home() {
                   <h2>{detail.recommendationsTitle}</h2>
                 </div>
                 <span className="status-pill light">
-                  {detail.exampleSnapshot}
+                  {sourceMeta ? "Live employer feed" : detail.exampleSnapshot}
                 </span>
               </div>
               <p className="data-disclosure">
-                {locale === "en"
-                  ? "This public preview uses labeled example openings. Connect the Adzuna adapter or another licensed provider for live listings."
-                  : detail.sourcePolicy}
+                {sourceMeta
+                  ? `${sourceMeta.coverage}. Retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}.`
+                  : locale === "en"
+                    ? "Example openings are labeled. Connect an employer's official public ATS board below for current published roles."
+                    : detail.sourcePolicy}
               </p>
+              <section className="source-connector" aria-labelledby="approved-source-title">
+                <div className="source-connector-heading">
+                  <div>
+                    <p className="eyebrow">Approved data source</p>
+                    <h3 id="approved-source-title">Connect an employer job board</h3>
+                    <p>
+                      Read-only access to published jobs through documented Greenhouse,
+                      Lever, and Ashby APIs. No page scraping and no automatic application.
+                    </p>
+                  </div>
+                  {sourceMeta && (
+                    <button className="text-link" type="button" onClick={useExampleJobs}>
+                      Disconnect
+                    </button>
+                  )}
+                </div>
+                <form className="source-connector-form" onSubmit={connectApprovedSource}>
+                  <label>
+                    <span>Provider</span>
+                    <select
+                      value={approvedSource}
+                      onChange={(event) =>
+                        setApprovedSource(event.target.value as ApprovedSourceId)
+                      }
+                    >
+                      <option value="greenhouse">Greenhouse</option>
+                      <option value="lever">Lever</option>
+                      <option value="lever-eu">Lever EU</option>
+                      <option value="ashby">Ashby</option>
+                    </select>
+                  </label>
+                  <label className="source-reference">
+                    <span>Employer careers URL or board identifier</span>
+                    <input
+                      value={sourceReference}
+                      onChange={(event) => setSourceReference(event.target.value)}
+                      placeholder="https://boards.greenhouse.io/company"
+                      inputMode="url"
+                      required
+                    />
+                  </label>
+                  <button className="button primary" disabled={sourceLoading}>
+                    {sourceLoading ? "Connecting…" : "Load published jobs"}
+                  </button>
+                </form>
+                {sourceError && (
+                  <p className="source-message error" role="alert">
+                    {sourceError}
+                  </p>
+                )}
+                {sourceMeta && (
+                  <div className="source-message connected" role="status">
+                    <div>
+                      <b>{sourceMeta.employer}</b>
+                      <span>
+                        {sourceJobs?.length || 0} published roles · {sourceMeta.name}
+                      </span>
+                    </div>
+                    <a href={sourceMeta.docsUrl} target="_blank" rel="noreferrer">
+                      Official API policy
+                    </a>
+                  </div>
+                )}
+              </section>
               <div className="filter-grid recommendation-filters">
                 <label className="wide">
                   <span>{detail.roleOrSkill}</span>
@@ -1040,15 +1230,27 @@ export default function Home() {
                               {job.city}, {job.country} · {job.workStyle} ·{" "}
                               {job.industry}
                             </span>
+                            {job.source && (
+                              <small className="job-provenance">
+                                {job.isLive ? "Live" : "Example"} · {job.source}
+                                {job.publishedAt
+                                  ? ` · ${new Date(job.publishedAt).toLocaleDateString(locale)}`
+                                  : ""}
+                              </small>
+                            )}
                           </div>
-                          <span
-                            className={
-                              job.trend >= 0 ? "trend up" : "trend down"
-                            }
-                          >
-                            {job.trend >= 0 ? "+" : ""}
-                            {job.trend}% {copy.market}
-                          </span>
+                          {job.isLive ? (
+                            <span className="trend live">Published</span>
+                          ) : (
+                            <span
+                              className={
+                                (job.trend || 0) >= 0 ? "trend up" : "trend down"
+                              }
+                            >
+                              {(job.trend || 0) >= 0 ? "+" : ""}
+                              {job.trend || 0}% {copy.market}
+                            </span>
+                          )}
                         </div>
                         <div className="story-callout">
                           <span>{detail.bestStory}</span>
@@ -1073,6 +1275,16 @@ export default function Home() {
                           </div>
                         </div>
                         <div className="job-actions">
+                          {job.sourceUrl && (
+                            <a
+                              className="text-link source-link"
+                              href={job.sourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              View official posting
+                            </a>
+                          )}
                           <button
                             className="button secondary"
                             onClick={() => saveJob(job)}
@@ -1110,14 +1322,16 @@ export default function Home() {
                   <h2>{detail.marketTitle}</h2>
                 </div>
                 <span className="status-pill light">
-                  {detail.providerPreview}
+                  {sourceMeta ? "Live employer snapshot" : detail.providerPreview}
                 </span>
               </div>
               <p className="data-disclosure">
-                <b>{detail.exampleSnapshot}.</b>{" "}
-                {locale === "en"
-                  ? "These values demonstrate the interaction and are not live labor-market totals. Production replaces them with source, coverage, methodology, retrieval time, and comparable snapshots."
-                  : detail.sourcePolicy}
+                <b>{sourceMeta ? sourceMeta.name : detail.exampleSnapshot}.</b>{" "}
+                {sourceMeta
+                  ? `This view covers ${sourceMeta.employer}'s published board only. It is not a total labor-market estimate; historical change needs comparable saved snapshots.`
+                  : locale === "en"
+                    ? "These values demonstrate the interaction and are not live labor-market totals. Production replaces them with source, coverage, methodology, retrieval time, and comparable snapshots."
+                    : detail.sourcePolicy}
               </p>
               <div className="source-grid">
                 {JOB_SOURCE_STATUS.map((source) => (
@@ -1205,19 +1419,28 @@ export default function Home() {
               </div>
               <div className="market-kpis">
                 <article>
-                  <span>{detail.exampleOpenings}</span>
+                  <span>
+                    {sourceMeta ? "Published openings" : detail.exampleOpenings}
+                  </span>
                   <b>{compactNumber(totalOpenings, locale)}</b>
                   <small>
-                    {country === "All countries" ? copy.worldwide : country}
+                    {sourceMeta?.employer ||
+                      (country === "All countries" ? copy.worldwide : country)}
                   </small>
                 </article>
                 <article>
                   <span>{detail.momentum}</span>
-                  <b className={weightedChange >= 0 ? "positive" : "negative"}>
-                    {weightedChange >= 0 ? "+" : ""}
-                    {weightedChange.toFixed(1)}%
-                  </b>
-                  <small>{detail.timeRange}</small>
+                  {weightedChange === null ? (
+                    <b>—</b>
+                  ) : (
+                    <b className={weightedChange >= 0 ? "positive" : "negative"}>
+                      {weightedChange >= 0 ? "+" : ""}
+                      {weightedChange.toFixed(1)}%
+                    </b>
+                  )}
+                  <small>
+                    {weightedChange === null ? "Needs a prior snapshot" : detail.timeRange}
+                  </small>
                 </article>
                 <article>
                   <span>{detail.remoteShare}</span>
@@ -1235,7 +1458,11 @@ export default function Home() {
                   <div className="chart-heading">
                     <div>
                       <h3>{detail.openingsByIndustry}</h3>
-                      <p>{detail.sourcePolicy}</p>
+                      <p>
+                        {sourceMeta
+                          ? `${sourceMeta.coverage} · retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}`
+                          : detail.sourcePolicy}
+                      </p>
                     </div>
                     <span>{detail.timeRange}</span>
                   </div>

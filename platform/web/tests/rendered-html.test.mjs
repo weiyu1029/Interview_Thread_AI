@@ -39,6 +39,12 @@ test("ships product metadata and a social card", async () => {
   assert.match(layout, /application\/ld\+json/);
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);
+  assert.match(page, /\/api\/jobs/);
+  assert.match(page, /Connect an employer job board/i);
+  assert.match(page, /Greenhouse/i);
+  assert.match(page, /Lever EU/i);
+  assert.match(page, /Ashby/i);
+  assert.match(page, /No page scraping and no automatic application/i);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
   assert.equal(i18n.match(/\["[^"]+",\s*"[^"]+"\]/g)?.length, 40);
   assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);
