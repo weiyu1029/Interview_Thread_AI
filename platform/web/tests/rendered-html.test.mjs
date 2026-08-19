@@ -43,6 +43,10 @@ test("ships product metadata and a social card", async () => {
   assert.match(page, /Hugging Face/);
   assert.match(page, /\/api\/jobs/);
   assert.match(page, /\/api\/region/);
+  assert.match(page, /\/api\/feedback/);
+  assert.match(page, /Feedback is open to every plan/i);
+  assert.match(page, /Team · Priority/i);
+  assert.match(page, /Enterprise · Highest priority/i);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
   assert.match(page, /Lever EU/i);
