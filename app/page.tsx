@@ -12,12 +12,16 @@ import {
   copyFor,
   detailFor,
   LANGUAGES,
+  localeFromPath,
+  localeToPath,
   LocaleCode,
   REVIEWED_LOCALES,
   RTL_LOCALES,
 } from "./i18n";
 import { parseDocuments } from "./document-parser";
-import { SEO_PAGES } from "./seo-content";
+import { localizedPath } from "./intl-routing";
+import { SEO_PAGE_KEYS } from "./seo-content";
+import { localizedSeoPage } from "./seo-localization";
 
 type MatchStatus = "Strong evidence" | "Partial evidence" | "Gap";
 type Match = {
@@ -1130,9 +1134,13 @@ function formatBillingUnit(locale: LocaleCode, unit: "month" | "year") {
   }).format(1);
 }
 
-export default function Home() {
+export default function Home({
+  initialLocale,
+}: {
+  initialLocale?: LocaleCode;
+} = {}) {
   const [active, setActive] = useState<WorkspaceView>("Analyze");
-  const [locale, setLocale] = useState<LocaleCode>("en");
+  const [locale, setLocale] = useState<LocaleCode>(initialLocale || "en");
   const [applicationMode, setApplicationMode] =
     useState<ApplicationMode>("Manual");
   const [jd, setJd] = useState(SAMPLE_JD);
@@ -1246,9 +1254,14 @@ export default function Home() {
       const savedModelSettings = window.localStorage.getItem(
         "aptograph-model-settings",
       );
-      if (savedLocale && LANGUAGES.some(([code]) => code === savedLocale))
+      if (
+        !initialLocale &&
+        savedLocale &&
+        LANGUAGES.some(([code]) => code === savedLocale)
+      )
         setLocale(savedLocale);
       else if (
+        !initialLocale &&
         !window.localStorage.getItem("aptograph-language-prompt-dismissed")
       ) {
         const detectedLocale = preferredLocale(navigator.languages);
@@ -1336,7 +1349,7 @@ export default function Home() {
       preferencesLoaded.current = true;
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [initialLocale]);
   useEffect(() => {
     if (window.localStorage.getItem("aptograph-billing-market")) return;
     const controller = new AbortController();
@@ -1402,6 +1415,15 @@ export default function Home() {
     setSuggestedLocale(null);
     window.localStorage.setItem("aptograph-locale", nextLocale);
     window.localStorage.setItem("aptograph-language-prompt-dismissed", "true");
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    const currentPathLocale = segments[0]
+      ? localeFromPath(segments[0])
+      : null;
+    const remaining = currentPathLocale ? segments.slice(1) : segments;
+    const nextPath = `/${[localeToPath(nextLocale), ...remaining].join("/")}`;
+    window.location.assign(
+      `${nextPath}${window.location.search}${window.location.hash}`,
+    );
   }
 
   function chooseBillingMarket(nextMarket: string) {
@@ -3703,14 +3725,17 @@ export default function Home() {
           </p>
         </div>
         <div className="seo-hub-grid">
-          {Object.values(SEO_PAGES).map((page, index) => (
-            <a href={page.path} key={page.path}>
+          {SEO_PAGE_KEYS.map((pageKey, index) => {
+            const page = localizedSeoPage(pageKey, locale);
+            return (
+            <a href={localizedPath(locale, page.path)} key={page.path}>
               <span>{String(index + 1).padStart(2, "0")}</span>
               <h3>{page.navLabel}</h3>
               <p>{page.description}</p>
-              <small>Explore guide</small>
+              <small>{locale === "en" ? "Explore guide" : copy.enter}</small>
             </a>
-          ))}
+            );
+          })}
         </div>
       </section>
       <section className="plans" id="plans">

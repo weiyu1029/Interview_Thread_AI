@@ -1,8 +1,5 @@
-import { SeoLandingPage } from "../SeoLandingPage";
-import { metadataFor } from "../seo-content";
-
-export const metadata = metadataFor("job-match-recommendations");
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <SeoLandingPage pageKey="job-match-recommendations" />;
+  redirect("/en/job-match-recommendations");
 }

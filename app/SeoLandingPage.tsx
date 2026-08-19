@@ -1,13 +1,26 @@
 import Link from "next/link";
-import { SEO_PAGES, SeoPageKey } from "./seo-content";
+import { copyFor, LocaleCode, RTL_LOCALES } from "./i18n";
+import { localizedPath } from "./intl-routing";
+import { SEO_PAGE_KEYS, SeoPageKey } from "./seo-content";
+import { localizedSeoPage, seoUiFor } from "./seo-localization";
 
-export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
-  const page = SEO_PAGES[pageKey];
+export function SeoLandingPage({
+  pageKey,
+  locale = "en",
+}: {
+  pageKey: SeoPageKey;
+  locale?: LocaleCode;
+}) {
+  const page = localizedSeoPage(pageKey, locale);
+  const ui = seoUiFor(locale);
+  const core = copyFor(locale);
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     "https://careerstorymap.com";
-  const pageUrl = `${siteUrl}${page.path}`;
-  const related = Object.values(SEO_PAGES).filter(
+  const homePath = localizedPath(locale);
+  const pagePath = localizedPath(locale, page.path);
+  const pageUrl = `${siteUrl}${pagePath}`;
+  const related = SEO_PAGE_KEYS.map((key) => localizedSeoPage(key, locale)).filter(
     (candidate) => candidate.path !== page.path,
   );
   const structuredData = [
@@ -18,6 +31,7 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
       headline: page.title,
       description: page.description,
       url: pageUrl,
+      inLanguage: locale,
       isPartOf: {
         "@type": "WebSite",
         name: "CareerStoryMap",
@@ -55,30 +69,34 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
   ];
 
   return (
-    <main className="seo-page">
+    <main
+      className="seo-page"
+      lang={locale}
+      dir={RTL_LOCALES.has(locale) ? "rtl" : "ltr"}
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="seo-header">
-        <Link className="brand" href="/" aria-label="CareerStoryMap home">
+        <Link className="brand" href={homePath} aria-label="CareerStoryMap home">
           <span className="brand-mark" aria-hidden="true">CS</span>
           <span>
             CareerStoryMap <small>Evidence to opportunity</small>
           </span>
         </Link>
         <nav aria-label="Page navigation">
-          <a href="#how-it-works">How it works</a>
-          <a href="#questions">Questions</a>
-          <Link className="button secondary" href="/#workspace">
-            Open workspace
+          <a href="#how-it-works">{ui.howItWorks}</a>
+          <a href="#questions">{ui.questions}</a>
+          <Link className="button secondary" href={`${homePath}#workspace`}>
+            {ui.openWorkspace}
           </Link>
         </nav>
       </header>
 
       <section className="seo-hero">
         <div>
-          <Link className="seo-backlink" href="/">
+          <Link className="seo-backlink" href={homePath}>
             CareerStoryMap / {page.navLabel}
           </Link>
           <p className="eyebrow">{page.eyebrow}</p>
@@ -87,32 +105,32 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
           <div className="hero-actions">
             <Link
               className="button primary"
-              href={`/?view=${encodeURIComponent(page.workspaceView)}#workspace`}
+              href={`${homePath}?view=${encodeURIComponent(page.workspaceView)}#workspace`}
             >
               {page.primaryCta}
             </Link>
             <a className="text-link" href="#how-it-works">
-              See how it works
+              {ui.seeHow}
             </a>
           </div>
         </div>
         <aside className="seo-map-card" aria-label="CareerStoryMap evidence flow">
           <div className="seo-map-heading">
-            <span>Career story map</span>
-            <b>Evidence-linked</b>
+            <span>{ui.mapTitle}</span>
+            <b>{ui.evidenceLinked}</b>
           </div>
           <ol>
             <li>
               <span>01</span>
-              <div><small>Source</small><strong>Resume evidence</strong></div>
+              <div><small>{ui.source}</small><strong>{ui.resumeEvidence}</strong></div>
             </li>
             <li>
               <span>02</span>
-              <div><small>Target</small><strong>Job requirements</strong></div>
+              <div><small>{ui.target}</small><strong>{ui.jobRequirements}</strong></div>
             </li>
             <li>
               <span>03</span>
-              <div><small>Outcome</small><strong>Interview story</strong></div>
+              <div><small>{ui.outcome}</small><strong>{ui.interviewStory}</strong></div>
             </li>
           </ol>
           <p>{page.summary}</p>
@@ -130,8 +148,8 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
 
       <section className="seo-process" id="how-it-works">
         <div className="seo-section-heading">
-          <p className="eyebrow">How it works</p>
-          <h2>A clearer path from experience to opportunity.</h2>
+          <p className="eyebrow">{ui.howItWorks}</p>
+          <h2>{ui.clearerPath}</h2>
         </div>
         <div className="seo-step-grid">
           {page.steps.map((step) => (
@@ -146,8 +164,8 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
 
       <section className="seo-benefits">
         <div className="seo-benefit-intro">
-          <p className="eyebrow">Why CareerStoryMap</p>
-          <h2>Useful because it stays accountable to the source.</h2>
+          <p className="eyebrow">{ui.whyBrand}</p>
+          <h2>{ui.accountable}</h2>
           <p>{page.summary}</p>
         </div>
         <div className="seo-benefit-list">
@@ -165,8 +183,8 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
 
       <section className="seo-faq" id="questions">
         <div className="seo-section-heading">
-          <p className="eyebrow">Questions</p>
-          <h2>What to know before you begin.</h2>
+          <p className="eyebrow">{ui.questions}</p>
+          <h2>{ui.beforeBegin}</h2>
         </div>
         <div>
           {page.faqs.map((faq) => (
@@ -179,11 +197,14 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
       </section>
 
       <section className="seo-related" aria-label="Explore CareerStoryMap tools">
-        <p className="eyebrow">Explore the career workflow</p>
-        <h2>One evidence map, six connected decisions.</h2>
+        <p className="eyebrow">{ui.exploreWorkflow}</p>
+        <h2>{ui.connectedDecisions}</h2>
         <div>
           {related.map((candidate) => (
-            <Link href={candidate.path} key={candidate.path}>
+            <Link
+              href={localizedPath(locale, candidate.path)}
+              key={candidate.path}
+            >
               <span>{candidate.navLabel}</span>
               <small>{candidate.eyebrow}</small>
             </Link>
@@ -193,17 +214,17 @@ export function SeoLandingPage({ pageKey }: { pageKey: SeoPageKey }) {
 
       <section className="seo-final-cta">
         <p className="eyebrow">Map your evidence. Own your story.</p>
-        <h2>Build a story that can hold up under a real interview.</h2>
-        <Link className="button primary" href="/#workspace">
-          Open CareerStoryMap
+        <h2>{ui.finalTitle}</h2>
+        <Link className="button primary" href={`${homePath}#workspace`}>
+          {ui.openProduct}
         </Link>
       </section>
 
       <footer className="seo-footer">
         <span>CareerStoryMap</span>
-        <span>Evidence that travels.</span>
+        <span>{locale === "en" ? "Evidence that travels." : core.heroTitle}</span>
         <a href="https://github.com/weiyu1029/careerproof-agent">
-          Open-source repository
+          {ui.repository}
         </a>
       </footer>
     </main>

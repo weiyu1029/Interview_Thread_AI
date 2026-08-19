@@ -10,16 +10,20 @@ export function GET() {
 CareerStoryMap is an open-source, evidence-grounded career intelligence platform. It helps people compare resume evidence with job descriptions, find stronger-fit roles from approved employer sources, understand market movement, prepare credible career stories, and track applications.
 
 ## Primary pages
-- Product: ${siteUrl}/#product
-- Workspace: ${siteUrl}/#workspace
-- Plans: ${siteUrl}/#plans
-- Resume and job-description matching: ${siteUrl}/resume-job-description-match
-- Career story builder: ${siteUrl}/career-story-builder
-- AI mock interview: ${siteUrl}/ai-mock-interview
-- Resume keyword analyzer: ${siteUrl}/resume-keyword-analyzer
-- Job match recommendations: ${siteUrl}/job-match-recommendations
-- Career market insights: ${siteUrl}/career-market-insights
+- Product: ${siteUrl}/en/#product
+- Workspace: ${siteUrl}/en/#workspace
+- Plans: ${siteUrl}/en/#plans
+- Resume and job-description matching: ${siteUrl}/en/resume-job-description-match
+- Career story builder: ${siteUrl}/en/career-story-builder
+- AI mock interview: ${siteUrl}/en/ai-mock-interview
+- Resume keyword analyzer: ${siteUrl}/en/resume-keyword-analyzer
+- Job match recommendations: ${siteUrl}/en/job-match-recommendations
+- Career market insights: ${siteUrl}/en/career-market-insights
 - Source code: https://github.com/weiyu1029/careerproof-agent
+
+## Language editions
+Every public page has an indexable, canonical language URL and reciprocal hreflang annotations. Supported URL prefixes are:
+/en, /ja, /ko, /zh-cn, /zh-tw, /es, /fr, /de, /pt-br, /it, /nl, /pl, /tr, /ru, /uk, /ar, /he, /hi, /bn, /ur, /id, /ms, /th, /vi, /fil, /sv, /no, /da, /fi, /cs, /sk, /hu, /ro, /el, /bg, /hr, /sr, /sl, /sw, and /fa.
 
 ## Core capabilities
 - Resume and job-description keyword evidence analysis
