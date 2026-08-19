@@ -6,7 +6,7 @@
 
 > Keywords may be reformulated, never fabricated.
 
-[Try the Streamlit app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try the professional web app](https://careerproof-open-source.wy-alicechen.chatgpt.site) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Why CareerProof exists
 
