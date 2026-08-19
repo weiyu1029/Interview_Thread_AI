@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.env
+.env.*
+artifacts/traces
+artifacts/grade_results
+platform/web/node_modules
+platform/web/.wrangler
+platform/web/dist

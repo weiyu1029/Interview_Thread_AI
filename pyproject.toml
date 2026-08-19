@@ -13,9 +13,33 @@ dependencies = [
 [dependency-groups]
 dev = [
   "pytest>=8.0.0",
+  "pytest-cov>=5.0.0",
 ]
 
 [project.optional-dependencies]
+web = [
+  "streamlit>=1.50,<2",
+  "pandas>=2.2,<3",
+  "openpyxl>=3.1,<4",
+  "google-genai>=1.0,<2",
+  "pypdf>=5,<7",
+  "python-docx>=1.1,<2",
+  "beautifulsoup4>=4.13,<5",
+  "odfpy>=1.4,<2",
+  "striprtf>=0.0.29,<1",
+]
+platform = [
+  "fastapi>=0.116,<1",
+  "uvicorn[standard]>=0.35,<1",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.10,<3",
+  "PyJWT>=2.10,<3",
+  "pwdlib[argon2]>=0.2,<1",
+  "python-multipart>=0.0.20,<1",
+  "httpx>=0.28,<1",
+  "email-validator>=2.2,<3",
+]
 lint = [
   "ruff>=0.4.6,<1.0.0",
   "ty>=0.0.1a0",
@@ -32,6 +56,10 @@ ignore = ["E501", "C901", "B006"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+"platform/api/careerproof_api/main.py" = ["B008"]
+"platform/api/careerproof_api/security.py" = ["B008"]
 
 [tool.ty]
 
@@ -55,6 +83,18 @@ unknown-argument = "ignore"
 [tool.codespell]
 ignore-words-list = "CareerProof,roadmap,FinTech,HealthTech,PropTech,InsurTech,EdTech,MarTech,AdTech,WealthTech,RevPAR,ROAS,ARR,MRR,NRR,GRR,ARPU,ARPPU,DAU,MAU"
 skip = ".venv,uv.lock,artifacts/traces,artifacts/grade_results"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["app"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
 
 [build-system]
 requires = ["hatchling"]

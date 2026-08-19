@@ -8,6 +8,8 @@ __pycache__/
 *.py[cod]
 *.pyo
 .pytest_cache/
+.coverage
+htmlcov/
 .ruff_cache/
 .mypy_cache/
 .ty/
@@ -26,6 +28,11 @@ app/.adk/
 build/
 dist/
 *.egg-info/
+platform/web/node_modules/
+platform/web/.wrangler/
+platform/web/.next/
+platform/web/.vinext/
+careerproof-dev.db
 
 # OS / editor
 .DS_Store
