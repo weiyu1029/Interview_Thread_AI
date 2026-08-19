@@ -131,11 +131,11 @@ def application_mode_entitlement(plan: str, mode: str) -> tuple[bool, str]:
     allowed = {
         "manual": {"free", "pro", "team", "enterprise"},
         "hybrid": {"pro", "team", "enterprise"},
-        "automatic": {"team", "enterprise"},
+        "automatic": {"pro", "team", "enterprise"},
     }
     if plan in allowed[mode]:
         return True, "enabled"
-    required = "Pro" if mode == "hybrid" else "Team or Enterprise"
+    required = "Pro"
     return False, f"{required} is required for {mode} mode"
 
 
@@ -149,7 +149,7 @@ def plans() -> dict:
     return {
         "plans": [
             {"id": "free", "name": "Community", "monthly_analyses": 8, "members": 1, "application_modes": ["manual"], "features": ["Evidence matching", "40-language UI", "Basic recommendations", "Local models", "Personal tracker"]},
-            {"id": "pro", "name": "Pro", "monthly_analyses": 100, "members": 1, "application_modes": ["manual", "hybrid"], "features": ["Permanent history", "Advanced story packs", "Approval queue", "Saved searches and alerts"]},
+            {"id": "pro", "name": "Pro", "monthly_analyses": 100, "members": 1, "application_modes": ["manual", "hybrid", "automatic"], "features": ["Permanent history", "Advanced story packs", "Approval queue", "Personal approved-API automation", "Saved searches and alerts"]},
             {"id": "team", "name": "Team", "monthly_analyses": 500, "members": 10, "application_modes": ["manual", "hybrid", "automatic"], "features": ["Shared workspaces", "Role-based access", "Governed connectors", "Audit logs"]},
         ],
         "billing_status": "adapter-ready",
@@ -427,7 +427,7 @@ async def create_analysis(
             result["ai_brief"] = await generate_text(
                 payload.provider,
                 payload.model,
-                build_model_prompt(payload.target_role, payload.company, keyword_analysis, story_pack),
+                build_model_prompt(payload.target_role, payload.company, keyword_analysis, story_pack, payload.output_locale),
                 x_model_api_key,
             )
         except (httpx.HTTPError, KeyError, ValueError) as exc:
@@ -607,12 +607,12 @@ async def send_chat_message(
     analysis = db.get(Analysis, thread.analysis_id) if thread.analysis_id else None
     db.add(ChatMessage(thread_id=thread.id, role="user", content=payload.content))
     if thread.provider == "deterministic":
-        reply = deterministic_copilot_reply(payload.content, analysis.result if analysis else None)
+        reply = deterministic_copilot_reply(payload.content, analysis.result if analysis else None, payload.locale)
     else:
         history = [{"role": item.role, "content": item.content} for item in thread.messages[-12:]]
         evidence = analysis.result if analysis else {"instruction": "Ask the user to run an analysis first."}
         messages = [
-            {"role": "system", "content": f"Use only this CareerProof evidence and never fabricate claims: {evidence}"},
+            {"role": "system", "content": f"Use only this CareerProof evidence and never fabricate claims. Respond fully in locale {payload.locale}, except for source quotations and proper nouns: {evidence}"},
             *history,
             {"role": "user", "content": payload.content},
         ]

@@ -1,0 +1,12 @@
+{
+  "name": "CareerProof Global",
+  "short_name": "CareerProof",
+  "description": "Evidence-grounded global career intelligence.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f3ef",
+  "theme_color": "#465d70",
+  "icons": [
+    { "src": "/og.png", "sizes": "1732x908", "type": "image/png", "purpose": "any" }
+  ]
+}

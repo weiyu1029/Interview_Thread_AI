@@ -10,7 +10,7 @@ application and interview strategy.
 
 > Keywords may be reformulated, never fabricated.
 
-[Try the professional web app](https://careerproof-open-source.wy-alicechen.chatgpt.site) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try the professional web app](https://careerproof-open-source.wy-alicechen.chatgpt.site) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Why CareerProof exists
 
@@ -59,7 +59,8 @@ The `platform/` directory is the production-oriented evolution path requested
 for accounts, permanent tracking, collaboration, and paid plans:
 
 - a professional, responsive, emoji-free React / Next-compatible interface;
-- guest analysis, 40 locale choices, worldwide recommendation filters, an
+- guest analysis, 40 locale choices with eight reviewed end-to-end catalogs
+  and 32 community-beta catalogs, locale-aware AI output, worldwide recommendation filters, an
   interactive Market Insights preview, a device-local tracker, evidence-aware
   copilot, and feedback;
 - FastAPI endpoints for identity, workspaces, persisted analyses, tracker items,
@@ -143,7 +144,8 @@ Job descriptions and uploaded documents are treated as untrusted data. They can 
 
 The open-source default never auto-submits an application or sends a message.
 Manual mode remains free. Hybrid mode is designed to require approval for each
-submission. Any future Team or Enterprise automation must use approved employer
+submission. Pro may expose Manual, Hybrid, or Automatic controls, but any
+future automatic workflow must use approved employer
 APIs with explicit consent, rate limits, audit logs, and an emergency stop; no
 submission connector is enabled in this repository.
 

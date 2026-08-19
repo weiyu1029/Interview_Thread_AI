@@ -34,6 +34,7 @@ class AnalysisRequest(BaseModel):
     model: str = Field(default="evidence-engine-v1", max_length=180)
     workspace_id: str | None = None
     persist: bool = True
+    output_locale: str = Field(default="en", min_length=2, max_length=20)
 
 
 class TrackerCreate(BaseModel):
@@ -77,6 +78,7 @@ class ChatThreadCreate(BaseModel):
 
 class ChatRequest(BaseModel):
     content: str = Field(min_length=1, max_length=12_000)
+    locale: str = Field(default="en", min_length=2, max_length=20)
 
 
 class FeedbackCreate(BaseModel):

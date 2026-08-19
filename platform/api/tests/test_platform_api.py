@@ -13,6 +13,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.tools.resume_parser import extract_resume_text
+
 engine = create_engine(
     "sqlite://",
     connect_args={"check_same_thread": False},
@@ -178,3 +180,14 @@ def test_application_modes_enforce_plan_boundaries() -> None:
         json={"workspace_id": workspace_id, "application_mode": "hybrid"},
     )
     assert denied_update.status_code == 402
+
+
+def test_extended_text_document_formats_extract_in_memory() -> None:
+    assert extract_resume_text("profile.yaml", b"role: Analyst\nskills:\n  - SQL") == "role: Analyst\nskills:\n  - SQL"
+    assert "Example role" in extract_resume_text("role.xml", b"<job><title>Example role</title></job>")
+
+
+def test_pro_plan_includes_controlled_automatic_mode() -> None:
+    plans = client.get("/v1/plans").json()["plans"]
+    pro = next(item for item in plans if item["id"] == "pro")
+    assert pro["application_modes"] == ["manual", "hybrid", "automatic"]

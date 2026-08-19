@@ -1,11 +1,34 @@
 from __future__ import annotations
 
 import csv
+import email
 import json
+import re
+import zipfile
 from io import BytesIO
+from xml.etree import ElementTree
 
 MAX_RESUME_BYTES = 12 * 1024 * 1024
-SUPPORTED_EXTENSIONS = ("pdf", "docx", "odt", "rtf", "txt", "md", "html", "htm", "csv", "json", "xlsx")
+SUPPORTED_EXTENSIONS = (
+    "pdf", "docx", "odt", "rtf", "txt", "md", "html", "htm", "csv", "json", "xlsx",
+    "pptx", "epub", "eml", "xml", "yaml", "yml", "log", "tex",
+)
+MAX_ARCHIVE_MEMBERS = 2_000
+MAX_EXPANDED_BYTES = 60 * 1024 * 1024
+
+
+def _safe_zip(content: bytes) -> zipfile.ZipFile:
+    archive = zipfile.ZipFile(BytesIO(content))
+    members = archive.infolist()
+    if len(members) > MAX_ARCHIVE_MEMBERS or sum(item.file_size for item in members) > MAX_EXPANDED_BYTES:
+        archive.close()
+        raise ValueError("Compressed document expands beyond the safe processing limit.")
+    return archive
+
+
+def _xml_text(content: bytes) -> str:
+    root = ElementTree.fromstring(content)
+    return "\n".join(piece.strip() for piece in root.itertext() if piece.strip())
 
 
 def extract_resume_text(file_name: str, content: bytes) -> str:
@@ -81,7 +104,31 @@ def extract_resume_text(file_name: str, content: bytes) -> str:
                     lines.append(" | ".join(values))
         return "\n".join(lines).strip()
 
-    if suffix in {"txt", "md"}:
+    if suffix == "pptx":
+        with _safe_zip(content) as archive:
+            slides = sorted(name for name in archive.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", name))
+            return "\n".join(_xml_text(archive.read(name)) for name in slides).strip()
+
+    if suffix == "epub":
+        from bs4 import BeautifulSoup
+
+        with _safe_zip(content) as archive:
+            pages = sorted(name for name in archive.namelist() if name.lower().endswith((".xhtml", ".html", ".htm")))
+            return "\n".join(BeautifulSoup(archive.read(name), "html.parser").get_text("\n", strip=True) for name in pages).strip()
+
+    if suffix == "eml":
+        message = email.message_from_bytes(content)
+        chunks = [f"Subject: {message.get('subject', '')}"]
+        for part in message.walk():
+            if part.get_content_type() == "text/plain" and part.get_content_disposition() != "attachment":
+                payload = part.get_payload(decode=True) or b""
+                chunks.append(payload.decode(part.get_content_charset() or "utf-8", errors="replace"))
+        return "\n".join(chunks).strip()
+
+    if suffix == "xml":
+        return _xml_text(content).strip()
+
+    if suffix in {"txt", "md", "yaml", "yml", "log", "tex"}:
         return content.decode("utf-8", errors="replace").strip()
 
     supported = ", ".join(item.upper() for item in SUPPORTED_EXTENSIONS)

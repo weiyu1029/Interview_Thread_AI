@@ -49,6 +49,7 @@ def build_model_prompt(
     company: str,
     keyword_analysis: dict,
     story_pack: list[dict],
+    output_locale: str = "en",
 ) -> list[dict[str, str]]:
     return [
         {
@@ -56,7 +57,8 @@ def build_model_prompt(
             "content": (
                 "You are CareerProof Copilot. Use only the supplied candidate evidence. "
                 "Never invent employers, tools, metrics, responsibilities, or results. "
-                "Label missing facts as questions. Separate safe phrasing from real gaps."
+                "Label missing facts as questions. Separate safe phrasing from real gaps. "
+                f"Write the complete response in locale {output_locale}; keep only company names, product names, and source quotations in their original language."
             ),
         },
         {
@@ -71,16 +73,16 @@ def build_model_prompt(
     ]
 
 
-def deterministic_copilot_reply(question: str, analysis: dict | None) -> str:
+def deterministic_copilot_reply(question: str, analysis: dict | None, locale: str = "en") -> str:
+    locale_name = locale or "en"
     if not analysis:
-        return "Start with an analysis so I can answer from verified role and resume evidence."
+        return f"[{locale_name}] Start with an analysis so I can answer from verified role and resume evidence."
     gaps = analysis.get("keyword_analysis", {}).get("missing_keywords", [])[:5]
     stories = analysis.get("story_pack", [])[:3]
     evidence = "; ".join(item.get("source_evidence", "") for item in stories if item.get("source_evidence"))
     gap_text = ", ".join(gaps) or "no major keyword gaps detected"
     return (
-        f"Based on the saved evidence, the strongest material is: {evidence or 'not enough evidence yet'}. "
+        f"[{locale_name}] Based on the saved evidence, the strongest material is: {evidence or 'not enough evidence yet'}. "
         f"The current gaps are: {gap_text}. For your question — {question.strip()} — build the answer around "
         "one verified example, state your personal action, and add a result only if you can support it."
     )
-
