@@ -102,6 +102,21 @@ export default async function AccountPage({
         <span className="account-language">{localeDisplayName(locale)}</span>
       </header>
 
+      <ol className="account-steps" aria-label={labels.account}>
+        <li className="active">
+          <span>1</span>
+          <b>{detail.plans}</b>
+        </li>
+        <li className={user ? "complete" : ""}>
+          <span>2</span>
+          <b>{labels.signIn}</b>
+        </li>
+        <li>
+          <span>3</span>
+          <b>{core.enter}</b>
+        </li>
+      </ol>
+
       <section className="account-hero">
         <div>
           <p className="eyebrow">CareerStoryMap · {labels.account}</p>
@@ -134,8 +149,15 @@ export default async function AccountPage({
             const isSelected = item.id === plan;
             const returnTo = `${accountPath}?plan=${item.id}`;
             const href = user
-              ? returnTo
+              ? isSelected
+                ? workspacePath
+                : returnTo
               : chatGPTSignInPath(returnTo);
+            const actionLabel = user
+              ? isSelected
+                ? core.enter
+                : item.name
+              : labels.signIn;
             return (
               <article className={isSelected ? "selected" : ""} key={item.id}>
                 <div className="account-plan-title">
@@ -150,7 +172,7 @@ export default async function AccountPage({
                   {item.features.map((feature) => <li key={feature}>{feature}</li>)}
                 </ul>
                 <a className={`button ${isSelected ? "primary" : "secondary"}`} href={href}>
-                  {user && isSelected ? labels.selected : labels.signIn}
+                  {actionLabel}
                 </a>
               </article>
             );

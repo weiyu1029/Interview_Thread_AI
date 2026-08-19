@@ -1223,11 +1223,9 @@ export default function Home({
   const [locale, setLocale] = useState<LocaleCode>(initialLocale || "en");
   const [applicationMode, setApplicationMode] =
     useState<ApplicationMode>("Manual");
-  const [jd, setJd] = useState(SAMPLE_JD);
-  const [resume, setResume] = useState(SAMPLE_RESUME);
-  const [matches, setMatches] = useState<Match[]>(() =>
-    runMatch(SAMPLE_JD, SAMPLE_RESUME),
-  );
+  const [jd, setJd] = useState("");
+  const [resume, setResume] = useState("");
+  const [matches, setMatches] = useState<Match[]>([]);
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadingDestination, setUploadingDestination] = useState<
@@ -1240,7 +1238,7 @@ export default function Home({
   );
   const [modelInsight, setModelInsight] = useState("");
   const [modelRunning, setModelRunning] = useState(false);
-  const [roleQuery, setRoleQuery] = useState("Product analyst");
+  const [roleQuery, setRoleQuery] = useState("");
   const [region, setRegion] = useState("Worldwide");
   const [country, setCountry] = useState("All countries");
   const [radius, setRadius] = useState("Worldwide");
@@ -2368,15 +2366,63 @@ export default function Home({
     }
   }
 
-  const views: { id: WorkspaceView; label: string }[] = [
-    { id: "Analyze", label: copy.analyze },
-    { id: "Recommendations", label: copy.recommendations },
-    { id: "Market Insights", label: copy.market },
-    { id: "Tracker", label: copy.tracker },
-    { id: "Interview Studio", label: copy.interview },
-    { id: "Copilot", label: copy.copilot },
-    { id: "Feedback", label: copy.feedback },
+  const flowViews: {
+    id: WorkspaceView;
+    label: string;
+    description: string;
+  }[] = [
+    { id: "Analyze", label: copy.analyze, description: detail.compare },
+    {
+      id: "Recommendations",
+      label: copy.recommendations,
+      description: detail.recommendationsTitle,
+    },
+    { id: "Tracker", label: copy.tracker, description: detail.trackerTitle },
+    {
+      id: "Interview Studio",
+      label: copy.interview,
+      description: interview.title,
+    },
   ];
+  const supportViews: {
+    id: WorkspaceView;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      id: "Market Insights",
+      label: copy.market,
+      description: detail.marketTitle,
+    },
+    { id: "Copilot", label: copy.copilot, description: detail.assistantTitle },
+    { id: "Feedback", label: copy.feedback, description: detail.feedbackTitle },
+  ];
+  const views = [...flowViews, ...supportViews];
+  const activeView = views.find((item) => item.id === active) || flowViews[0];
+  const flowIndex = flowViews.findIndex((item) => item.id === active);
+  const previousView =
+    flowIndex > 0
+      ? flowViews[flowIndex - 1]
+      : active === "Market Insights" || active === "Copilot"
+        ? flowViews[0]
+        : active === "Feedback"
+          ? flowViews[2]
+          : null;
+  const nextView =
+    flowIndex >= 0 && flowIndex < flowViews.length - 1
+      ? flowViews[flowIndex + 1]
+      : active === "Interview Studio"
+        ? flowViews[1]
+        : active === "Market Insights"
+          ? flowViews[1]
+          : active === "Copilot"
+            ? flowViews[3]
+            : flowViews[0];
+  const needsEvidence =
+    !resume.trim() &&
+    ["Recommendations", "Tracker", "Interview Studio", "Copilot"].includes(
+      active,
+    );
   const modeMessage =
     MODE_DISCLOSURES[locale]?.[applicationMode] ||
     (applicationMode === "Manual"
@@ -2440,7 +2486,15 @@ export default function Home({
         </a>
         <nav className="topnav" aria-label="Primary navigation">
           <a href="#product">{detail.product}</a>
-          <a href="#workspace">{detail.workspace}</a>
+          <a
+            href="#workspace"
+            onClick={(event) => {
+              event.preventDefault();
+              openWorkspace("Analyze");
+            }}
+          >
+            {detail.workspace}
+          </a>
           <a href="#career-tools">Career tools</a>
           <a href="#plans">{detail.plans}</a>
           <a href="https://github.com/weiyu1029/CareerStoryMap-agent">
@@ -2533,22 +2587,12 @@ export default function Home({
             </button>
           </div>
           <ol className="journey-strip" aria-label={detail.workspace}>
-            <li>
-              <span>1</span>
-              <b>{detail.resumeEvidence}</b>
-            </li>
-            <li>
-              <span>2</span>
-              <b>{detail.jobDescription}</b>
-            </li>
-            <li>
-              <span>3</span>
-              <b>{detail.matrix}</b>
-            </li>
-            <li>
-              <span>4</span>
-              <b>{copy.interview}</b>
-            </li>
+            {flowViews.map((item, index) => (
+              <li key={item.id}>
+                <span>{index + 1}</span>
+                <b>{item.label}</b>
+              </li>
+            ))}
           </ol>
           <div className="trust-row">
             <span>{detail.evidenceLinked}</span>
@@ -2560,24 +2604,26 @@ export default function Home({
         <div className="hero-panel">
           <div className="panel-heading">
             <span>{detail.readiness}</span>
-            <span className="status-pill">{detail.checked}</span>
+            <span className="status-pill">
+              {matches.length ? detail.checked : detail.exampleSnapshot}
+            </span>
           </div>
           <div className="score-row">
-            <strong>{score}</strong>
+            <strong>{matches.length ? score : "—"}</strong>
             <span>/ 100</span>
           </div>
           <div className="score-bar">
-            <i style={{ width: `${score}%` }} />
+            <i style={{ width: `${matches.length ? score : 0}%` }} />
           </div>
           <div className="metric-grid">
             <div>
               <span>{detail.requiredMatch}</span>
-              <b>{requiredScore}%</b>
+              <b>{matches.length ? `${requiredScore}%` : "—"}</b>
             </div>
             <div>
               <span>{detail.evidenceCoverage}</span>
               <b>
-                {strongCount} / {matches.length}
+                {matches.length ? `${strongCount} / ${matches.length}` : "—"}
               </b>
             </div>
             <div>
@@ -2597,28 +2643,68 @@ export default function Home({
         <aside className="workspace-nav">
           <p className="workspace-label">{detail.workspace}</p>
           <label className="workspace-nav-mobile">
-            <span>{detail.workspace}</span>
+            <span>
+              {flowIndex >= 0
+                ? `${flowIndex + 1} / ${flowViews.length}`
+                : detail.explore}
+            </span>
             <select
               value={active}
-              onChange={(event) => setActive(event.target.value as WorkspaceView)}
+              onChange={(event) =>
+                openWorkspace(event.target.value as WorkspaceView)
+              }
             >
-              {views.map((item) => (
-                <option value={item.id} key={item.id}>
-                  {item.label}
-                </option>
-              ))}
+              <optgroup label={detail.workspace}>
+                {flowViews.map((item, index) => (
+                  <option value={item.id} key={item.id}>
+                    {index + 1}. {item.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label={detail.explore}>
+                {supportViews.map((item) => (
+                  <option value={item.id} key={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </label>
-          {views.map((item) => (
-            <button
-              type="button"
-              className={active === item.id ? "active" : ""}
-              key={item.id}
-              onClick={() => setActive(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
+          <div className="workspace-nav-group">
+            {flowViews.map((item, index) => (
+              <button
+                type="button"
+                className={active === item.id ? "active" : ""}
+                key={item.id}
+                onClick={() => openWorkspace(item.id)}
+                aria-current={active === item.id ? "step" : undefined}
+              >
+                <span>{index + 1}</span>
+                <div>
+                  <b>{item.label}</b>
+                  <small>{item.description}</small>
+                </div>
+              </button>
+            ))}
+          </div>
+          <p className="workspace-label workspace-support-label">
+            {detail.explore}
+          </p>
+          <div className="workspace-nav-group support">
+            {supportViews.map((item) => (
+              <button
+                type="button"
+                className={active === item.id ? "active" : ""}
+                key={item.id}
+                onClick={() => openWorkspace(item.id)}
+              >
+                <span aria-hidden="true">·</span>
+                <div>
+                  <b>{item.label}</b>
+                </div>
+              </button>
+            ))}
+          </div>
           <div className="workspace-note">
             <span className="dot" />
             <div>
@@ -2632,6 +2718,43 @@ export default function Home({
           </div>
         </aside>
         <div className="workspace-main">
+          <div className="workspace-context">
+            <div className="workspace-context-index">
+              {flowIndex >= 0 ? `${flowIndex + 1}/${flowViews.length}` : "·"}
+            </div>
+            <div>
+              <span>{flowIndex >= 0 ? detail.workspace : detail.explore}</span>
+              <b>{activeView.label}</b>
+              <p>{activeView.description}</p>
+            </div>
+          </div>
+          {needsEvidence && (
+            <div className="workflow-prerequisite" role="note">
+              <div>
+                <b>{detail.resumeEvidence}</b>
+                <p>{detail.compare}</p>
+              </div>
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => openWorkspace("Analyze")}
+              >
+                {copy.analyze}
+              </button>
+              <button
+                type="button"
+                className="button primary"
+                onClick={() => {
+                  setJd(SAMPLE_JD);
+                  setResume(SAMPLE_RESUME);
+                  setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
+                  openWorkspace("Analyze");
+                }}
+              >
+                {detail.sample}
+              </button>
+            </div>
+          )}
           {active === "Analyze" && (
             <>
               <div className="section-heading">
@@ -2675,6 +2798,7 @@ export default function Home({
                     id="resume-text"
                     value={resume}
                     onChange={(event) => setResume(event.target.value)}
+                    placeholder={detail.resumeEvidence}
                   />
                   <label className="upload-control" htmlFor="resume-file">
                     <input
@@ -2702,6 +2826,7 @@ export default function Home({
                     id="jd-text"
                     value={jd}
                     onChange={(event) => setJd(event.target.value)}
+                    placeholder={detail.jobDescription}
                   />
                   <label className="upload-control" htmlFor="jd-file">
                     <input
@@ -2733,7 +2858,15 @@ export default function Home({
                 </div>
                 <button
                   className="button primary"
-                  onClick={runModelAnalysis}
+                  onClick={async () => {
+                    await runModelAnalysis();
+                    window.requestAnimationFrame(() => {
+                      document.getElementById("analysis-results")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    });
+                  }}
                   disabled={modelRunning || !jd.trim() || !resume.trim()}
                 >
                   {modelRunning ? "Running…" : detail.runMatch}
@@ -2805,7 +2938,7 @@ export default function Home({
                   {modelInsight && <p>{modelInsight}</p>}
                 </div>
               </details>
-              <div className="results-card">
+              <div className="results-card" id="analysis-results">
                 <div className="results-title">
                   <h3>{detail.matrix}</h3>
                   <span>
@@ -2832,29 +2965,6 @@ export default function Home({
                     <p className="empty-state">{detail.matrix}</p>
                   )}
                 </div>
-              </div>
-              <div className="next-actions">
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => openWorkspace("Market Insights")}
-                >
-                  {copy.market}
-                </button>
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => setActive("Copilot")}
-                >
-                  {copy.copilot}
-                </button>
-                <button
-                  type="button"
-                  className="button primary"
-                  onClick={() => openWorkspace("Interview Studio")}
-                >
-                  {copy.interview}
-                </button>
               </div>
             </>
           )}
@@ -3553,7 +3663,7 @@ export default function Home({
                             onClick={() => {
                               setJd(job.description);
                               setMatches(runMatch(job.description, resume));
-                              setActive("Analyze");
+                              openWorkspace("Analyze");
                             }}
                           >
                             {detail.analyzeRole}
@@ -4047,6 +4157,34 @@ export default function Home({
               </form>
             </>
           )}
+          <footer className="workspace-next-step">
+            <div>
+              <span>
+                {flowIndex >= 0
+                  ? `${flowIndex + 1} / ${flowViews.length}`
+                  : detail.explore}
+              </span>
+              <b>{nextView.description}</b>
+            </div>
+            <nav aria-label={detail.workspace}>
+              {previousView && (
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => openWorkspace(previousView.id)}
+                >
+                  ← {previousView.label}
+                </button>
+              )}
+              <button
+                type="button"
+                className="button primary"
+                onClick={() => openWorkspace(nextView.id)}
+              >
+                {nextView.label} →
+              </button>
+            </nav>
+          </footer>
         </div>
       </section>
 

@@ -80,8 +80,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /keepListeningRef/);
   assert.match(page, /voice-live-transcript/);
   assert.match(page, /function openWorkspace/);
-  assert.match(page, /openWorkspace\("Market Insights"\)/);
-  assert.match(page, /openWorkspace\("Interview Studio"\)/);
+  assert.match(page, /const flowViews/);
+  assert.match(page, /workspace-next-step/);
+  assert.match(page, /workflow-prerequisite/);
+  assert.match(page, /openWorkspace\(nextView\.id\)/);
   assert.match(page, /localizedPath\(locale, "account"\).*plan=community/s);
   assert.match(page, /localizedPath\(locale, "account"\).*plan=pro/s);
   assert.match(page, /localizedPath\(locale, "account"\).*plan=team/s);
@@ -114,7 +116,9 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(speech, /เล่าตัวอย่าง/);
   assert.match(speech, /Nieleze/);
   assert.doesNotMatch(seoPage, /next\/link|<Link\b/);
-  assert.match(seoPage, /href=\{`\$\{homePath\}#workspace`\}/);
+  assert.match(seoPage, /const workspaceHref/);
+  assert.match(seoPage, /seo-workflow-nav/);
+  assert.match(seoPage, /href=\{workspaceHref\}/);
   assert.doesNotMatch(seoPage, /github\.com\/weiyu1029\/careerproof-agent/);
   assert.match(auth, /oai-authenticated-user-id/);
   assert.match(auth, /oai-authenticated-user-email/);

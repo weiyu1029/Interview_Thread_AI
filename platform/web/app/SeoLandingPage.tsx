@@ -20,6 +20,13 @@ export function SeoLandingPage({
   const homePath = localizedPath(locale);
   const pagePath = localizedPath(locale, page.path);
   const pageUrl = `${siteUrl}${pagePath}`;
+  const workspaceHref = `${homePath}?view=${encodeURIComponent(page.workspaceView)}#workspace`;
+  const workflow = [
+    { view: "Analyze", label: core.analyze },
+    { view: "Recommendations", label: core.recommendations },
+    { view: "Tracker", label: core.tracker },
+    { view: "Interview Studio", label: core.interview },
+  ];
   const related = SEO_PAGE_KEYS.map((key) => localizedSeoPage(key, locale)).filter(
     (candidate) => candidate.path !== page.path,
   );
@@ -88,11 +95,24 @@ export function SeoLandingPage({
         <nav aria-label="Page navigation">
           <a href="#how-it-works">{ui.howItWorks}</a>
           <a href="#questions">{ui.questions}</a>
-          <a className="button secondary" href={`${homePath}#workspace`}>
+          <a className="button secondary" href={workspaceHref}>
             {ui.openWorkspace}
           </a>
         </nav>
       </header>
+
+      <nav className="seo-workflow-nav" aria-label={ui.exploreWorkflow}>
+        {workflow.map((step, index) => (
+          <a
+            className={page.workspaceView === step.view ? "active" : ""}
+            href={`${homePath}?view=${encodeURIComponent(step.view)}#workspace`}
+            key={step.view}
+          >
+            <span>{index + 1}</span>
+            {step.label}
+          </a>
+        ))}
+      </nav>
 
       <section className="seo-hero">
         <div>
@@ -105,7 +125,7 @@ export function SeoLandingPage({
           <div className="hero-actions">
             <a
               className="button primary"
-              href={`${homePath}?view=${encodeURIComponent(page.workspaceView)}#workspace`}
+              href={workspaceHref}
             >
               {page.primaryCta}
             </a>
@@ -215,7 +235,7 @@ export function SeoLandingPage({
       <section className="seo-final-cta">
         <p className="eyebrow">Map your evidence. Own your story.</p>
         <h2>{ui.finalTitle}</h2>
-        <a className="button primary" href={`${homePath}#workspace`}>
+        <a className="button primary" href={workspaceHref}>
           {ui.openProduct}
         </a>
       </section>
