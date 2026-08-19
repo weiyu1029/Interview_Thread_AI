@@ -545,6 +545,82 @@ input:focus {
   border: 1px solid #dde3e6;
   background: #f7f8f8;
 }
+.source-connector {
+  margin: 0 0 18px;
+  padding: 17px;
+  border: 1px solid #ccd6dc;
+  border-radius: 12px;
+  background: #f1f4f5;
+}
+.source-connector-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+.source-connector-heading .eyebrow {
+  margin-bottom: 5px;
+}
+.source-connector-heading h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.source-connector-heading p:last-child {
+  max-width: 720px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+.source-connector-form {
+  display: grid;
+  grid-template-columns: 0.75fr 1.7fr auto;
+  align-items: end;
+  gap: 10px;
+}
+.source-connector-form .button {
+  min-width: 150px;
+}
+.source-connector-form .button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+  transform: none;
+}
+.source-message {
+  margin: 11px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.source-message.error {
+  border: 1px solid #e6c9c1;
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+.source-message.connected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #cbdcd4;
+  background: var(--positive-soft);
+  color: #365a4b;
+}
+.source-message.connected b,
+.source-message.connected span {
+  display: block;
+}
+.source-message.connected span {
+  margin-top: 2px;
+  color: #60756c;
+  font-size: 9px;
+}
+.source-message.connected a {
+  font-weight: 720;
+  white-space: nowrap;
+}
 .source-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -768,6 +844,15 @@ input:focus {
   color: #758089;
   font-size: 10px;
 }
+.job-heading .job-provenance {
+  display: block;
+  margin-top: 6px;
+  color: #526b7c;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
 .trend {
   height: fit-content;
   border-radius: 99px;
@@ -782,6 +867,10 @@ input:focus {
 .trend.down {
   color: var(--negative);
   background: var(--negative-soft);
+}
+.trend.live {
+  color: var(--positive);
+  background: var(--positive-soft);
 }
 .story-callout {
   margin: 14px 0;
@@ -832,9 +921,14 @@ input:focus {
 }
 .job-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 15px;
+}
+.job-actions .source-link {
+  margin-right: auto;
+  font-size: 10px;
 }
 .job-actions .button {
   min-height: 35px;
@@ -1342,8 +1436,16 @@ input:focus {
   .input-grid,
   .filter-grid,
   .recommendation-filters,
-  .market-filters {
+  .market-filters,
+  .source-connector-form {
     grid-template-columns: 1fr;
+  }
+  .source-connector-form .button {
+    width: 100%;
+  }
+  .source-connector-heading,
+  .source-message.connected {
+    flex-direction: column;
   }
   .recommendation-filters .wide {
     grid-column: 1;
@@ -1380,6 +1482,9 @@ input:focus {
   }
   .job-actions .button {
     width: 100%;
+  }
+  .job-actions .source-link {
+    margin: 0 0 4px;
   }
   .job-signals {
     grid-template-columns: 1fr;
