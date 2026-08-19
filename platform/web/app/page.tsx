@@ -20,6 +20,14 @@ import {
 } from "./i18n";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
+import {
+  bestSpeechVoice,
+  InterviewPersonaId,
+  localizedInterviewQuestion,
+  localizedPersonaLabel,
+  speechLocaleFor,
+  speechRateFor,
+} from "./interview-speech";
 import { SEO_PAGE_KEYS } from "./seo-content";
 import { localizedSeoPage } from "./seo-localization";
 
@@ -110,13 +118,6 @@ type WorkspaceView =
   | "Copilot"
   | "Feedback";
 type ApplicationMode = "Manual" | "Hybrid" | "Automatic";
-type InterviewPersonaId =
-  | "hr"
-  | "hiring-manager"
-  | "coo"
-  | "ceo"
-  | "peer"
-  | "case";
 type InterviewMode = "Coaching" | "Realistic";
 type InterviewScore = {
   relevance: number;
@@ -148,6 +149,12 @@ type InterviewCopy = {
   mute: string;
   listen: string;
   listening: string;
+  stopListening: string;
+  liveTranscript: string;
+  speechLanguage: string;
+  recognitionConfidence: string;
+  noSpeech: string;
+  permissionDenied: string;
   unavailable: string;
   scoreTitle: string;
   relevance: string;
@@ -357,6 +364,12 @@ const INTERVIEW_COPY: Partial<Record<LocaleCode, Partial<InterviewCopy>>> = {
     mute: "停止朗讀",
     listen: "語音作答",
     listening: "正在聆聽",
+    stopListening: "停止語音輸入",
+    liveTranscript: "即時辨識",
+    speechLanguage: "語音語言",
+    recognitionConfidence: "辨識信心",
+    noSpeech: "尚未聽到清楚語音，請靠近麥克風後再試一次。",
+    permissionDenied: "請允許瀏覽器使用麥克風，或改用文字作答。",
     unavailable: "此瀏覽器不支援語音輸入，仍可使用文字作答。",
     scoreTitle: "回答訊號",
     relevance: "JD 關聯",
@@ -389,6 +402,12 @@ const INTERVIEW_COPY: Partial<Record<LocaleCode, Partial<InterviewCopy>>> = {
     mute: "停止朗读",
     listen: "语音作答",
     listening: "正在聆听",
+    stopListening: "停止语音输入",
+    liveTranscript: "实时识别",
+    speechLanguage: "语音语言",
+    recognitionConfidence: "识别置信度",
+    noSpeech: "尚未听到清晰语音，请靠近麦克风后重试。",
+    permissionDenied: "请允许浏览器使用麦克风，或改用文字作答。",
     unavailable: "此浏览器不支持语音输入，仍可使用文字作答。",
     scoreTitle: "回答信号",
     relevance: "JD 关联",
@@ -421,6 +440,12 @@ const INTERVIEW_COPY: Partial<Record<LocaleCode, Partial<InterviewCopy>>> = {
     mute: "読み上げを停止",
     listen: "音声で回答",
     listening: "聞き取り中",
+    stopListening: "音声入力を停止",
+    liveTranscript: "リアルタイム認識",
+    speechLanguage: "音声言語",
+    recognitionConfidence: "認識信頼度",
+    noSpeech: "明瞭な音声を検出できませんでした。マイクに近づいて再度お試しください。",
+    permissionDenied: "マイクの使用を許可するか、テキストで回答してください。",
     unavailable: "このブラウザでは音声入力を利用できません。",
     scoreTitle: "回答シグナル",
     relevance: "求人との関連",
@@ -453,6 +478,12 @@ const INTERVIEW_COPY: Partial<Record<LocaleCode, Partial<InterviewCopy>>> = {
     mute: "읽기 중지",
     listen: "음성 답변",
     listening: "듣는 중",
+    stopListening: "음성 입력 중지",
+    liveTranscript: "실시간 인식",
+    speechLanguage: "음성 언어",
+    recognitionConfidence: "인식 신뢰도",
+    noSpeech: "선명한 음성이 감지되지 않았습니다. 마이크에 가까이 말한 뒤 다시 시도하세요.",
+    permissionDenied: "브라우저에서 마이크 사용을 허용하거나 텍스트로 답변하세요.",
     unavailable: "이 브라우저에서는 음성 입력을 지원하지 않습니다.",
     scoreTitle: "답변 신호",
     relevance: "JD 연관성",
@@ -488,6 +519,12 @@ const EN_INTERVIEW_COPY: InterviewCopy = {
   mute: "Stop speaking",
   listen: "Answer by voice",
   listening: "Listening",
+  stopListening: "Stop voice input",
+  liveTranscript: "Live transcript",
+  speechLanguage: "Speech language",
+  recognitionConfidence: "Recognition confidence",
+  noSpeech: "No clear speech was detected. Move closer to the microphone and try again.",
+  permissionDenied: "Allow microphone access in your browser, or answer by text.",
   unavailable: "Voice input is not supported in this browser. You can still type.",
   scoreTitle: "Answer signals",
   relevance: "JD relevance",
@@ -978,11 +1015,14 @@ function questionForInterview(
   persona: InterviewPersonaId,
   turn: number,
   matches: Match[],
+  locale: LocaleCode,
 ) {
   const proof = firstEvidence(matches);
   const gap = matches.find((item) => item.status === "Gap");
   const proofLabel = proof?.keyword || "the most relevant achievement on your resume";
   const gapLabel = gap?.keyword || "an unfamiliar part of this role";
+  if (locale !== "en")
+    return localizedInterviewQuestion(locale, turn, proofLabel, gapLabel);
   const questions: Record<InterviewPersonaId, string[]> = {
     hr: [
       `Give me the two-minute version of your career story, and connect it directly to this role—not just your job titles.`,
@@ -1016,6 +1056,34 @@ function questionForInterview(
     ],
   };
   return questions[persona][Math.min(turn, questions[persona].length - 1)];
+}
+
+function questionOnly(content: string) {
+  return content.split(/\n\s*\n/).filter(Boolean).at(-1)?.trim() || content;
+}
+
+function appendTranscript(current: string, next: string, locale: LocaleCode) {
+  if (!current.trim()) return next.trim();
+  const separator = ["zh-CN", "zh-TW", "ja", "th"].includes(locale)
+    ? ""
+    : " ";
+  return `${current.trim()}${separator}${next.trim()}`;
+}
+
+async function availableSpeechVoices() {
+  const current = window.speechSynthesis.getVoices();
+  if (current.length) return current;
+  return new Promise<SpeechSynthesisVoice[]>((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.speechSynthesis.removeEventListener("voiceschanged", finish);
+      resolve(window.speechSynthesis.getVoices());
+    };
+    window.speechSynthesis.addEventListener("voiceschanged", finish);
+    window.setTimeout(finish, 800);
+  });
 }
 
 function scoreInterviewAnswer(answer: string, matches: Match[]): InterviewScore {
@@ -1201,6 +1269,10 @@ export default function Home({
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
+  const [voiceInterim, setVoiceInterim] = useState("");
+  const [recognitionConfidence, setRecognitionConfidence] = useState<
+    number | null
+  >(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
@@ -1213,7 +1285,11 @@ export default function Home({
   const selectedProvider =
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
   const preferencesLoaded = useRef(false);
-  const speechRecognitionRef = useRef<{ stop: () => void } | null>(null);
+  const speechRecognitionRef = useRef<{
+    start: () => void;
+    stop: () => void;
+  } | null>(null);
+  const keepListeningRef = useRef(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -1316,14 +1392,26 @@ export default function Home({
             messages?: ChatMessage[];
             turn?: number;
             scores?: InterviewScore | null;
+            locale?: LocaleCode;
           };
           if (INTERVIEW_PERSONAS.some((item) => item.id === session.persona))
             setInterviewPersona(session.persona as InterviewPersonaId);
           if (session.mode === "Coaching" || session.mode === "Realistic")
             setInterviewMode(session.mode);
-          if (Array.isArray(session.messages)) setInterviewMessages(session.messages);
-          if (Number.isInteger(session.turn)) setInterviewTurn(session.turn || 0);
-          if (session.scores) setInterviewScores(session.scores);
+          if (
+            session.locale ===
+              (initialLocale ||
+                (savedLocale &&
+                LANGUAGES.some(([code]) => code === savedLocale)
+                  ? savedLocale
+                  : "en")) &&
+            Array.isArray(session.messages)
+          ) {
+            setInterviewMessages(session.messages);
+            if (Number.isInteger(session.turn))
+              setInterviewTurn(session.turn || 0);
+            if (session.scores) setInterviewScores(session.scores);
+          }
         } catch {
           window.localStorage.removeItem("aptograph-interview-session");
         }
@@ -1364,6 +1452,9 @@ export default function Home({
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
+    keepListeningRef.current = false;
+    speechRecognitionRef.current?.stop();
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     if (preferencesLoaded.current)
       window.localStorage.setItem("aptograph-locale", locale);
   }, [locale]);
@@ -1390,9 +1481,17 @@ export default function Home({
         messages: interviewMessages.slice(-12),
         turn: interviewTurn,
         scores: interviewScores,
+        locale,
       }),
     );
-  }, [interviewMessages, interviewMode, interviewPersona, interviewScores, interviewTurn]);
+  }, [
+    interviewMessages,
+    interviewMode,
+    interviewPersona,
+    interviewScores,
+    interviewTurn,
+    locale,
+  ]);
 
   useEffect(() => {
     if (!preferencesLoaded.current) return;
@@ -1404,6 +1503,7 @@ export default function Home({
 
   useEffect(
     () => () => {
+      keepListeningRef.current = false;
       speechRecognitionRef.current?.stop();
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     },
@@ -1992,13 +2092,18 @@ export default function Home({
   }
 
   function startInterview() {
+    keepListeningRef.current = false;
+    speechRecognitionRef.current?.stop();
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    const opening = questionForInterview(interviewPersona, 0, matches);
+    const opening = questionForInterview(interviewPersona, 0, matches, locale);
     setInterviewMessages([{ role: "assistant", content: opening }]);
     setInterviewTurn(0);
     setInterviewScores(null);
     setInterviewAnswer("");
     setVoiceMessage("");
+    setVoiceInterim("");
+    setRecognitionConfidence(null);
+    setIsListening(false);
     setIsSpeaking(false);
   }
 
@@ -2006,12 +2111,15 @@ export default function Home({
     event.preventDefault();
     const answer = interviewAnswer.trim();
     if (!answer || !interviewMessages.length) return;
+    keepListeningRef.current = false;
+    speechRecognitionRef.current?.stop();
     const scores = scoreInterviewAnswer(answer, matches);
     const nextTurn = interviewTurn + 1;
     const nextQuestion = questionForInterview(
       interviewPersona,
       nextTurn,
       matches,
+      locale,
     );
     const feedback = interviewFeedback(scores, interview, interviewMode);
     setInterviewMessages((current) => [
@@ -2029,9 +2137,12 @@ export default function Home({
     setInterviewTurn(nextTurn);
     setInterviewAnswer("");
     setVoiceMessage("");
+    setVoiceInterim("");
+    setRecognitionConfidence(null);
+    setIsListening(false);
   }
 
-  function speakLatestInterviewQuestion() {
+  async function speakLatestInterviewQuestion() {
     if (!("speechSynthesis" in window) || !interviewMessages.length) {
       setVoiceMessage(interview.unavailable);
       return;
@@ -2045,30 +2156,55 @@ export default function Home({
       .reverse()
       .find((message) => message.role === "assistant");
     if (!latest) return;
-    const utterance = new SpeechSynthesisUtterance(latest.content);
-    utterance.lang = locale;
-    utterance.rate = interviewMode === "Realistic" ? 1.04 : 0.94;
+    const speechLocale = speechLocaleFor(locale);
+    const utterance = new SpeechSynthesisUtterance(
+      questionOnly(latest.content),
+    );
+    utterance.lang = speechLocale;
+    utterance.rate = speechRateFor(
+      locale,
+      interviewMode === "Realistic",
+    );
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    const voice = bestSpeechVoice(await availableSpeechVoices(), locale);
+    if (voice) utterance.voice = voice;
     utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setVoiceMessage(interview.unavailable);
+    };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
+    setVoiceMessage(
+      `${interview.speechLanguage}: ${speechLocale}${voice ? ` · ${voice.name}` : ""}`,
+    );
   }
 
   function toggleInterviewListening() {
+    type RecognitionAlternative = {
+      transcript: string;
+      confidence?: number;
+    };
+    type RecognitionResult = ArrayLike<RecognitionAlternative> & {
+      isFinal?: boolean;
+    };
     type BrowserRecognition = {
       lang: string;
       continuous: boolean;
       interimResults: boolean;
+      maxAlternatives: number;
       start: () => void;
       stop: () => void;
       onresult:
         | ((event: {
-            results: ArrayLike<ArrayLike<{ transcript: string }>>;
+            resultIndex?: number;
+            results: ArrayLike<RecognitionResult>;
           }) => void)
         | null;
       onend: (() => void) | null;
-      onerror: (() => void) | null;
+      onerror: ((event: { error?: string }) => void) | null;
     };
     type RecognitionConstructor = new () => BrowserRecognition;
     const voiceWindow = window as typeof window & {
@@ -2082,31 +2218,97 @@ export default function Home({
       return;
     }
     if (isListening) {
+      keepListeningRef.current = false;
       speechRecognitionRef.current?.stop();
       setIsListening(false);
+      setVoiceInterim("");
       return;
     }
     const recognition = new Recognition();
-    recognition.lang = locale;
+    const speechLocale = speechLocaleFor(locale);
+    recognition.lang = speechLocale;
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
     recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((result) => result[0]?.transcript || "")
-        .join(" ")
-        .trim();
-      if (transcript)
-        setInterviewAnswer((current) => `${current} ${transcript}`.trim());
+      const finalSegments: string[] = [];
+      const interimSegments: string[] = [];
+      const confidences: number[] = [];
+      const startIndex = event.resultIndex || 0;
+      for (let index = startIndex; index < event.results.length; index += 1) {
+        const result = event.results[index];
+        const alternatives = Array.from(result).sort(
+          (left, right) => (right.confidence || 0) - (left.confidence || 0),
+        );
+        const best = alternatives[0];
+        const transcript = best?.transcript?.trim();
+        if (!transcript) continue;
+        if (typeof best.confidence === "number" && best.confidence > 0)
+          confidences.push(best.confidence);
+        if (result.isFinal) finalSegments.push(transcript);
+        else interimSegments.push(transcript);
+      }
+      const finalText = finalSegments.join(
+        ["zh-CN", "zh-TW", "ja", "th"].includes(locale) ? "" : " ",
+      );
+      if (finalText)
+        setInterviewAnswer((current) =>
+          appendTranscript(current, finalText, locale),
+        );
+      setVoiceInterim(
+        interimSegments.join(
+          ["zh-CN", "zh-TW", "ja", "th"].includes(locale) ? "" : " ",
+        ),
+      );
+      if (confidences.length)
+        setRecognitionConfidence(
+          Math.round(
+            (confidences.reduce((sum, value) => sum + value, 0) /
+              confidences.length) *
+              100,
+          ),
+        );
     };
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => {
-      setIsListening(false);
-      setVoiceMessage(interview.unavailable);
+    recognition.onend = () => {
+      if (keepListeningRef.current) {
+        window.setTimeout(() => {
+          if (!keepListeningRef.current) return;
+          try {
+            recognition.start();
+          } catch {
+            keepListeningRef.current = false;
+            setIsListening(false);
+          }
+        }, 250);
+      } else {
+        setIsListening(false);
+      }
+    };
+    recognition.onerror = (event) => {
+      const error = event.error || "";
+      if (["not-allowed", "service-not-allowed"].includes(error)) {
+        keepListeningRef.current = false;
+        setVoiceMessage(interview.permissionDenied);
+      } else if (error === "no-speech") {
+        setVoiceMessage(interview.noSpeech);
+      } else if (error !== "aborted") {
+        setVoiceMessage(interview.unavailable);
+      }
+      if (error !== "no-speech") setIsListening(false);
     };
     speechRecognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-    setVoiceMessage("");
+    keepListeningRef.current = true;
+    try {
+      recognition.start();
+      setIsListening(true);
+      setVoiceInterim("");
+      setRecognitionConfidence(null);
+      setVoiceMessage(`${interview.speechLanguage}: ${speechLocale}`);
+    } catch {
+      keepListeningRef.current = false;
+      setIsListening(false);
+      setVoiceMessage(interview.unavailable);
+    }
   }
   async function sendFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -2174,9 +2376,17 @@ export default function Home({
   const suggestedLanguageName = suggestedLocale
     ? LANGUAGES.find(([code]) => code === suggestedLocale)?.[1]
     : null;
-  const selectedInterviewPersona =
+  const selectedInterviewPersonaBase =
     INTERVIEW_PERSONAS.find((item) => item.id === interviewPersona) ||
     INTERVIEW_PERSONAS[1];
+  const selectedInterviewPersona = {
+    ...selectedInterviewPersonaBase,
+    label: localizedPersonaLabel(
+      locale,
+      selectedInterviewPersonaBase.id,
+      selectedInterviewPersonaBase.label,
+    ),
+  };
   const interviewProof = firstEvidence(matches);
   const interviewGap = matches.find((item) => item.status === "Gap");
   const interviewAverage = interviewScores
@@ -2577,11 +2787,11 @@ export default function Home({
                       setInterviewScores(null);
                     }}
                   >
-                    {INTERVIEW_PERSONAS.map((persona) => (
-                      <option value={persona.id} key={persona.id}>
-                        {persona.label}
-                      </option>
-                    ))}
+                  {INTERVIEW_PERSONAS.map((persona) => (
+                    <option value={persona.id} key={persona.id}>
+                      {localizedPersonaLabel(locale, persona.id, persona.label)}
+                    </option>
+                  ))}
                   </select>
                 </label>
                 <fieldset>
@@ -2710,6 +2920,19 @@ export default function Home({
                       placeholder={interview.placeholder}
                       disabled={!interviewMessages.length}
                     />
+                    {(isListening || voiceInterim) && (
+                      <div className="voice-live-transcript" role="status">
+                        <span>
+                          {interview.liveTranscript} · {interview.listening}
+                        </span>
+                        <p>{voiceInterim || "…"}</p>
+                        {recognitionConfidence !== null && (
+                          <b>
+                            {interview.recognitionConfidence} {recognitionConfidence}%
+                          </b>
+                        )}
+                      </div>
+                    )}
                     <div className="interview-answer-actions">
                       <button
                         type="button"
@@ -2718,7 +2941,9 @@ export default function Home({
                         disabled={!interviewMessages.length}
                         aria-pressed={isListening}
                       >
-                        {isListening ? interview.listening : interview.listen}
+                        {isListening
+                          ? interview.stopListening
+                          : interview.listen}
                       </button>
                       <button
                         className="button primary"
@@ -2729,7 +2954,7 @@ export default function Home({
                     </div>
                     <small className="voice-disclosure">
                       {voiceMessage ||
-                        `${interview.privacy} Voice recognition may use your browser's speech service.`}
+                        `${interview.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
                     </small>
                   </form>
                 </section>
