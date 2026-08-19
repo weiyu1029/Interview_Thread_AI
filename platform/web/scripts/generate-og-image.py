@@ -91,13 +91,13 @@ def generate() -> None:
     # Brand lockup.
     draw.rounded_rectangle((62, 58, 108, 104), radius=14, fill=GRAPHITE)
     draw.arc((70, 66, 100, 96), start=38, end=320, fill=WHITE, width=3)
-    draw.text((80, 71), "S", font=font(19, "Bold"), fill=MIST)
+    draw.text((76, 71), "CS", font=font(15, "Bold"), fill=MIST)
     draw.ellipse((96, 69, 102, 75), fill=WHITE)
     draw.text((124, 66), "CareerStoryMap", font=font(25, "SemiBold"), fill=INK)
     text_with_tracking(
         draw,
         (125, 95),
-        "EVIDENCE TO OPPORTUNITY",
+        "INTERVIEW PROOF PACK",
         font(9, "Bold"),
         MUTED,
         2,
@@ -106,23 +106,23 @@ def generate() -> None:
     text_with_tracking(
         draw,
         (62, 166),
-        "CAREER STORY INTELLIGENCE",
+        "ONE JOB. ONE PROOF PACK.",
         font(12, "Bold"),
         MIST_DEEP,
         2,
     )
-    draw.text((60, 202), "Map your evidence.", font=font(56, "SemiBold"), fill=INK)
-    draw.text((60, 270), "Own your story.", font=font(56, "SemiBold"), fill=INK)
+    draw.text((60, 202), "Build interview stories", font=font(48, "SemiBold"), fill=INK)
+    draw.text((60, 262), "you can defend.", font=font(48, "SemiBold"), fill=INK)
     draw.text(
         (64, 367),
-        "Turn a resume and job description into a story\nyou can prove, practice, and tell with confidence.",
-        font=font(21, "Regular"),
+        "Turn one job description and your real experience into\nan evidence map, defensible stories, and a mock interview.",
+        font=font(19, "Regular"),
         fill=MUTED,
         spacing=10,
     )
 
     # Product promise chips.
-    chips = ["Resume evidence", "Job requirements", "Interview practice"]
+    chips = ["Evidence map", "Real gaps", "Role-specific follow-ups"]
     chip_x = 62
     for chip in chips:
         chip_width = int(draw.textlength(chip, font=font(12, "Medium"))) + 30
@@ -141,18 +141,18 @@ def generate() -> None:
     text_with_tracking(
         draw,
         (690, 88),
-        "YOUR STORY MAP",
+        "INTERVIEW PROOF PACK",
         font(11, "Bold"),
         MIST,
         2,
     )
-    draw.text((690, 119), "From source to confidence", font=font(29, "SemiBold"), fill=WHITE)
+    draw.text((690, 119), "Evidence you can defend", font=font(29, "SemiBold"), fill=WHITE)
 
-    card(draw, 176, "1", "Resume evidence", "What you have actually done")
+    card(draw, 176, "1", "Resume + JD", "What you did and what the role needs")
     draw.line((734, 268, 734, 284), fill=MIST_DEEP, width=2)
-    card(draw, 284, "2", "Job requirements", "What this role needs")
+    card(draw, 284, "2", "Evidence map", "Strong proof and real gaps")
     draw.line((734, 376, 734, 392), fill=MIST_DEEP, width=2)
-    card(draw, 392, "3", "Interview story", "Specific, truthful, and ready", active=True)
+    card(draw, 392, "3", "Stories + mock interview", "Specific, truthful, and ready", active=True)
 
     draw.rounded_rectangle((690, 510, 1080, 548), radius=19, fill="#E7EFF3")
     draw.ellipse((708, 523, 720, 535), fill=MIST_DEEP)

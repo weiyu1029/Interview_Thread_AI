@@ -14,7 +14,7 @@ streamlit_app.py
 
 1. Push the repository to GitHub.
 2. Open [Streamlit Community Cloud](https://share.streamlit.io/).
-3. Create an app from `weiyu1029/careerproof-agent`.
+3. Create an app from `weiyu1029/CareerStoryMap-agent`.
 4. Select the production branch.
 5. Set the main file path to `streamlit_app.py`.
 6. Deploy without a model key for deterministic public access.
@@ -51,14 +51,14 @@ Verify these paths before release:
 ## Docker deployment
 
 ```bash
-docker build -t careerproof-agent .
-docker run --rm -p 8501:8501 careerproof-agent
+docker build -t careerstorymap-agent .
+docker run --rm -p 8501:8501 careerstorymap-agent
 ```
 
 Pass a server key only when the deployment has appropriate controls:
 
 ```bash
-docker run --rm -p 8501:8501 -e GOOGLE_API_KEY careerproof-agent
+docker run --rm -p 8501:8501 -e GOOGLE_API_KEY careerstorymap-agent
 ```
 
 ## Privacy and operations checklist

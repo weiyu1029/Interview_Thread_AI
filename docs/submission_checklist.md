@@ -16,16 +16,16 @@
 ```bash
 git init
 git add .
-git commit -m "feat: add CareerProof Agent capstone project"
+git commit -m "feat: add CareerStoryMap Agent capstone project"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/careerproof-agent.git
+git remote add origin https://github.com/YOUR_USERNAME/CareerStoryMap-agent.git
 git push -u origin main
 ```
 
 ## Kaggle submission
 
 - Track: Concierge Agents
-- Title: CareerProof Agent
+- Title: CareerStoryMap Agent
 - Subtitle: A personal AI career concierge that turns job descriptions into evidence-based interview strategy.
 - Include GitHub link
 - Include demo video link if available

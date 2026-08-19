@@ -1,6 +1,6 @@
-# CareerProof Platform
+# CareerStoryMap Platform
 
-This directory is the production-oriented evolution path for CareerProof. The
+This directory is the production-oriented evolution path for CareerStoryMap. The
 root Streamlit application remains the simplest public reference deployment;
 the platform adds a professional web client and a multi-tenant API for accounts,
 permanent history, shared workspaces, and usage controls. Every feature is free

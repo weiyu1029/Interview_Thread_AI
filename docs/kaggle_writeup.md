@@ -1,4 +1,4 @@
-# CareerProof Agent
+# CareerStoryMap Agent
 
 ## Track
 
@@ -6,7 +6,7 @@ Concierge Agents
 
 ## Project summary
 
-CareerProof Agent is a personal AI career concierge that turns job descriptions into evidence-based interview strategy for business, data, BI, product, operations, strategy, consulting, and AI/data product candidates.
+CareerStoryMap Agent is a personal AI career concierge that turns job descriptions into evidence-based interview strategy for business, data, BI, product, operations, strategy, consulting, and AI/data product candidates.
 
 ## Problem
 
@@ -14,7 +14,7 @@ AI tools can generate polished answers, but candidates still struggle to underst
 
 ## Solution
 
-CareerProof analyzes a job description and candidate profile, then produces:
+CareerStoryMap analyzes a job description and candidate profile, then produces:
 
 - Role Problem Map
 - Industry Context
@@ -28,7 +28,7 @@ CareerProof analyzes a job description and candidate profile, then produces:
 
 ## Core insight
 
-Generic AI gives answers. CareerProof builds evidence.
+Generic AI gives answers. CareerStoryMap builds evidence.
 
 ## Technical implementation
 
@@ -36,7 +36,7 @@ The prototype uses Google ADK and Gemini. Deterministic Python tools handle priv
 
 ## Industry coverage
 
-CareerProof includes a 25-industry interview knowledge base, covering SaaS, FinTech, healthcare, retail, logistics, consulting, cybersecurity, HR Tech, EdTech, and more.
+CareerStoryMap includes a 25-industry interview knowledge base, covering SaaS, FinTech, healthcare, retail, logistics, consulting, cybersecurity, HR Tech, EdTech, and more.
 
 ## Market research
 
@@ -52,4 +52,4 @@ This is a prototype. It does not yet connect to live job boards, LinkedIn, ATS s
 
 ## Future vision
 
-CareerProof can grow into a career intelligence platform with a personal career graph, hiring signal database, industry interview knowledge graph, career coach marketplace, enterprise school dashboard, and API / agent marketplace version.
+CareerStoryMap can grow into a career intelligence platform with a personal career graph, hiring signal database, industry interview knowledge graph, career coach marketplace, enterprise school dashboard, and API / agent marketplace version.

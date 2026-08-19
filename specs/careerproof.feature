@@ -1,4 +1,4 @@
-Feature: CareerProof Agent
+Feature: CareerStoryMap Agent
 
   Scenario: Decode a job description
     Given a candidate provides a job description

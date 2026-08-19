@@ -26,11 +26,18 @@ export async function generateMetadata({
   const locale = localeFromPath(pathLocale);
   if (!locale) return {};
   const copy = copyFor(locale);
-  const title = `CareerStoryMap — ${copy.heroTitle}`;
+  const title =
+    locale === "en"
+      ? "CareerStoryMap — Build interview stories you can defend."
+      : `CareerStoryMap — ${copy.heroTitle}`;
+  const description =
+    locale === "en"
+      ? "CareerStoryMap finds your strongest evidence, exposes the real gaps, and drills you with role-specific follow-ups—without inventing achievements."
+      : copy.heroBody;
   const path = localizedPath(locale);
   return {
     title: { absolute: title },
-    description: copy.heroBody,
+    description,
     alternates: {
       canonical: path,
       languages: languageAlternates(),
@@ -40,7 +47,7 @@ export async function generateMetadata({
       siteName: "CareerStoryMap",
       url: path,
       title,
-      description: copy.heroBody,
+      description,
       locale: localeOpenGraph(locale),
       alternateLocale: LANGUAGES.filter(([code]) => code !== locale).map(
         ([code]) => localeOpenGraph(code),
@@ -50,14 +57,14 @@ export async function generateMetadata({
           url: "/og-careerstorymap.png",
           width: 1200,
           height: 630,
-          alt: "CareerStoryMap — Map your evidence. Own your story.",
+          alt: "CareerStoryMap Interview Proof Pack",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description: copy.heroBody,
+      description,
       images: ["/og-careerstorymap.png"],
     },
   };
@@ -68,12 +75,20 @@ export default async function LocalizedHome({ params }: LocalizedHomeProps) {
   const locale = localeFromPath(pathLocale);
   if (!locale) notFound();
   const copy = copyFor(locale);
+  const pageTitle =
+    locale === "en"
+      ? "CareerStoryMap — Build interview stories you can defend."
+      : `CareerStoryMap — ${copy.heroTitle}`;
+  const pageDescription =
+    locale === "en"
+      ? "CareerStoryMap finds your strongest evidence, exposes the real gaps, and drills you with role-specific follow-ups—without inventing achievements."
+      : copy.heroBody;
   const pageUrl = localizedPath(locale);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: `CareerStoryMap — ${copy.heroTitle}`,
-    description: copy.heroBody,
+    name: pageTitle,
+    description: pageDescription,
     url: pageUrl,
     inLanguage: locale,
     isPartOf: {

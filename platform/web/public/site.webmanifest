@@ -1,7 +1,7 @@
 {
   "name": "CareerStoryMap",
   "short_name": "CareerStoryMap",
-  "description": "Your evidence, mapped to what’s next.",
+  "description": "Turn one job description and your real experience into interview stories you can defend.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f4f3ef",

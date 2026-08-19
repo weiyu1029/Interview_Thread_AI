@@ -2,15 +2,15 @@
 
 ![CareerStoryMap](platform/web/public/og-careerstorymap.png)
 
-**CareerStoryMap — Map your evidence. Own your story.** is an open-source,
-evidence-grounded career intelligence platform. It compares a job description
-with a candidate's real experience, recommends stronger-fit roles worldwide,
-keeps missing proof visible, and turns the strongest evidence into a credible
-application and interview strategy.
+**CareerStoryMap turns one job description and your real experience into
+interview stories you can defend.** It is an open-source, evidence-grounded
+interview preparation product that links every suggestion to candidate evidence,
+keeps unsupported requirements visible as gaps, and rehearses role-specific
+follow-up questions without inventing achievements.
 
 > Keywords may be reformulated, never fabricated.
 
-[Try the professional web app](https://careerstorymap.com) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try CareerStoryMap](https://careerstorymap.com) · [Product strategy](docs/product_strategy.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Why CareerStoryMap exists
 
@@ -25,17 +25,20 @@ Generic keyword tools reward repetition. Generic AI tools can produce fluent but
 
 The result is useful for resume tailoring and interview preparation while remaining understandable and reviewable by a human.
 
-## What it produces
+## Interview Proof Pack
 
-- a transparent evidence-fit score and A–F grade;
-- weighted keyword coverage, exact wording coverage, evidence strength, and quantified-proof coverage;
-- an evidence matrix with Required / Core / Preferred priority;
-- exact and alias-aware keyword matches;
-- safe, evidence-backed wording suggestions;
-- honest skill and proof gaps;
-- role mission, industry context, and hiring-manager priorities;
-- interview stories, likely questions, and a seven-day preparation plan;
-- Markdown and JSON downloads for personal workflows.
+Provide one real resume, one real job description, and an interview date or
+current application stage. Within about ten minutes, CareerStoryMap produces:
+
+1. three strongest role-match proofs linked to source evidence;
+2. three real capability or evidence gaps;
+3. three to five defensible interview stories;
+4. ten likely role-specific follow-up questions;
+5. one focused 30-minute interview preparation plan.
+
+The primary journey is:
+
+`Resume + JD → Evidence Map → 3 Interview Stories → Mock Interview`
 
 CareerStoryMap does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
 
@@ -75,7 +78,7 @@ Start the complete local stack:
 ```bash
 cd platform
 cp .env.example .env
-# replace CAREERPROOF_JWT_SECRET before starting
+# replace the legacy CAREERPROOF_JWT_SECRET compatibility variable before starting
 docker compose up --build
 ```
 
@@ -181,7 +184,7 @@ The deterministic matrix remains canonical when Gemini is enabled.
 ## Project structure
 
 ```text
-careerproof-agent/
+CareerStoryMap-agent/
 ├── app/
 │   ├── agent.py                 # Google ADK entry point
 │   ├── schemas.py               # validated public request contract
@@ -241,8 +244,8 @@ Use `streamlit_app.py` as the entry point. The application is fully useful witho
 ### Docker
 
 ```bash
-docker build -t careerproof-agent .
-docker run --rm -p 8501:8501 careerproof-agent
+docker build -t careerstorymap-agent .
+docker run --rm -p 8501:8501 careerstorymap-agent
 ```
 
 ### Multi-user platform
@@ -263,7 +266,10 @@ feature incubator.
 
 ## Origins and attribution
 
-This repository is the recommended canonical home for the public CareerStoryMap project because it has a modular agent package, an English documentation set, an MIT license, tests, and a web deployment entry point. Existing package and repository names remain stable for contributor compatibility.
+This repository is the canonical home for the public CareerStoryMap project.
+The brand, domain, metadata, documentation, and product UI use CareerStoryMap.
+Legacy environment-variable and Python-module identifiers remain temporarily
+supported only to avoid breaking existing self-hosted installations.
 
 It incorporates product lessons from:
 

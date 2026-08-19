@@ -1,6 +1,6 @@
 # Global Recommendations and Market Insights
 
-CareerProof Global extends evidence matching into job discovery without turning
+CareerStoryMap Global extends evidence matching into job discovery without turning
 fluency into a substitute for truth. A recommendation is a ranked comparison
 between a licensed or imported job description and candidate-provided evidence.
 The system can improve framing, but it cannot manufacture experience.

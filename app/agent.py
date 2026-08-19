@@ -10,7 +10,7 @@ from google.adk.models import Gemini
 from google.genai import types
 
 from .config import MODEL_NAME
-from .schemas import CareerProofRequest
+from .schemas import CareerStoryMapRequest
 from .tools.evidence_mapper import build_evidence_prompts
 from .tools.industry_map import infer_industry
 from .tools.job_signals import extract_job_signals
@@ -29,10 +29,10 @@ def _extract_json(text: str) -> dict[str, Any]:
         return json.loads(match.group(0))
 
 
-def careerproof_strategy(input_json: str) -> str:
+def careerstorymap_strategy(input_json: str) -> str:
     """Build the evidence-based career intelligence report context."""
     payload = _extract_json(input_json)
-    request = CareerProofRequest.model_validate(payload)
+    request = CareerStoryMapRequest.model_validate(payload)
 
     job_description, jd_redactions = redact_with_counts(request.job_description)
     candidate_profile, profile_redactions = redact_with_counts(request.candidate_profile)
@@ -55,7 +55,7 @@ def careerproof_strategy(input_json: str) -> str:
     }
 
     return f"""
-You are CareerProof Agent, a personal AI career concierge.
+You are CareerStoryMap Agent, a personal AI career concierge.
 
 Your goal is not to fabricate interview answers.
 Your goal is to help a job seeker build credible, evidence-based interview strategy.
@@ -149,18 +149,18 @@ Rules:
 
 
 root_agent = Agent(
-    name="careerproof_agent",
+    name="careerstorymap_agent",
     model=Gemini(
         model=MODEL_NAME,
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=(
-        "You are CareerProof Agent. Always call the careerproof_strategy tool "
+        "You are CareerStoryMap Agent. Always call the careerstorymap_strategy tool "
         "when the user provides a job description or candidate profile. Use the "
         "tool output to write a structured, evidence-based career strategy report. "
         "Be practical, honest, and industry-specific. Never fabricate experience."
     ),
-    tools=[careerproof_strategy],
+    tools=[careerstorymap_strategy],
 )
 
 app = App(

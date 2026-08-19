@@ -31,7 +31,19 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /CareerStoryMap/);
-  assert.match(html, /Map your evidence\. Own your story\./i);
+  assert.match(
+    html,
+    /Turn one job description and your real experience into interview stories you can defend\./i,
+  );
+  assert.match(html, /Build my free evidence map/i);
+  assert.match(html, /See a 2-minute example/i);
+  assert.match(html, /Resume \+ JD/);
+  assert.match(html, /Evidence Map/);
+  assert.match(html, /3 Interview Stories/);
+  assert.match(html, /Mock Interview/);
+  assert.match(html, /Every suggestion links back to your evidence/i);
+  assert.match(html, /No invented achievements/i);
+  assert.match(html, /Interview Proof Pack/i);
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
   assert.match(html, /Market Insights/i);
@@ -58,7 +70,7 @@ test("localizes market filters while retaining canonical values", () => {
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
-  const [layout, page, i18n, speech, seoPage, auth, brandMark, mobileNav] = await Promise.all([
+  const [layout, page, i18n, speech, seoPage, auth, brandMark, mobileNav, readme, strategy, brandGuide] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
@@ -67,12 +79,28 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
     readFile(new URL("../app/chatgpt-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/BrandMark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobileNav.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../../../README.md", import.meta.url), "utf8"),
+    readFile(new URL("../../../docs/product_strategy.md", import.meta.url), "utf8"),
+    readFile(new URL("../../../docs/brand.md", import.meta.url), "utf8"),
   ]);
   await access(new URL("../public/og-careerstorymap.png", import.meta.url));
   assert.match(layout, /openGraph/);
   assert.match(layout, /twitter/);
   assert.match(layout, /\/og-careerstorymap\.png/);
   assert.match(layout, /application\/ld\+json/);
+  assert.match(layout, /Build interview stories you can defend/);
+  assert.match(page, /3 strongest role-match proofs/);
+  assert.match(page, /3 real evidence or capability gaps/);
+  assert.match(page, /10 likely follow-up questions/);
+  assert.match(page, /30-minute interview preparation/);
+  const heroSource = page.match(
+    /<section className="hero"[\s\S]*?<\/section>/,
+  )?.[0];
+  assert.ok(heroSource);
+  assert.doesNotMatch(
+    heroSource,
+    /Explore global demand|Automatic application|Team|Enterprise|40 languages/i,
+  );
   assert.match(page, /Ollama/);
   assert.match(page, /OpenAI-compatible/);
   assert.match(page, /parseDocuments/);
@@ -152,6 +180,9 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(mobileNav, /aria-expanded=\{open\}/);
   assert.match(mobileNav, /pointerdown/);
   assert.match(mobileNav, /Escape/);
+  for (const publicSurface of [layout, page, readme, strategy, brandGuide]) {
+    assert.doesNotMatch(publicSurface, /CareerProof/);
+  }
 });
 
 test("renders a localized registration page for free open-source access", async () => {
@@ -230,7 +261,14 @@ test("server-renders all 40 indexable language home pages", async () => {
     const response = await render(`/${localeToPath(locale)}`);
     assert.equal(response.status, 200, locale);
     const html = await response.text();
-    assert.ok(html.includes(copyFor(locale).heroTitle), locale);
+    assert.ok(
+      html.includes(
+        locale === "en"
+          ? "Turn one job description and your real experience into interview stories you can defend."
+          : copyFor(locale).heroTitle,
+      ),
+      locale,
+    );
     assert.ok(html.includes(`lang="${locale}"`), locale);
   }
 });

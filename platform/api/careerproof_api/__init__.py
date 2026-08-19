@@ -1,2 +1,2 @@
-"""CareerProof multi-tenant API."""
+"""CareerStoryMap multi-tenant API."""
 

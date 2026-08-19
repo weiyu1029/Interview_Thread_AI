@@ -27,9 +27,9 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const title = "CareerStoryMap — Map your evidence. Own your story.";
+  const title = "CareerStoryMap — Build interview stories you can defend.";
   const description =
-    "Match your resume to any job description, build credible career stories, practice AI interviews, and discover stronger-fit roles worldwide.";
+    "Turn one job description and your real experience into an evidence map, defensible interview stories, likely follow-up questions, and a focused mock interview.";
   const image = new URL("/og-careerstorymap.png", origin).toString();
   const englishHome = new URL("/en", origin).toString();
 
@@ -45,15 +45,13 @@ export async function generateMetadata(): Promise<Metadata> {
       languages: languageAlternates(),
     },
     keywords: [
-      "career evidence",
-      "AI job matching",
-      "career intelligence",
-      "resume analysis",
-      "resume keyword analysis",
+      "interview proof pack",
+      "resume job description match",
+      "interview story builder",
+      "career evidence map",
+      "resume evidence gaps",
       "AI mock interview",
       "interview story coaching",
-      "global jobs",
-      "multilingual job search",
       "open source career tools",
     ],
     applicationName: "CareerStoryMap",
@@ -85,7 +83,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: image,
           width: 1200,
           height: 630,
-          alt: "CareerStoryMap — Map your evidence. Own your story.",
+          alt: "CareerStoryMap Interview Proof Pack",
         },
       ],
     },
@@ -118,14 +116,15 @@ export default async function RootLayout({
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Evidence-grounded resume and job analysis, interview story development, multi-persona AI mock interviews, global job matching, market insights, and application tracking.",
+        "Turn a real resume and job description into an evidence-grounded Interview Proof Pack with defensible stories, visible gaps, likely follow-ups, and a focused mock interview.",
       featureList: [
-        "Evidence-grounded resume and job description analysis",
-        "Global job recommendations from approved employer sources",
-        "Market insight by geography and role",
-        "Multilingual interface across 40 languages",
-        "Voice and text mock interviews for HR, hiring manager, executive, peer, and case scenarios",
-        "Application tracker and career copilot",
+        "Resume-to-job-description evidence map",
+        "Three strongest role-match proofs",
+        "Three real capability or evidence gaps",
+        "Three to five defensible interview stories",
+        "Ten likely follow-up questions",
+        "Thirty-minute interview preparation plan",
+        "Evidence-grounded voice and text mock interviews",
       ],
       url: origin,
       inLanguage: LANGUAGES.map(([code]) => code),
@@ -147,7 +146,7 @@ export default async function RootLayout({
       alternateName: "Career Story Map",
       url: origin,
       description:
-        "Open-source global career intelligence grounded in the evidence a candidate can support.",
+        "Open-source interview preparation grounded in evidence a candidate can defend.",
       inLanguage: LANGUAGES.map(([code]) => code),
     },
   ];

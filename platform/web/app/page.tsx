@@ -36,8 +36,6 @@ import {
   speechLocaleFor,
   speechRateFor,
 } from "./interview-speech";
-import { SEO_PAGE_KEYS } from "./seo-content";
-import { localizedSeoPage } from "./seo-localization";
 
 type MatchStatus = "Strong evidence" | "Partial evidence" | "Gap";
 type Match = {
@@ -1092,6 +1090,7 @@ export default function Home({
     useState<ApplicationMode>("Manual");
   const [jd, setJd] = useState("");
   const [resume, setResume] = useState("");
+  const [interviewContext, setInterviewContext] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
@@ -1399,18 +1398,17 @@ export default function Home({
     });
   }
 
-  const score = useMemo(() => scoreMatches(matches), [matches]);
+  function loadProofPackExample(openAfterLoading = false) {
+    setJd(SAMPLE_JD);
+    setResume(SAMPLE_RESUME);
+    setInterviewContext("Hiring manager interview · next Tuesday");
+    setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
+    if (openAfterLoading) openWorkspace("Analyze");
+  }
+
   const strongCount = matches.filter(
     (item) => item.status === "Strong evidence",
   ).length;
-  const required = matches.filter((item) => item.priority === "Required");
-  const requiredScore = required.length
-    ? Math.round(
-        (required.filter((item) => item.status === "Strong evidence").length /
-          required.length) *
-          100,
-      )
-    : score;
   const recommendedJobs = useMemo<RankedJob[]>(
     () =>
       (sourceJobs || JOBS)
@@ -2213,16 +2211,17 @@ export default function Home({
     label: string;
     description: string;
   }[] = [
-    { id: "Analyze", label: copy.analyze, description: detail.compare },
     {
-      id: "Recommendations",
-      label: copy.recommendations,
-      description: detail.recommendationsTitle,
+      id: "Analyze",
+      label: locale === "en" ? "Interview Proof Pack" : copy.analyze,
+      description:
+        locale === "en"
+          ? "Resume + JD → evidence, gaps, stories, and a prep plan"
+          : detail.compare,
     },
-    { id: "Tracker", label: copy.tracker, description: detail.trackerTitle },
     {
       id: "Interview Studio",
-      label: copy.interview,
+      label: locale === "en" ? "Mock Interview" : copy.interview,
       description: interview.title,
     },
   ];
@@ -2231,6 +2230,12 @@ export default function Home({
     label: string;
     description: string;
   }[] = [
+    {
+      id: "Recommendations",
+      label: copy.recommendations,
+      description: detail.recommendationsTitle,
+    },
+    { id: "Tracker", label: copy.tracker, description: detail.trackerTitle },
     {
       id: "Market Insights",
       label: copy.market,
@@ -2245,21 +2250,15 @@ export default function Home({
   const previousView =
     flowIndex > 0
       ? flowViews[flowIndex - 1]
-      : active === "Market Insights" || active === "Copilot"
+      : flowIndex === -1
         ? flowViews[0]
-        : active === "Feedback"
-          ? flowViews[2]
-          : null;
+        : null;
   const nextView =
     flowIndex >= 0 && flowIndex < flowViews.length - 1
       ? flowViews[flowIndex + 1]
       : active === "Interview Studio"
-        ? flowViews[1]
-        : active === "Market Insights"
-          ? flowViews[1]
-          : active === "Copilot"
-            ? flowViews[3]
-            : flowViews[0];
+        ? flowViews[0]
+        : flowViews[1];
   const needsEvidence =
     !resume.trim() &&
     ["Recommendations", "Tracker", "Interview Studio", "Copilot"].includes(
@@ -2299,6 +2298,81 @@ export default function Home({
           5,
       )
     : null;
+  const landingTitle =
+    locale === "en"
+      ? "Turn one job description and your real experience into interview stories you can defend."
+      : copy.heroTitle;
+  const landingSubtitle =
+    locale === "en"
+      ? "CareerStoryMap finds your strongest evidence, exposes the real gaps, and drills you with role-specific follow-ups—without inventing achievements."
+      : copy.heroBody;
+  const landingPrimaryCta =
+    locale === "en" ? "Build my free evidence map" : detail.runMatch;
+  const landingSecondaryCta =
+    locale === "en" ? "See a 2-minute example" : detail.sample;
+  const proofPackFlow =
+    locale === "en"
+      ? [
+          "Resume + JD",
+          "Evidence Map",
+          "3 Interview Stories",
+          "Mock Interview",
+        ]
+      : [
+          `${detail.resumeEvidence} + ${detail.jobDescription}`,
+          detail.matrix,
+          `3 · ${detail.bestStory}`,
+          copy.interview,
+        ];
+  const proofPackOutputs =
+    locale === "en"
+      ? [
+          "3 strongest role-match proofs",
+          "3 real evidence or capability gaps",
+          "3–5 defensible interview stories",
+          "10 likely follow-up questions",
+          "30-minute interview prep plan",
+        ]
+      : [
+          detail.matchedEvidence,
+          detail.evidenceCoverage,
+          detail.bestStory,
+          copy.interview,
+          detail.readiness,
+        ];
+  const strongestProofs = matches
+    .filter(
+      (item) =>
+        item.status !== "Gap" && item.evidence !== "No source evidence found.",
+    )
+    .sort((a, b) => {
+      const rank = { "Strong evidence": 2, "Partial evidence": 1, Gap: 0 };
+      return rank[b.status] - rank[a.status];
+    })
+    .slice(0, 3);
+  const realGaps = matches
+    .filter((item) => item.status === "Gap")
+    .slice(0, 3);
+  const defensibleStories = strongestProofs.slice(0, 5);
+  const followUpQuestions = Array.from({ length: 10 }, (_, index) =>
+    localizedInterviewQuestion(
+      locale,
+      index % 5,
+      strongestProofs[index % Math.max(1, strongestProofs.length)]?.keyword ||
+        detail.matchedEvidence,
+      realGaps[index % Math.max(1, realGaps.length)]?.keyword ||
+        detail.evidenceCoverage,
+    ),
+  );
+  const prepPlan = [
+    { time: "0–5", label: proofPackFlow[1] },
+    { time: "5–15", label: proofPackFlow[2] },
+    { time: "15–25", label: proofPackFlow[3] },
+    {
+      time: "25–30",
+      label: locale === "en" ? "Gap review and final notes" : detail.evidenceCoverage,
+    },
+  ];
 
   return (
     <main className="app-shell">
@@ -2310,7 +2384,9 @@ export default function Home({
           </span>
         </a>
         <nav className="topnav" aria-label="Primary navigation">
-          <a href="#product">{detail.product}</a>
+          <a href="#product">
+            {locale === "en" ? "How it works" : detail.product}
+          </a>
           <a
             href="#workspace"
             onClick={(event) => {
@@ -2318,9 +2394,8 @@ export default function Home({
               openWorkspace("Analyze");
             }}
           >
-            {detail.workspace}
+            {locale === "en" ? "Interview Proof Pack" : detail.workspace}
           </a>
-          <a href="#career-tools">{copy.market}</a>
           <a href="#plans">{openSourceLabel}</a>
         </nav>
         <label className="locale-control">
@@ -2347,12 +2422,15 @@ export default function Home({
         <MobileNav
           label={detail.product}
           items={[
-            { label: detail.product, href: "#product" },
             {
-              label: detail.workspace,
+              label: locale === "en" ? "How it works" : detail.product,
+              href: "#product",
+            },
+            {
+              label:
+                locale === "en" ? "Interview Proof Pack" : detail.workspace,
               href: `${localizedPath(locale)}?view=Analyze#workspace`,
             },
-            { label: detail.explore, href: "#career-tools" },
             { label: openSourceLabel, href: "#plans" },
             {
               label: accountLabels.account,
@@ -2397,14 +2475,16 @@ export default function Home({
       )}
 
       <a className="skip-link" href="#workspace">
-        {copy.analyze}: {detail.resumeEvidence} + {detail.jobDescription}
+        {landingPrimaryCta}
       </a>
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">CareerStoryMap · Map your evidence. Own your story.</p>
-          <h1>{copy.heroTitle}</h1>
-          <p className="lede">{copy.heroBody}</p>
+          <p className="eyebrow">
+            {locale === "en" ? "Interview Proof Pack" : detail.evidenceWorkspace}
+          </p>
+          <h1>{landingTitle}</h1>
+          <p className="lede">{landingSubtitle}</p>
           <div className="hero-actions">
             <a
               className="button primary hero-primary-action"
@@ -2414,70 +2494,59 @@ export default function Home({
                 openWorkspace("Analyze");
               }}
             >
-              {copy.analyze}: {detail.resumeEvidence} + {detail.jobDescription}
+              {landingPrimaryCta}
             </a>
             <button
               className="button secondary"
               type="button"
-              onClick={() => {
-                setJd(SAMPLE_JD);
-                setResume(SAMPLE_RESUME);
-                setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
-                openWorkspace("Analyze");
-              }}
+              onClick={() => loadProofPackExample(true)}
             >
-              {detail.sample}
+              {landingSecondaryCta}
             </button>
           </div>
-          <ol className="journey-strip" aria-label={detail.workspace}>
-            {flowViews.map((item, index) => (
-              <li key={item.id}>
+          <ol className="journey-strip" aria-label={landingPrimaryCta}>
+            {proofPackFlow.map((item, index) => (
+              <li key={item}>
                 <span>{index + 1}</span>
-                <b>{item.label}</b>
+                <b>{item}</b>
               </li>
             ))}
           </ol>
           <div className="trust-row">
-            <span>{detail.evidenceLinked}</span>
-            <span>{detail.globalDiscovery}</span>
-            <span>{detail.languageCount}</span>
-            <span>{detail.openCore}</span>
-          </div>
-        </div>
-        <div className="hero-panel">
-          <div className="panel-heading">
-            <span>{detail.readiness}</span>
-            <span className="status-pill">
-              {matches.length ? detail.checked : detail.exampleSnapshot}
+            <span>
+              {locale === "en"
+                ? "Every suggestion links back to your evidence"
+                : detail.evidenceLinked}
+            </span>
+            <span>{detail.privateTitle}</span>
+            <span>
+              {locale === "en" ? "No invented achievements" : detail.matchedEvidence}
             </span>
           </div>
-          <div className="score-row">
-            <strong>{matches.length ? score : "—"}</strong>
-            <span>/ 100</span>
-          </div>
-          <div className="score-bar">
-            <i style={{ width: `${matches.length ? score : 0}%` }} />
-          </div>
-          <div className="metric-grid">
+        </div>
+        <div className="hero-panel proof-pack-card">
+          <div className="proof-pack-card-heading">
             <div>
-              <span>{detail.requiredMatch}</span>
-              <b>{matches.length ? `${requiredScore}%` : "—"}</b>
+              <span>{locale === "en" ? "Your outcome" : detail.results}</span>
+              <h2>Interview Proof Pack</h2>
             </div>
-            <div>
-              <span>{detail.evidenceCoverage}</span>
-              <b>
-                {matches.length ? `${strongCount} / ${matches.length}` : "—"}
-              </b>
-            </div>
-            <div>
-              <span>{detail.globalMatches}</span>
-              <b>{recommendedJobs.length}</b>
-            </div>
+            <span className="proof-pack-time">
+              {locale === "en" ? "Ready in about 10 min" : detail.readiness}
+            </span>
           </div>
-          <p className="insight">
+          <ol className="proof-pack-list">
+            {proofPackOutputs.map((item, index) => (
+              <li key={item}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <b>{item}</b>
+              </li>
+            ))}
+          </ol>
+          <p className="proof-pack-inputs">
+            <span>{locale === "en" ? "You provide" : detail.compare}</span>
             {locale === "en"
-              ? "Every interview story stays traceable to your resume evidence and the JD. CareerStoryMap trains what you can prove, then pressures the gaps without inventing experience."
-              : copy.heroBody}
+              ? "One real resume · One real JD · Interview date or application stage"
+              : `${detail.resumeEvidence} · ${detail.jobDescription}`}
           </p>
         </div>
       </section>
@@ -2587,12 +2656,7 @@ export default function Home({
               <button
                 type="button"
                 className="button primary"
-                onClick={() => {
-                  setJd(SAMPLE_JD);
-                  setResume(SAMPLE_RESUME);
-                  setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
-                  openWorkspace("Analyze");
-                }}
+                onClick={() => loadProofPackExample(true)}
               >
                 {detail.sample}
               </button>
@@ -2602,33 +2666,49 @@ export default function Home({
             <>
               <div className="section-heading">
                 <div>
-                  <p className="eyebrow">{detail.evidenceWorkspace}</p>
-                  <h2>{detail.compare}</h2>
+                  <p className="eyebrow">
+                    {locale === "en" ? "Core product" : detail.evidenceWorkspace}
+                  </p>
+                  <h2>
+                    {locale === "en"
+                      ? "Build your Interview Proof Pack"
+                      : detail.compare}
+                  </h2>
+                  <p>
+                    {locale === "en"
+                      ? "Add one real resume, one real job description, and your interview timing. CareerStoryMap will only use evidence it can trace back to your input."
+                      : copy.heroBody}
+                  </p>
                 </div>
                 <button
                   className="button secondary"
-                  onClick={() => {
-                    setJd(SAMPLE_JD);
-                    setResume(SAMPLE_RESUME);
-                    setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
-                  }}
+                  onClick={() => loadProofPackExample()}
                 >
                   {detail.sample}
                 </button>
               </div>
-              <ol className="workspace-progress" aria-label={detail.workspace}>
-                <li className={resume.trim() ? "complete" : "current"}>
-                  <span>1</span>
-                  <b>{detail.resumeEvidence}</b>
-                </li>
-                <li className={jd.trim() ? "complete" : resume.trim() ? "current" : ""}>
-                  <span>2</span>
-                  <b>{detail.jobDescription}</b>
-                </li>
-                <li className={resume.trim() && jd.trim() ? "current" : ""}>
-                  <span>3</span>
-                  <b>{detail.runMatch}</b>
-                </li>
+              <ol className="workspace-progress" aria-label={landingPrimaryCta}>
+                {proofPackFlow.map((item, index) => {
+                  const inputsReady = Boolean(resume.trim() && jd.trim());
+                  const className =
+                    index === 0
+                      ? inputsReady
+                        ? "complete"
+                        : "current"
+                      : index < 3 && matches.length
+                        ? "complete"
+                        : index === 1 && inputsReady
+                          ? "current"
+                          : index === 3 && matches.length
+                            ? "current"
+                            : "";
+                  return (
+                    <li className={className} key={item}>
+                      <span>{index + 1}</span>
+                      <b>{item}</b>
+                    </li>
+                  );
+                })}
               </ol>
               <div className="input-grid">
                 <div className="document-field guided-card">
@@ -2688,6 +2768,27 @@ export default function Home({
                   </label>
                 </div>
               </div>
+              <label className="proof-context-field">
+                <span>
+                  {locale === "en"
+                    ? "Interview date or current application stage"
+                    : interview.focus}
+                </span>
+                <input
+                  value={interviewContext}
+                  onChange={(event) => setInterviewContext(event.target.value)}
+                  placeholder={
+                    locale === "en"
+                      ? "Example: Hiring manager interview next Tuesday"
+                      : interview.focus
+                  }
+                />
+                <small>
+                  {locale === "en"
+                    ? "Optional. This helps prioritize the 30-minute preparation plan."
+                    : detail.readiness}
+                </small>
+              </label>
               {uploadMessage && (
                 <p className="notice" role="status">
                   {uploadMessage}
@@ -2696,8 +2797,12 @@ export default function Home({
               <div className="analysis-primary-action">
                 <div>
                   <span>3</span>
-                  <b>{detail.runMatch}</b>
-                  <small>{detail.matrix}</small>
+                  <b>{landingPrimaryCta}</b>
+                  <small>
+                    {locale === "en"
+                      ? "Evidence, gaps, stories, follow-ups, and a prep plan"
+                      : detail.matrix}
+                  </small>
                 </div>
                 <button
                   className="button primary"
@@ -2712,7 +2817,7 @@ export default function Home({
                   }}
                   disabled={modelRunning || !jd.trim() || !resume.trim()}
                 >
-                  {modelRunning ? "Running…" : detail.runMatch}
+                  {modelRunning ? "Running…" : landingPrimaryCta}
                 </button>
               </div>
               <details className="advanced-settings">
@@ -2809,6 +2914,152 @@ export default function Home({
                   )}
                 </div>
               </div>
+              {matches.length > 0 && (
+                <section className="interview-proof-pack" aria-labelledby="proof-pack-title">
+                  <div className="proof-pack-result-heading">
+                    <div>
+                      <p className="eyebrow">
+                        {locale === "en" ? "Your core result" : detail.results}
+                      </p>
+                      <h3 id="proof-pack-title">Interview Proof Pack</h3>
+                    </div>
+                    <span>
+                      {interviewContext ||
+                        (locale === "en" ? "Timing not added" : detail.readiness)}
+                    </span>
+                  </div>
+                  <div className="proof-pack-result-grid">
+                    <article>
+                      <div className="proof-pack-result-label">
+                        <span>01</span>
+                        <h4>
+                          {locale === "en"
+                            ? "Strongest role-match evidence"
+                            : detail.matchedEvidence}
+                        </h4>
+                      </div>
+                      {strongestProofs.length ? (
+                        <ol>
+                          {strongestProofs.map((item) => (
+                            <li key={item.keyword}>
+                              <b>{item.keyword}</b>
+                              <p>{item.evidence}</p>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className="proof-pack-empty">
+                          {locale === "en"
+                            ? "No defensible evidence found yet. Add a more detailed resume rather than inventing a claim."
+                            : detail.evidenceCoverage}
+                        </p>
+                      )}
+                    </article>
+                    <article>
+                      <div className="proof-pack-result-label">
+                        <span>02</span>
+                        <h4>
+                          {locale === "en" ? "Real gaps" : detail.evidenceCoverage}
+                        </h4>
+                      </div>
+                      {realGaps.length ? (
+                        <ol>
+                          {realGaps.map((item) => (
+                            <li key={item.keyword}>
+                              <b>{item.keyword}</b>
+                              <p>
+                                {locale === "en"
+                                  ? "The JD asks for this, but the resume does not provide supporting evidence."
+                                  : detail.sourcePolicy}
+                              </p>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className="proof-pack-empty">
+                          {locale === "en"
+                            ? "No unsupported requirements were detected in this JD."
+                            : detail.checked}
+                        </p>
+                      )}
+                    </article>
+                    <article className="proof-pack-stories">
+                      <div className="proof-pack-result-label">
+                        <span>03</span>
+                        <h4>
+                          {locale === "en"
+                            ? "Defensible interview stories"
+                            : detail.bestStory}
+                        </h4>
+                      </div>
+                      <ol>
+                        {defensibleStories.map((item, index) => (
+                          <li key={item.keyword}>
+                            <b>
+                              {locale === "en" ? `Story ${index + 1}` : `${index + 1}`} ·{" "}
+                              {item.keyword}
+                            </b>
+                            <p>{item.evidence}</p>
+                            <small>
+                              {locale === "en"
+                                ? "Prepare the context, your decision, your action, and the measurable outcome."
+                                : interview.storySpine}
+                            </small>
+                          </li>
+                        ))}
+                      </ol>
+                    </article>
+                    <article className="proof-pack-followups">
+                      <div className="proof-pack-result-label">
+                        <span>04</span>
+                        <h4>
+                          {locale === "en"
+                            ? "10 likely follow-up questions"
+                            : interview.focus}
+                        </h4>
+                      </div>
+                      <ol>
+                        {followUpQuestions.map((item, index) => (
+                          <li key={`${index}-${item}`}>
+                            <span>{String(index + 1).padStart(2, "0")}</span>
+                            <p>{item}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    </article>
+                    <article className="proof-pack-plan">
+                      <div className="proof-pack-result-label">
+                        <span>05</span>
+                        <h4>
+                          {locale === "en"
+                            ? "30-minute interview preparation"
+                            : detail.readiness}
+                        </h4>
+                      </div>
+                      <ol>
+                        {prepPlan.map((item) => (
+                          <li key={item.time}>
+                            <span>{item.time} min</span>
+                            <b>{item.label}</b>
+                          </li>
+                        ))}
+                      </ol>
+                      <button
+                        className="button primary"
+                        type="button"
+                        onClick={() => openWorkspace("Interview Studio")}
+                      >
+                        {locale === "en" ? "Start mock interview" : copy.interview}
+                      </button>
+                    </article>
+                  </div>
+                  <p className="proof-pack-integrity">
+                    {locale === "en"
+                      ? "Every item above comes from your resume and this JD. Missing evidence stays visible as a gap."
+                      : detail.sourcePolicy}
+                  </p>
+                </section>
+              )}
             </>
           )}
 
@@ -4034,64 +4285,43 @@ export default function Home({
 
       <section className="principles" id="product">
         <div>
-          <p className="eyebrow">{detail.product}</p>
+          <p className="eyebrow">
+            {locale === "en" ? "One product, one outcome" : detail.product}
+          </p>
           <h2>
             {locale === "en"
-              ? "A global career platform without a credibility shortcut"
+              ? "An Interview Proof Pack you can defend under follow-up."
               : copy.heroTitle}
           </h2>
         </div>
         <div className="principle-grid">
           <article>
             <span>01</span>
-            <h3>{detail.recommendationsTitle}</h3>
+            <h3>{locale === "en" ? "Find the proof" : detail.matchedEvidence}</h3>
             <p>
               {locale === "en"
-                ? "Rank roles by the requirements your real stories can support, then surface gaps before generating polished language."
+                ? "Map each important JD requirement to a specific line in your real resume or career evidence."
                 : copy.heroBody}
             </p>
           </article>
           <article>
             <span>02</span>
-            <h3>{detail.marketTitle}</h3>
+            <h3>{locale === "en" ? "Keep the gaps honest" : detail.evidenceCoverage}</h3>
             <p>
               {locale === "en"
-                ? "Filter openings and momentum by region, country, role family, industry, and time period with visible data provenance."
+                ? "Separate stronger wording from missing evidence so you know what to explain, learn, or leave as a real gap."
                 : copy.heroBody}
             </p>
           </article>
           <article>
             <span>03</span>
-            <h3>{copy.mode}</h3>
+            <h3>{locale === "en" ? "Defend the story" : copy.interview}</h3>
             <p>
               {locale === "en"
-                ? "All modes are free and open source. Hybrid always requires your approval, while automatic submission stays disabled until approved APIs, limits, consent, and an audit trail exist."
-                : modeMessage}
+                ? "Turn supported evidence into interview stories, then rehearse the questions a real interviewer is likely to ask next."
+                : interview.subtitle}
             </p>
           </article>
-        </div>
-      </section>
-      <section className="seo-hub" id="career-tools">
-        <div className="seo-hub-heading">
-          <p className="eyebrow">CareerStoryMap guides</p>
-          <h2>Start with the career decision in front of you.</h2>
-          <p>
-            Six focused tools connect resume evidence, job requirements,
-            interview confidence, role discovery, and market direction.
-          </p>
-        </div>
-        <div className="seo-hub-grid">
-          {SEO_PAGE_KEYS.map((pageKey, index) => {
-            const page = localizedSeoPage(pageKey, locale);
-            return (
-            <a href={localizedPath(locale, page.path)} key={page.path}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <h3>{page.navLabel}</h3>
-              <p>{page.description}</p>
-              <small>{locale === "en" ? "Explore guide" : copy.enter}</small>
-            </a>
-            );
-          })}
         </div>
       </section>
       <section className="plans" id="plans">
@@ -4105,15 +4335,12 @@ export default function Home({
             <h3>{openSourceLabel}</h3>
             <p className="price">{accountLabels.noCharge}</p>
             <ul>
-              <li>{detail.matrix}</li>
-              <li>{detail.languageCount}</li>
-              <li>{detail.recommendationsTitle}</li>
-              <li>{copy.manual} · {copy.hybrid} · {copy.automatic}</li>
-              <li>{copy.tracker}</li>
-              <li>{copy.market}</li>
-              <li>{detail.assistantTitle}</li>
-              <li>{detail.aiModel}</li>
-              <li>{copy.feedback}</li>
+              <li>{locale === "en" ? "Resume-to-JD evidence map" : detail.matrix}</li>
+              <li>{locale === "en" ? "Real gap detection" : detail.evidenceCoverage}</li>
+              <li>{locale === "en" ? "3–5 defensible interview stories" : detail.bestStory}</li>
+              <li>{locale === "en" ? "10 role-specific follow-up questions" : interview.focus}</li>
+              <li>{locale === "en" ? "30-minute preparation plan" : detail.readiness}</li>
+              <li>{locale === "en" ? "Evidence-grounded mock interview" : copy.interview}</li>
             </ul>
             <a
               className="button primary"

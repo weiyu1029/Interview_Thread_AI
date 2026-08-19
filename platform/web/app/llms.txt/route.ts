@@ -5,9 +5,9 @@ const siteUrl =
 export function GET() {
   const body = `# CareerStoryMap
 
-> Map your evidence. Own your story.
+> Turn one job description and your real experience into interview stories you can defend.
 
-CareerStoryMap is an open-source, evidence-grounded career intelligence platform. It helps people compare resume evidence with job descriptions, find stronger-fit roles from approved employer sources, understand market movement, prepare credible career stories, and track applications.
+CareerStoryMap is an open-source, evidence-grounded interview preparation product. A candidate provides one real resume, one real job description, and an interview date or application stage. CareerStoryMap returns an Interview Proof Pack without inventing achievements.
 
 ## Primary pages
 - Product: ${siteUrl}/en/#product
@@ -19,21 +19,25 @@ CareerStoryMap is an open-source, evidence-grounded career intelligence platform
 - Resume keyword analyzer: ${siteUrl}/en/resume-keyword-analyzer
 - Job match recommendations: ${siteUrl}/en/job-match-recommendations
 - Career market insights: ${siteUrl}/en/career-market-insights
-- Source code: https://github.com/weiyu1029/careerproof-agent
+- Source code: https://github.com/weiyu1029/CareerStoryMap-agent
 
 ## Language editions
 Every public page has an indexable, canonical language URL and reciprocal hreflang annotations. Supported URL prefixes are:
 /en, /ja, /ko, /zh-cn, /zh-tw, /es, /fr, /de, /pt-br, /it, /nl, /pl, /tr, /ru, /uk, /ar, /he, /hi, /bn, /ur, /id, /ms, /th, /vi, /fil, /sv, /no, /da, /fi, /cs, /sk, /hu, /ro, /el, /bg, /hr, /sr, /sl, /sw, and /fa.
 
 ## Core capabilities
-- Resume and job-description keyword evidence analysis
+- Three strongest role-match proofs linked to source evidence
+- Three real evidence or capability gaps
+- Three to five defensible interview stories
+- Ten likely role-specific follow-up questions
+- One focused 30-minute interview preparation plan
+- Evidence-grounded voice and text mock interviews
+
+## Secondary workspace tools
 - Global job recommendations with visible source provenance
-- Proof-to-Role Radar alerts based on evidence, must-have coverage, and quantified outcome strength
-- One-click or automatic tracking of proof-qualified roles with the best defensible story attached
 - Geographic and role-based market insight
-- 40-language interface
-- Manual, hybrid, and governed automatic application modes
-- Public feedback for everyone through one equal community queue
+- Application tracking, model selection, and public feedback
+- Localized public pages and interface support
 
 ## Access
 - Every public feature is free and open source

@@ -87,7 +87,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="CareerProof API",
+    title="CareerStoryMap API",
     version="1.1.0-alpha",
     description="Evidence-first global career analysis, job recommendation, market insight, tracking, collaboration, chat, and feedback API.",
     lifespan=lifespan,
@@ -135,7 +135,7 @@ def application_mode_entitlement(plan: str, mode: str) -> tuple[bool, str]:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "careerproof-api", "version": app.version}
+    return {"status": "ok", "service": "careerstorymap-api", "version": app.version}
 
 
 @app.get("/v1/plans")
@@ -604,7 +604,7 @@ async def send_chat_message(
         history = [{"role": item.role, "content": item.content} for item in thread.messages[-12:]]
         evidence = analysis.result if analysis else {"instruction": "Ask the user to run an analysis first."}
         messages = [
-            {"role": "system", "content": f"Use only this CareerProof evidence and never fabricate claims. Respond fully in locale {payload.locale}, except for source quotations and proper nouns: {evidence}"},
+            {"role": "system", "content": f"Use only this CareerStoryMap evidence and never fabricate claims. Respond fully in locale {payload.locale}, except for source quotations and proper nouns: {evidence}"},
             *history,
             {"role": "user", "content": payload.content},
         ]

@@ -1,6 +1,6 @@
 # Platform Architecture
 
-CareerProof uses a progressive architecture: anyone can start without an
+CareerStoryMap uses a progressive architecture: anyone can start without an
 account, while people who need permanent history or collaboration can move into
 the free account-backed platform without changing the
 evidence model.

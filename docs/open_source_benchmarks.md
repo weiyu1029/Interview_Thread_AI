@@ -1,10 +1,10 @@
 # Open-Source Product Benchmarks
 
-CareerProof borrows product patterns, not code, from established open-source
+CareerStoryMap borrows product patterns, not code, from established open-source
 career tools. Every upstream license still applies to any code or asset that a
 future contributor may intentionally reuse.
 
-| Project | Pattern worth learning from | CareerProof application |
+| Project | Pattern worth learning from | CareerStoryMap application |
 |---|---|---|
 | [career-ops](https://github.com/santifer/career-ops) | Career evidence as the source of truth; human confirmation before writes | Canonical evidence boundary and no auto-apply behavior |
 | [Resume Matcher](https://github.com/srbhr/Resume-Matcher) | Master resume, role-specific tailoring, keyword highlighting, interview preparation, local and remote models | Evidence matrix, story pack, and provider-agnostic routing |
@@ -13,7 +13,7 @@ future contributor may intentionally reuse.
 | [JobSync](https://github.com/Gsync/jobsync) | Permanent tracker, narrow evidence-aware assistant, explicit write confirmation | Workspace-scoped tracker, analysis-linked chat, and untrusted JD handling |
 | [VeriWorkly](https://github.com/VeriWorkly/veriworkly) | Local-first master profile, optional sync, usage controls, extensible API | Progressive persistence, usage events, and account-backed team plan |
 
-## What CareerProof should differentiate
+## What CareerStoryMap should differentiate
 
 - Keyword results show the exact candidate sentence used as evidence.
 - Required, core, and preferred requirements receive different weights.
@@ -27,6 +27,6 @@ future contributor may intentionally reuse.
 
 Automatic job application submission, covert scraping, unreviewed resume
 rewrites, and opaque "ATS prediction" scores create safety, platform-policy,
-and trust risks. CareerProof should instead make the candidate's evidence easier
+and trust risks. CareerStoryMap should instead make the candidate's evidence easier
 to inspect, improve, and communicate.
 
