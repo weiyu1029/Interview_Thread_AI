@@ -51,6 +51,7 @@ export type CoreCopy = {
   recommendations: string;
   market: string;
   tracker: string;
+  interview: string;
   copilot: string;
   feedback: string;
   worldwide: string;
@@ -62,14 +63,15 @@ export type CoreCopy = {
 };
 
 const en: CoreCopy = {
-  heroTitle: "Find the right role for the story only you can prove.",
+  heroTitle: "Turn your resume and the JD into an interview story you can own.",
   heroBody:
-    "Translate your career evidence into credible applications, discover stronger-fit jobs worldwide, and understand where hiring demand is moving.",
+    "Map every requirement to evidence, shape truthful stories for each role, and rehearse them with AI interviewers until you can answer with confidence.",
   enter: "Enter global workspace",
   analyze: "Analyze",
   recommendations: "Recommendations",
   market: "Market Insights",
   tracker: "Tracker",
+  interview: "Interview Studio",
   copilot: "Copilot",
   feedback: "Feedback",
   worldwide: "Worldwide",
@@ -83,14 +85,15 @@ const en: CoreCopy = {
 const translations: Record<LocaleCode, Partial<CoreCopy>> = {
   en,
   ja: {
-    heroTitle: "あなたにしか証明できない経験に合う仕事を見つけましょう。",
+    heroTitle: "履歴書と求人票を、自信を持って話せる面接ストーリーへ。",
     heroBody:
-      "キャリアの実績を信頼できる応募書類に変え、世界中から相性の良い仕事を探し、採用需要の変化を把握できます。",
+      "求人要件を実績に結び付け、役割ごとに誠実なストーリーを組み立て、AI面接官との練習で自信を高めます。",
     enter: "グローバルワークスペースへ",
     analyze: "分析",
     recommendations: "おすすめ",
     market: "市場インサイト",
     tracker: "進捗管理",
+    interview: "面接スタジオ",
     copilot: "コパイロット",
     feedback: "フィードバック",
     worldwide: "全世界",
@@ -101,14 +104,15 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
     automatic: "自動",
   },
   ko: {
-    heroTitle: "오직 당신만 증명할 수 있는 이야기에 맞는 직무를 찾으세요.",
+    heroTitle: "이력서와 JD를 자신 있게 말할 수 있는 면접 스토리로 바꾸세요.",
     heroBody:
-      "경력 근거를 신뢰할 수 있는 지원서로 바꾸고, 전 세계에서 더 잘 맞는 채용 공고를 찾으며 채용 수요의 변화를 파악하세요.",
+      "모든 요구사항을 실제 근거와 연결하고, 직무별 스토리를 만든 뒤 AI 면접관과 연습해 자신감을 높이세요.",
     enter: "글로벌 워크스페이스 열기",
     analyze: "분석",
     recommendations: "추천",
     market: "시장 인사이트",
     tracker: "지원 관리",
+    interview: "면접 스튜디오",
     copilot: "코파일럿",
     feedback: "피드백",
     worldwide: "전 세계",
@@ -119,14 +123,15 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
     automatic: "자동",
   },
   "zh-CN": {
-    heroTitle: "找到最适合你真实经历的职位。",
+    heroTitle: "把简历与 JD 变成你能自信讲出的面试故事。",
     heroBody:
-      "将职业证据转化为可信的申请材料，在全球发现更匹配的职位，并了解招聘需求的变化。",
+      "把每项职位要求对应到真实证据，为不同角色组织可信故事，并与 AI 面试官练习到能从容作答。",
     enter: "进入全球工作区",
     analyze: "分析",
     recommendations: "职位推荐",
     market: "市场洞察",
     tracker: "申请追踪",
+    interview: "面试训练室",
     copilot: "AI 助手",
     feedback: "反馈",
     worldwide: "全球",
@@ -137,14 +142,15 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
     automatic: "全自动",
   },
   "zh-TW": {
-    heroTitle: "找到最適合你真實故事的職缺。",
+    heroTitle: "把履歷與 JD 變成你能自信說出的面試故事。",
     heroBody:
-      "把職涯證據轉成可信的申請內容，在全球探索更合適的工作，並掌握招聘需求的變化。",
+      "把每項職缺要求對應到真實證據，為不同角色整理可信故事，再與 AI 面試官練習到能從容作答。",
     enter: "進入全球工作區",
     analyze: "分析",
     recommendations: "職缺推薦",
     market: "市場洞察",
     tracker: "申請追蹤",
+    interview: "面試訓練室",
     copilot: "AI 助手",
     feedback: "意見回饋",
     worldwide: "全世界",
@@ -156,14 +162,15 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
   },
   es: {
     heroTitle:
-      "Encuentra el puesto adecuado para la historia que solo tú puedes demostrar.",
+      "Convierte tu currículum y la oferta en una historia que puedas defender.",
     heroBody:
-      "Convierte tu experiencia verificable en candidaturas creíbles, descubre mejores oportunidades en todo el mundo y entiende cómo cambia la demanda.",
+      "Relaciona cada requisito con pruebas, crea historias veraces y practícalas con entrevistadores de IA hasta responder con confianza.",
     enter: "Abrir espacio global",
     analyze: "Analizar",
     recommendations: "Recomendaciones",
     market: "Mercado laboral",
     tracker: "Seguimiento",
+    interview: "Estudio de entrevistas",
     copilot: "Copiloto",
     feedback: "Comentarios",
     worldwide: "Todo el mundo",
@@ -175,14 +182,15 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
   },
   fr: {
     heroTitle:
-      "Trouvez le poste adapté à l’histoire que vous seul pouvez prouver.",
+      "Transformez votre CV et l’offre en une histoire d’entretien maîtrisée.",
     heroBody:
-      "Transformez vos preuves professionnelles en candidatures crédibles, trouvez de meilleures offres dans le monde et suivez l’évolution de la demande.",
+      "Reliez chaque exigence à une preuve, construisez des récits sincères et entraînez-vous avec des recruteurs IA jusqu’à répondre avec assurance.",
     enter: "Ouvrir l’espace mondial",
     analyze: "Analyser",
     recommendations: "Recommandations",
     market: "Marché de l’emploi",
     tracker: "Suivi",
+    interview: "Studio d’entretien",
     copilot: "Copilote",
     feedback: "Avis",
     worldwide: "Monde entier",
@@ -193,14 +201,15 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
     automatic: "Automatique",
   },
   de: {
-    heroTitle: "Finde die Stelle, die zu deiner belegbaren Geschichte passt.",
+    heroTitle: "Mach aus Lebenslauf und Stellenanzeige deine sichere Interview-Story.",
     heroBody:
-      "Verwandle nachweisbare Erfahrung in glaubwürdige Bewerbungen, entdecke weltweit passendere Stellen und erkenne Veränderungen der Nachfrage.",
+      "Verknüpfe jede Anforderung mit Belegen, entwickle ehrliche Geschichten und übe sie mit KI-Interviewern, bis du souverän antwortest.",
     enter: "Globalen Arbeitsbereich öffnen",
     analyze: "Analysieren",
     recommendations: "Empfehlungen",
     market: "Arbeitsmarkt",
     tracker: "Bewerbungen",
+    interview: "Interview-Studio",
     copilot: "Copilot",
     feedback: "Feedback",
     worldwide: "Weltweit",

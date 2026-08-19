@@ -1514,6 +1514,335 @@ input:focus {
   grid-template-columns: 1fr auto;
   gap: 10px;
 }
+.interview-heading {
+  align-items: flex-start;
+}
+.interview-heading h2 {
+  max-width: 720px;
+}
+.interview-heading > div > p:last-child {
+  max-width: 720px;
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.interview-setup {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(260px, 1.2fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #f7f7f5;
+}
+.interview-setup fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.interview-setup legend {
+  margin-bottom: 7px;
+  color: #4d5963;
+  font-size: 10px;
+  font-weight: 720;
+}
+.interview-mode {
+  height: 42px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #d2d8dc;
+  border-radius: 8px;
+  background: #edf0f1;
+}
+.interview-mode button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+.interview-mode button.active {
+  background: white;
+  color: var(--accent-deep);
+  box-shadow: 0 3px 10px rgba(43, 56, 66, 0.08);
+}
+.interview-brief {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0;
+}
+.interview-brief article {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+}
+.interview-brief span,
+.interview-brief b,
+.interview-brief small {
+  display: block;
+}
+.interview-brief span {
+  color: #7a858d;
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.interview-brief b {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.interview-brief small {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+.interview-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 12px;
+  align-items: start;
+}
+.interview-room,
+.answer-scorecard {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.interview-room-bar {
+  min-height: 58px;
+  padding: 10px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  background: #f7f8f8;
+}
+.interview-room-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.interviewer-avatar {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--accent-deep);
+  color: white;
+  font-size: 9px;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+}
+.interview-room-bar b,
+.interview-room-bar small {
+  display: block;
+}
+.interview-room-bar b {
+  font-size: 11px;
+}
+.interview-room-bar small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.voice-button {
+  min-height: 33px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: white;
+  color: var(--accent-deep);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+}
+.voice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.interview-transcript {
+  min-height: 286px;
+  max-height: 430px;
+  overflow: auto;
+  padding: 17px;
+  background:
+    linear-gradient(rgba(248, 249, 249, 0.94), rgba(248, 249, 249, 0.94)),
+    radial-gradient(circle at 20% 20%, #d9e2e7 0 1px, transparent 1px);
+  background-size: auto, 18px 18px;
+}
+.interview-message {
+  max-width: 86%;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.interview-message b {
+  display: block;
+  margin-bottom: 4px;
+  color: #687580;
+  font-size: 8px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.interview-message p {
+  margin: 0;
+  white-space: pre-line;
+}
+.interview-message.assistant {
+  border: 1px solid var(--line);
+  border-top-left-radius: 3px;
+  background: white;
+}
+.interview-message.user {
+  margin-left: auto;
+  border-top-right-radius: 3px;
+  background: #dde6ea;
+  color: #2d3d48;
+}
+.interview-empty {
+  max-width: 450px;
+  margin: 48px auto;
+  text-align: center;
+}
+.interview-empty b {
+  font-size: 14px;
+}
+.interview-empty p {
+  margin: 9px 0 17px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+.interview-answer-form {
+  padding: 14px;
+  border-top: 1px solid var(--line);
+}
+.interview-answer-form > label {
+  display: block;
+  margin-bottom: 7px;
+  color: #4d5963;
+  font-size: 10px;
+  font-weight: 720;
+}
+.interview-answer-form textarea {
+  min-height: 98px;
+}
+.interview-answer-form textarea:disabled {
+  background: #f2f3f3;
+  cursor: not-allowed;
+}
+.interview-answer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 9px;
+}
+.interview-answer-actions .listening {
+  border-color: #78909f;
+  background: #e6ecef;
+  box-shadow: 0 0 0 3px rgba(84, 105, 121, 0.1);
+}
+.interview-answer-actions .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+  transform: none;
+}
+.voice-disclosure {
+  display: block;
+  margin-top: 8px;
+  color: #7b858d;
+  font-size: 8px;
+  line-height: 1.4;
+}
+.answer-scorecard {
+  position: sticky;
+  top: 14px;
+  padding: 15px;
+  background: #29343e;
+  color: white;
+}
+.scorecard-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+.scorecard-heading span,
+.scorecard-heading b {
+  display: block;
+}
+.scorecard-heading span {
+  color: #b8c3ca;
+  font-size: 9px;
+}
+.scorecard-heading b {
+  margin-top: 5px;
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.scorecard-heading small {
+  color: #aeb9c1;
+  font-size: 9px;
+}
+.answer-signal {
+  margin: 12px 0;
+}
+.answer-signal > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #dbe2e6;
+  font-size: 9px;
+}
+.answer-signal i {
+  height: 4px;
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.answer-signal i span {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: #9eb1bd;
+  transition: width 0.3s ease;
+}
+.scorecard-note {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.scorecard-note b {
+  font-size: 9px;
+}
+.scorecard-note p {
+  margin: 6px 0 0;
+  color: #aeb9c1;
+  font-size: 8px;
+  line-height: 1.5;
+}
 .feedback-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1729,6 +2058,10 @@ input:focus {
   margin-left: 0;
   margin-right: auto;
 }
+[dir="rtl"] .interview-message.user {
+  margin-left: 0;
+  margin-right: auto;
+}
 [dir="rtl"] .insight {
   border-left: 0;
   border-right: 2px solid #9fb3c0;
@@ -1803,6 +2136,19 @@ input:focus {
   .source-grid {
     grid-template-columns: 1fr;
   }
+  .interview-stage {
+    grid-template-columns: 1fr;
+  }
+  .answer-scorecard {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .scorecard-heading,
+  .scorecard-note {
+    grid-column: 1 / -1;
+  }
 }
 @media (max-width: 650px) {
   .topbar {
@@ -1865,7 +2211,9 @@ input:focus {
   .filter-grid,
   .recommendation-filters,
   .market-filters,
-  .source-connector-form {
+  .source-connector-form,
+  .interview-setup,
+  .interview-brief {
     grid-template-columns: 1fr;
   }
   .source-connector-form .button {
@@ -1984,6 +2332,26 @@ input:focus {
   }
   .chat-message {
     max-width: 94%;
+  }
+  .interview-heading {
+    flex-direction: column;
+  }
+  .interview-message {
+    max-width: 96%;
+  }
+  .interview-answer-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .interview-answer-actions .button {
+    width: 100%;
+  }
+  .answer-scorecard {
+    grid-template-columns: 1fr 1fr;
+  }
+  .scorecard-heading,
+  .scorecard-note {
+    grid-column: 1 / -1;
   }
   .principle-grid,
   .plan-grid {
