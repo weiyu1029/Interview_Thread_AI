@@ -17,6 +17,7 @@ import {
   RTL_LOCALES,
 } from "./i18n";
 import { parseDocuments } from "./document-parser";
+import { SEO_PAGES } from "./seo-content";
 
 type MatchStatus = "Strong evidence" | "Partial evidence" | "Gap";
 type Match = {
@@ -1208,6 +1209,23 @@ export default function Home() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      const requestedView = new URLSearchParams(window.location.search).get(
+        "view",
+      );
+      if (
+        requestedView &&
+        [
+          "Analyze",
+          "Recommendations",
+          "Market Insights",
+          "Tracker",
+          "Interview Studio",
+          "Copilot",
+          "Feedback",
+        ].includes(requestedView)
+      ) {
+        setActive(requestedView as WorkspaceView);
+      }
       const savedLocale = (window.localStorage.getItem("aptograph-locale") ||
         window.localStorage.getItem("careerproof-locale")) as LocaleCode | null;
       const savedTracker =
@@ -1713,7 +1731,7 @@ export default function Home() {
 
     setModelRunning(true);
     setModelStatus(`Running ${modelName.trim()} on your configured endpoint…`);
-    const prompt = `You are Aptograph, an evidence-grounded career coach. Compare the resume evidence with the job description. Never invent experience. Return concise plain text with exactly three headings: BEST STORY, PROOF TO QUOTE, GAPS TO ADDRESS.\n\nJOB DESCRIPTION\n${jd.slice(0, 10_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 10_000)}`;
+    const prompt = `You are CareerStoryMap, an evidence-grounded career coach. Compare the resume evidence with the job description. Never invent experience. Return concise plain text with exactly three headings: BEST STORY, PROOF TO QUOTE, GAPS TO ADDRESS.\n\nJOB DESCRIPTION\n${jd.slice(0, 10_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 10_000)}`;
     try {
       const content = await requestConfiguredModel(prompt);
       setModelInsight(content.trim());
@@ -1872,7 +1890,7 @@ export default function Home() {
       setNotificationPermission(permission);
       const top = newlyQualified[0];
       if (permission === "granted" && top)
-        new Notification("Aptograph Story Signal", {
+        new Notification("CareerStoryMap Story Signal", {
           body: `${top.storyFit}% story fit · ${top.title} at ${top.company}. ${top.proofCount} proof-backed signals.`,
           tag: `aptograph-${top.id}`,
         });
@@ -1930,7 +1948,7 @@ export default function Home() {
         modelName.trim()
       ) {
         reply = await requestConfiguredModel(
-          `You are Aptograph, an evidence-grounded career copilot. Answer the user's question in ${LANGUAGES.find(([code]) => code === locale)?.[1] || "English"}. Never invent experience. Ground the answer in the resume and JD, clearly label any gap, and give wording the candidate can truthfully say.\n\nQUESTION\n${userQuestion}\n\nJOB DESCRIPTION\n${jd.slice(0, 8_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 8_000)}`,
+          `You are CareerStoryMap, an evidence-grounded career copilot. Answer the user's question in ${LANGUAGES.find(([code]) => code === locale)?.[1] || "English"}. Never invent experience. Ground the answer in the resume and JD, clearly label any gap, and give wording the candidate can truthfully say.\n\nQUESTION\n${userQuestion}\n\nJOB DESCRIPTION\n${jd.slice(0, 8_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 8_000)}`,
         );
       }
       setMessages((current) => [
@@ -2153,15 +2171,16 @@ export default function Home() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Aptograph home">
-          <span className="brand-mark" aria-hidden="true">A</span>
+        <a className="brand" href="#top" aria-label="CareerStoryMap home">
+          <span className="brand-mark" aria-hidden="true">CS</span>
           <span>
-            Aptograph <small>Career intelligence</small>
+            CareerStoryMap <small>Evidence to opportunity</small>
           </span>
         </a>
         <nav className="topnav" aria-label="Primary navigation">
           <a href="#product">{detail.product}</a>
           <a href="#workspace">{detail.workspace}</a>
+          <a href="#career-tools">Career tools</a>
           <a href="#plans">{detail.plans}</a>
           <a href="https://github.com/weiyu1029/careerproof-agent">
             {detail.source}
@@ -2218,7 +2237,7 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Aptograph · Your evidence, mapped to what’s next.</p>
+          <p className="eyebrow">CareerStoryMap · Map your evidence. Own your story.</p>
           <h1>{copy.heroTitle}</h1>
           <p className="lede">{copy.heroBody}</p>
           <div className="hero-actions">
@@ -2276,7 +2295,7 @@ export default function Home() {
           </div>
           <p className="insight">
             {locale === "en"
-              ? "Every interview story stays traceable to your resume evidence and the JD. Aptograph trains what you can prove, then pressures the gaps without inventing experience."
+              ? "Every interview story stays traceable to your resume evidence and the JD. CareerStoryMap trains what you can prove, then pressures the gaps without inventing experience."
               : copy.heroBody}
           </p>
         </div>
@@ -2520,7 +2539,7 @@ export default function Home() {
                   <h2>{interview.title}</h2>
                   <p>{interview.subtitle}</p>
                 </div>
-                <span className="status-pill light">Aptograph ProofLoop</span>
+                <span className="status-pill light">CareerStoryMap ProofLoop</span>
               </div>
 
               <div className="interview-setup">
@@ -2726,7 +2745,7 @@ export default function Home() {
                   <div className="scorecard-note">
                     <b>Evidence before polish</b>
                     <p>
-                      Aptograph rewards a specific decision, verifiable action,
+                      CareerStoryMap rewards a specific decision, verifiable action,
                       measurable outcome, and explicit link to this JD. Fluency
                       alone cannot create a high score.
                     </p>
@@ -2895,7 +2914,7 @@ export default function Home() {
               <section className="story-radar" aria-labelledby="story-radar-title">
                 <div className="story-radar-heading">
                   <div>
-                    <p className="eyebrow">Aptograph Story Signal</p>
+                    <p className="eyebrow">CareerStoryMap Story Signal</p>
                     <h3 id="story-radar-title">Proof-to-Role Radar</h3>
                     <p>
                       Alerts only when your evidence can carry a credible story—not
@@ -3495,7 +3514,7 @@ export default function Home() {
                   >
                     <b>
                       {message.role === "assistant"
-                        ? "Aptograph"
+                        ? "CareerStoryMap"
                         : detail.privateTitle}
                     </b>
                     <p>{message.content}</p>
@@ -3521,7 +3540,7 @@ export default function Home() {
                 <small className="model-note">
                   {selectedProvider.kind === "built-in"
                     ? "Evidence-grounded local guidance."
-                    : `${modelStatus} If the local model is unavailable, Aptograph returns an evidence-engine fallback and labels the failure.`}
+                    : `${modelStatus} If the local model is unavailable, CareerStoryMap returns an evidence-engine fallback and labels the failure.`}
                 </small>
               </form>
             </>
@@ -3672,6 +3691,26 @@ export default function Home() {
                 : modeMessage}
             </p>
           </article>
+        </div>
+      </section>
+      <section className="seo-hub" id="career-tools">
+        <div className="seo-hub-heading">
+          <p className="eyebrow">CareerStoryMap guides</p>
+          <h2>Start with the career decision in front of you.</h2>
+          <p>
+            Six focused tools connect resume evidence, job requirements,
+            interview confidence, role discovery, and market direction.
+          </p>
+        </div>
+        <div className="seo-hub-grid">
+          {Object.values(SEO_PAGES).map((page, index) => (
+            <a href={page.path} key={page.path}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <h3>{page.navLabel}</h3>
+              <p>{page.description}</p>
+              <small>Explore guide</small>
+            </a>
+          ))}
         </div>
       </section>
       <section className="plans" id="plans">

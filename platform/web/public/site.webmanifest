@@ -1,6 +1,6 @@
 {
-  "name": "Aptograph",
-  "short_name": "Aptograph",
+  "name": "CareerStoryMap",
+  "short_name": "CareerStoryMap",
   "description": "Your evidence, mapped to what’s next.",
   "start_url": "/",
   "display": "standalone",

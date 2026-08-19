@@ -1,8 +1,8 @@
-# CareerProof Global
+# CareerStoryMap
 
-![CareerProof Agent](assets/careerproof-hero.png)
+![CareerStoryMap](platform/web/public/og-careerstorymap.png)
 
-**CareerProof Global — Evidence that travels.** is an open-source,
+**CareerStoryMap — Map your evidence. Own your story.** is an open-source,
 evidence-grounded career intelligence platform. It compares a job description
 with a candidate's real experience, recommends stronger-fit roles worldwide,
 keeps missing proof visible, and turns the strongest evidence into a credible
@@ -10,11 +10,11 @@ application and interview strategy.
 
 > Keywords may be reformulated, never fabricated.
 
-[Try the professional web app](https://careerproof-open-source.wy-alicechen.chatgpt.site) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try the professional web app](https://careerstorymap.com) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-## Why CareerProof exists
+## Why CareerStoryMap exists
 
-Generic keyword tools reward repetition. Generic AI tools can produce fluent but unsupported claims. CareerProof uses a different sequence:
+Generic keyword tools reward repetition. Generic AI tools can produce fluent but unsupported claims. CareerStoryMap uses a different sequence:
 
 1. decode the role and industry;
 2. extract required, core, and preferred concepts;
@@ -37,7 +37,7 @@ The result is useful for resume tailoring and interview preparation while remain
 - interview stories, likely questions, and a seven-day preparation plan;
 - Markdown and JSON downloads for personal workflows.
 
-CareerProof does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
+CareerStoryMap does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
 
 ## Public web experience
 
@@ -84,7 +84,7 @@ The web client is available at `http://localhost:3000` and the documented API at
 
 ## Open and local model ecosystem
 
-CareerProof does not freeze a list that will become obsolete. It discovers
+CareerStoryMap does not freeze a list that will become obsolete. It discovers
 models at runtime and supports any compatible chat model served by:
 
 - Ollama;
@@ -120,7 +120,7 @@ Never commit a real key or resume.
 
 ## Transparent scoring
 
-CareerProof weights detected concepts by where and how they appear in the job description:
+CareerStoryMap weights detected concepts by where and how they appear in the job description:
 
 | Priority | Typical source | Relative weight |
 |---|---|---:|
@@ -264,7 +264,7 @@ feature incubator.
 
 ## Origins and attribution
 
-This repository is the recommended canonical home for the public CareerProof project because it has a modular agent package, an English documentation set, an MIT license, tests, and a web deployment entry point.
+This repository is the recommended canonical home for the public CareerStoryMap project because it has a modular agent package, an English documentation set, an MIT license, tests, and a web deployment entry point. Existing package and repository names remain stable for contributor compatibility.
 
 It incorporates product lessons from:
 

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://careerproof-open-source.wy-alicechen.chatgpt.site";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://careerstorymap.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {
