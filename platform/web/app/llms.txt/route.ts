@@ -22,6 +22,12 @@ Aptograph is an open-source, evidence-grounded career intelligence platform. It 
 - 40-language interface
 - Manual, hybrid, and governed automatic application modes
 
+## Plans
+- Community: free and open-source core
+- Pro: US$15 per month or US$150 per year base price, with transparent regional currency options
+- Team: US$35 per seat per month, or US$29 per seat per month billed annually, with a five-seat minimum
+- Enterprise: custom annual agreement starting at US$15,000
+
 ## Data policy
 Aptograph uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
 `;

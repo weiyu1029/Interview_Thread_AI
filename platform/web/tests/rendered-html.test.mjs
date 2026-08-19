@@ -23,6 +23,8 @@ test("server-renders the Aptograph product experience", async () => {
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
   assert.match(html, /Market Insights/i);
+  assert.match(html, /US\$15 base/i);
+  assert.match(html, /Enterprise/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -40,6 +42,7 @@ test("ships product metadata and a social card", async () => {
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);
   assert.match(page, /\/api\/jobs/);
+  assert.match(page, /\/api\/region/);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
   assert.match(page, /Lever EU/i);
