@@ -1,0 +1,12 @@
+{
+  "name": "CareerStoryMap",
+  "short_name": "CareerStoryMap",
+  "description": "Your evidence, mapped to what’s next.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f3ef",
+  "theme_color": "#465d70",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

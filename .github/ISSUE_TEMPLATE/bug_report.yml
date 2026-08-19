@@ -1,0 +1,37 @@
+name: Bug report
+description: Report reproducible incorrect behavior without sharing private career data.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not paste a real resume, API key, or personal information. Use synthetic examples."
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the observed and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide synthetic JD/profile text and exact steps.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Processing mode
+      options:
+        - Deterministic Evidence Guard
+        - Gemini enrichment
+        - ADK agent
+    validations:
+      required: true
+

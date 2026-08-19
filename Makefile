@@ -1,10 +1,28 @@
-.PHONY: install lint run-demo run-healthcare run-fintech run-marketplace playground local-grade
+.PHONY: install lint test check web platform-api platform-web platform-check run-demo run-healthcare run-fintech run-marketplace playground local-grade
 
 install:
 	agents-cli install
 
 lint:
-	agents-cli lint
+	ruff check app tests platform/api/careerproof_api platform/api/tests streamlit_app.py
+
+test:
+	pytest
+
+check: lint test
+
+web:
+	streamlit run streamlit_app.py
+
+platform-api:
+	PYTHONPATH=.:platform/api uvicorn careerproof_api.main:app --app-dir platform/api --reload
+
+platform-web:
+	npm --prefix platform/web run dev
+
+platform-check:
+	PYTHONPATH=.:platform/api pytest tests platform/api/tests
+	npm --prefix platform/web run test
 
 playground:
 	agents-cli playground

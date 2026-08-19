@@ -1,15 +1,23 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
-
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "industries.json"
 
 
 def load_industry_knowledge() -> dict[str, Any]:
-    return json.loads(DATA_PATH.read_text())
+    return json.loads(DATA_PATH.read_text(encoding="utf-8"))
+
+
+def _contains_phrase(text: str, phrase: str) -> bool:
+    escaped = re.escape(phrase.lower()).replace(r"\ ", r"\s+")
+    return re.search(
+        rf"(?<![A-Za-z0-9]){escaped}(?![A-Za-z0-9])",
+        text.lower(),
+    ) is not None
 
 
 def infer_industry(job_description: str, explicit_industry: str | None = None) -> dict[str, Any]:
@@ -34,12 +42,8 @@ def infer_industry(job_description: str, explicit_industry: str | None = None) -
         tokens += [problem.lower() for problem in info.get("business_problems", [])]
 
         for token in tokens:
-            if token and token in jd:
-                score += 1.0
-
-        for word in jd.split():
-            if len(word) > 6 and word in industry.lower():
-                score += 0.5
+            if token and _contains_phrase(jd, token):
+                score += 2.0 if " " in token else 1.0
 
         if score > best_score:
             best_name = industry
