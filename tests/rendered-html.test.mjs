@@ -32,10 +32,11 @@ test("ships product metadata and a social card", async () => {
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
   ]);
-  await access(new URL("../public/og.png", import.meta.url));
+  await access(new URL("../public/og-v2.png", import.meta.url));
   assert.match(layout, /openGraph/);
   assert.match(layout, /twitter/);
-  assert.match(layout, /\/og\.png/);
+  assert.match(layout, /\/og-v2\.png/);
+  assert.match(layout, /application\/ld\+json/);
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
