@@ -46,6 +46,38 @@ button {
   min-height: 100vh;
 }
 
+.language-suggestion {
+  max-width: 1240px;
+  margin: 14px auto 0;
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(35, 45, 54, 0.06);
+}
+.language-suggestion div {
+  min-width: 0;
+  margin-right: auto;
+}
+.language-suggestion b {
+  font-size: 12px;
+}
+.language-suggestion p {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.language-suggestion .button {
+  min-height: 35px;
+  flex: 0 0 auto;
+}
+
 .topbar {
   min-height: 72px;
   max-width: 1320px;
@@ -1241,10 +1273,42 @@ input:focus {
   max-width: 700px;
   margin-bottom: 30px;
 }
+.pricing-controls {
+  margin: -12px 0 24px;
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-soft);
+}
+.pricing-controls label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+.pricing-controls label > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pricing-controls select {
+  min-width: 220px;
+}
+.pricing-controls p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
 .principle-grid,
 .plan-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 .principle-grid article {
@@ -1290,6 +1354,27 @@ input:focus {
   color: #596872;
   font-size: 12px;
 }
+.plan-grid .price strong,
+.plan-grid .price small {
+  display: block;
+}
+.plan-grid .price strong {
+  color: var(--ink);
+  font-size: 25px;
+  letter-spacing: -0.04em;
+}
+.plan-grid .price small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+.plan-grid .price-note {
+  min-height: 16px;
+  margin: -8px 0 14px;
+  color: #7a858e;
+  font-size: 9px;
+}
 .plan-grid ul {
   padding-left: 18px;
   margin: 0 0 22px;
@@ -1334,6 +1419,9 @@ input:focus {
   .locale-control span {
     display: none;
   }
+  .plan-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 @media (max-width: 900px) {
   .hero {
@@ -1365,6 +1453,10 @@ input:focus {
   .principle-grid,
   .plan-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .language-suggestion {
+    margin-left: 18px;
+    margin-right: 18px;
   }
   h1 {
     font-size: 47px;
@@ -1514,6 +1606,23 @@ input:focus {
   .principle-grid,
   .plan-grid {
     grid-template-columns: 1fr;
+  }
+  .language-suggestion,
+  .pricing-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .language-suggestion div {
+    margin-right: 0;
+  }
+  .language-suggestion .button,
+  .pricing-controls label,
+  .pricing-controls select {
+    width: 100%;
+  }
+  .pricing-controls label {
+    align-items: stretch;
+    flex-direction: column;
   }
   .principles,
   .plans {

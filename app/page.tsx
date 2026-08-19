@@ -72,6 +72,11 @@ type WorkspaceView =
   | "Copilot"
   | "Feedback";
 type ApplicationMode = "Manual" | "Hybrid" | "Automatic";
+type BillingMarket = {
+  code: string;
+  currency: string;
+  proMonthly: number;
+};
 
 const KEYWORDS: Record<string, string[]> = {
   SQL: ["sql", "structured query language"],
@@ -358,6 +363,101 @@ const REGION_FACTORS: Record<string, number> = {
   "Middle East & Africa": 0.06,
 };
 
+const BILLING_MARKETS: BillingMarket[] = [
+  { code: "US", currency: "USD", proMonthly: 15 },
+  { code: "EU", currency: "EUR", proMonthly: 14 },
+  { code: "GB", currency: "GBP", proMonthly: 12 },
+  { code: "CA", currency: "CAD", proMonthly: 20 },
+  { code: "AU", currency: "AUD", proMonthly: 23 },
+  { code: "NZ", currency: "NZD", proMonthly: 25 },
+  { code: "JP", currency: "JPY", proMonthly: 2200 },
+  { code: "KR", currency: "KRW", proMonthly: 20000 },
+  { code: "TW", currency: "TWD", proMonthly: 490 },
+  { code: "CN", currency: "CNY", proMonthly: 108 },
+  { code: "HK", currency: "HKD", proMonthly: 118 },
+  { code: "SG", currency: "SGD", proMonthly: 20 },
+  { code: "IN", currency: "INR", proMonthly: 999 },
+  { code: "BR", currency: "BRL", proMonthly: 59 },
+  { code: "MX", currency: "MXN", proMonthly: 229 },
+  { code: "CH", currency: "CHF", proMonthly: 14 },
+  { code: "SE", currency: "SEK", proMonthly: 159 },
+  { code: "NO", currency: "NOK", proMonthly: 165 },
+  { code: "DK", currency: "DKK", proMonthly: 105 },
+  { code: "PL", currency: "PLN", proMonthly: 59 },
+  { code: "CZ", currency: "CZK", proMonthly: 349 },
+  { code: "AE", currency: "AED", proMonthly: 55 },
+  { code: "ZA", currency: "ZAR", proMonthly: 249 },
+  { code: "TH", currency: "THB", proMonthly: 499 },
+  { code: "ID", currency: "IDR", proMonthly: 219000 },
+  { code: "MY", currency: "MYR", proMonthly: 65 },
+  { code: "PH", currency: "PHP", proMonthly: 849 },
+  { code: "VN", currency: "VND", proMonthly: 379000 },
+];
+
+const EURO_COUNTRIES = new Set([
+  "AT",
+  "BE",
+  "CY",
+  "DE",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GR",
+  "HR",
+  "IE",
+  "IT",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "PT",
+  "SI",
+  "SK",
+]);
+
+const LANGUAGE_MARKETS: Record<string, string> = {
+  ja: "JP",
+  ko: "KR",
+  zh: "CN",
+  hi: "IN",
+  bn: "IN",
+  id: "ID",
+  ms: "MY",
+  th: "TH",
+  vi: "VN",
+  fil: "PH",
+  sv: "SE",
+  no: "NO",
+  da: "DK",
+  pl: "PL",
+  cs: "CZ",
+  pt: "BR",
+};
+
+const FRIENDLY_PRICE_STEPS: Record<string, number> = {
+  JPY: 100,
+  KRW: 1000,
+  TWD: 10,
+  CNY: 5,
+  HKD: 10,
+  INR: 50,
+  BRL: 5,
+  MXN: 10,
+  SEK: 5,
+  NOK: 5,
+  DKK: 5,
+  PLN: 5,
+  CZK: 10,
+  ZAR: 10,
+  THB: 10,
+  IDR: 10000,
+  MYR: 5,
+  PHP: 50,
+  VND: 10000,
+};
+
 function includesPhrase(text: string, phrase: string) {
   const escaped = phrase
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -432,6 +532,61 @@ function compactNumber(value: number, locale: LocaleCode = "en") {
   }).format(value);
 }
 
+function preferredLocale(languages: readonly string[]) {
+  for (const rawLanguage of languages) {
+    const normalized = rawLanguage.replace("_", "-");
+    const exact = LANGUAGES.find(
+      ([code]) => code.toLowerCase() === normalized.toLowerCase(),
+    );
+    if (exact) return exact[0];
+    const base = normalized.split("-")[0].toLowerCase();
+    if (base === "zh")
+      return /hant|tw|hk|mo/i.test(normalized) ? "zh-TW" : "zh-CN";
+    const related = LANGUAGES.find(([code]) => code.split("-")[0] === base);
+    if (related) return related[0];
+  }
+  return "en";
+}
+
+function marketForCountry(countryCode: string | null) {
+  if (!countryCode) return "US";
+  const normalized = countryCode.toUpperCase();
+  if (EURO_COUNTRIES.has(normalized)) return "EU";
+  return BILLING_MARKETS.some((market) => market.code === normalized)
+    ? normalized
+    : "US";
+}
+
+function marketForLanguage(language: string) {
+  const normalized = language.replace("_", "-");
+  const region = normalized.split("-")[1]?.toUpperCase();
+  if (region) return marketForCountry(region);
+  return LANGUAGE_MARKETS[normalized.split("-")[0].toLowerCase()] || "US";
+}
+
+function friendlyPrice(value: number, currency: string) {
+  const step = FRIENDLY_PRICE_STEPS[currency] || 1;
+  return Math.round(value / step) * step;
+}
+
+function formatPrice(value: number, currency: string, locale: LocaleCode) {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    currencyDisplay: "symbol",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatBillingUnit(locale: LocaleCode, unit: "month" | "year") {
+  return new Intl.NumberFormat(locale, {
+    style: "unit",
+    unit,
+    unitDisplay: "long",
+    maximumFractionDigits: 0,
+  }).format(1);
+}
+
 export default function Home() {
   const [active, setActive] = useState<WorkspaceView>("Analyze");
   const [locale, setLocale] = useState<LocaleCode>("en");
@@ -465,6 +620,9 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [suggestedLocale, setSuggestedLocale] =
+    useState<LocaleCode | null>(null);
+  const [billingMarketCode, setBillingMarketCode] = useState("US");
   const copy = copyFor(locale);
   const detail = detailFor(locale);
   const preferencesLoaded = useRef(false);
@@ -476,8 +634,23 @@ export default function Home() {
       const savedTracker =
         window.localStorage.getItem("aptograph-tracker") ||
         window.localStorage.getItem("careerproof-tracker");
+      const savedBillingMarket = window.localStorage.getItem(
+        "aptograph-billing-market",
+      );
       if (savedLocale && LANGUAGES.some(([code]) => code === savedLocale))
         setLocale(savedLocale);
+      else if (
+        !window.localStorage.getItem("aptograph-language-prompt-dismissed")
+      ) {
+        const detectedLocale = preferredLocale(navigator.languages);
+        if (detectedLocale !== "en") setSuggestedLocale(detectedLocale);
+      }
+      if (
+        savedBillingMarket &&
+        BILLING_MARKETS.some((market) => market.code === savedBillingMarket)
+      )
+        setBillingMarketCode(savedBillingMarket);
+      else setBillingMarketCode(marketForLanguage(navigator.language));
       if (savedTracker) {
         try {
           setTracker(JSON.parse(savedTracker));
@@ -490,11 +663,34 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, []);
   useEffect(() => {
+    if (window.localStorage.getItem("aptograph-billing-market")) return;
+    const controller = new AbortController();
+    fetch("/api/region", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data: { country?: string | null }) => {
+        if (data.country) setBillingMarketCode(marketForCountry(data.country));
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+  useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
     if (preferencesLoaded.current)
       window.localStorage.setItem("aptograph-locale", locale);
   }, [locale]);
+
+  function chooseLocale(nextLocale: LocaleCode) {
+    setLocale(nextLocale);
+    setSuggestedLocale(null);
+    window.localStorage.setItem("aptograph-locale", nextLocale);
+    window.localStorage.setItem("aptograph-language-prompt-dismissed", "true");
+  }
+
+  function chooseBillingMarket(nextMarket: string) {
+    setBillingMarketCode(nextMarket);
+    window.localStorage.setItem("aptograph-billing-market", nextMarket);
+  }
 
   const score = useMemo(() => scoreMatches(matches), [matches]);
   const strongCount = matches.filter(
@@ -778,6 +974,26 @@ export default function Home() {
         : applicationMode === "Hybrid"
           ? "Pro preview. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
           : "Pro preview. Personal automation is limited to approved employer APIs with consent, rate limits, an audit log, and an emergency stop. Nothing is submitted in this public preview.";
+  const billingMarket =
+    BILLING_MARKETS.find((market) => market.code === billingMarketCode) ||
+    BILLING_MARKETS[0];
+  const proMonthly = billingMarket.proMonthly;
+  const teamMonthly = friendlyPrice(
+    proMonthly * (35 / 15),
+    billingMarket.currency,
+  );
+  const teamAnnualMonthly = friendlyPrice(
+    proMonthly * (29 / 15),
+    billingMarket.currency,
+  );
+  const enterpriseAnnual = friendlyPrice(
+    proMonthly * 1000,
+    billingMarket.currency,
+  );
+  const regionNames = new Intl.DisplayNames([locale], { type: "region" });
+  const suggestedLanguageName = suggestedLocale
+    ? LANGUAGES.find(([code]) => code === suggestedLocale)?.[1]
+    : null;
 
   return (
     <main className="app-shell">
@@ -800,7 +1016,9 @@ export default function Home() {
           <span>{copy.language}</span>
           <select
             value={locale}
-            onChange={(event) => setLocale(event.target.value as LocaleCode)}
+            onChange={(event) =>
+              chooseLocale(event.target.value as LocaleCode)
+            }
           >
             {LANGUAGES.map(([code, name]) => (
               <option value={code} key={code}>
@@ -813,6 +1031,35 @@ export default function Home() {
           </small>
         </label>
       </header>
+
+      {suggestedLocale && suggestedLanguageName && (
+        <aside className="language-suggestion" aria-live="polite">
+          <div>
+            <b>
+              {copyFor(suggestedLocale).language}: {suggestedLanguageName}?
+            </b>
+            <p>{copyFor(suggestedLocale).heroTitle}</p>
+          </div>
+          <button
+            className="button primary"
+            onClick={() => chooseLocale(suggestedLocale)}
+          >
+            {suggestedLanguageName}
+          </button>
+          <button
+            className="button secondary"
+            onClick={() => {
+              setSuggestedLocale(null);
+              window.localStorage.setItem(
+                "aptograph-language-prompt-dismissed",
+                "true",
+              );
+            }}
+          >
+            English
+          </button>
+        </aside>
+      )}
 
       <section className="hero" id="top">
         <div className="hero-copy">
@@ -1749,6 +1996,29 @@ export default function Home() {
               : copy.heroTitle}
           </h2>
         </div>
+        <div className="pricing-controls">
+          <label>
+            <span>{copy.worldwide}</span>
+            <select
+              value={billingMarket.code}
+              onChange={(event) => chooseBillingMarket(event.target.value)}
+            >
+              {BILLING_MARKETS.map((market) => (
+                <option value={market.code} key={market.code}>
+                  {regionNames.of(market.code) || market.code} · {market.currency}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p>
+            {locale === "en"
+              ? "Transparent regional estimates. Country and currency can be changed; final currency, tax, and total are confirmed in Stripe Checkout. Pricing never uses your resume, job history, or behavior."
+              : copy.worldwide +
+                " · " +
+                billingMarket.currency +
+                " · Stripe Checkout"}
+          </p>
+        </div>
         <div className="plan-grid">
           <article>
             <span>{detail.source}</span>
@@ -1771,7 +2041,16 @@ export default function Home() {
           <article className="featured">
             <span>{detail.privateTitle}</span>
             <h3>Pro</h3>
-            <p className="price">{detail.plans}</p>
+            <p className="price">
+              <strong>
+                {formatPrice(proMonthly, billingMarket.currency, locale)}
+              </strong>
+              <small>/ {formatBillingUnit(locale, "month")}</small>
+            </p>
+            <p className="price-note">
+              {formatPrice(proMonthly * 10, billingMarket.currency, locale)} /{" "}
+              {formatBillingUnit(locale, "year")} · US$15 base
+            </p>
             <ul>
               <li>{detail.privateTitle}</li>
               <li>{detail.assistantTitle}</li>
@@ -1790,20 +2069,53 @@ export default function Home() {
           </article>
           <article>
             <span>{detail.workspace}</span>
-            <h3>Team · Enterprise</h3>
-            <p className="price">{detail.plans}</p>
+            <h3>Team</h3>
+            <p className="price">
+              <strong>
+                {formatPrice(teamMonthly, billingMarket.currency, locale)}
+              </strong>
+              <small>/ {formatBillingUnit(locale, "month")} · 5+</small>
+            </p>
+            <p className="price-note">
+              {formatPrice(
+                teamAnnualMonthly,
+                billingMarket.currency,
+                locale,
+              )} × 12 · 5+ seats
+            </p>
             <ul>
               <li>{detail.workspace}</li>
+              <li>{copy.tracker} · {copy.feedback}</li>
               <li>{copy.automatic}</li>
               <li>{detail.checked}</li>
               <li>{copy.market}</li>
-              <li>{copy.feedback}</li>
             </ul>
             <button
               className="button secondary"
               onClick={() => setApplicationMode("Automatic")}
             >
-              {copy.automatic}
+              Team · {detail.plans}
+            </button>
+          </article>
+          <article>
+            <span>SSO · SLA · API</span>
+            <h3>Enterprise</h3>
+            <p className="price">
+              <strong>
+                ≥ {formatPrice(enterpriseAnnual, billingMarket.currency, locale)}
+              </strong>
+              <small>/ {formatBillingUnit(locale, "year")}</small>
+            </p>
+            <p className="price-note">Annual agreement · custom scope</p>
+            <ul>
+              <li>SSO · SCIM · audit log</li>
+              <li>Private models · data controls</li>
+              <li>API · SLA · onboarding</li>
+              <li>{copy.market} · {detail.workspace}</li>
+              <li>{detail.checked}</li>
+            </ul>
+            <button className="button secondary">
+              Enterprise · {detail.plans}
             </button>
           </article>
         </div>
