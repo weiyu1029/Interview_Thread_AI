@@ -28,8 +28,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
   const title = "Aptograph — Your evidence, mapped to what’s next";
   const description =
-    "Map verified career evidence to better-fit jobs, multilingual applications, market insight, and stronger interview stories worldwide.";
-  const image = new URL("/og.png", origin).toString();
+    "Turn resume evidence and job requirements into stronger interview stories, then rehearse them with evidence-grounded AI interviewers.";
+  const image = new URL("/og-interview.png", origin).toString();
 
   return {
     metadataBase: new URL(origin),
@@ -45,6 +45,8 @@ export async function generateMetadata(): Promise<Metadata> {
       "career intelligence",
       "resume analysis",
       "resume keyword analysis",
+      "AI mock interview",
+      "interview story coaching",
       "global jobs",
       "multilingual job search",
       "open source career tools",
@@ -111,12 +113,13 @@ export default async function RootLayout({
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Evidence-grounded global job matching, resume keyword analysis, career story development, market insights, and application tracking.",
+        "Evidence-grounded resume and job analysis, interview story development, multi-persona AI mock interviews, global job matching, market insights, and application tracking.",
       featureList: [
         "Evidence-grounded resume and job description analysis",
         "Global job recommendations from approved employer sources",
         "Market insight by geography and role",
         "Multilingual interface across 40 languages",
+        "Voice and text mock interviews for HR, hiring manager, executive, peer, and case scenarios",
         "Application tracker and career copilot",
       ],
       url: origin,

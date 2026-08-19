@@ -34,10 +34,10 @@ test("ships product metadata and a social card", async () => {
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
   ]);
-  await access(new URL("../public/og.png", import.meta.url));
+  await access(new URL("../public/og-interview.png", import.meta.url));
   assert.match(layout, /openGraph/);
   assert.match(layout, /twitter/);
-  assert.match(layout, /\/og\.png/);
+  assert.match(layout, /\/og-interview\.png/);
   assert.match(layout, /application\/ld\+json/);
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);
@@ -51,6 +51,12 @@ test("ships product metadata and a social card", async () => {
   assert.match(page, /Story Signal alerts/i);
   assert.match(page, /aptograph-story-radar-settings/i);
   assert.match(page, /zero unsupported must-haves/i);
+  assert.match(page, /Aptograph ProofLoop/i);
+  assert.match(page, /HR screening/i);
+  assert.match(page, /Hiring manager/i);
+  assert.match(page, /Case breakdown/i);
+  assert.match(page, /SpeechRecognition/i);
+  assert.match(page, /Evidence before polish/i);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
   assert.match(page, /Lever EU/i);

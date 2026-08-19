@@ -100,9 +100,63 @@ type WorkspaceView =
   | "Recommendations"
   | "Market Insights"
   | "Tracker"
+  | "Interview Studio"
   | "Copilot"
   | "Feedback";
 type ApplicationMode = "Manual" | "Hybrid" | "Automatic";
+type InterviewPersonaId =
+  | "hr"
+  | "hiring-manager"
+  | "coo"
+  | "ceo"
+  | "peer"
+  | "case";
+type InterviewMode = "Coaching" | "Realistic";
+type InterviewScore = {
+  relevance: number;
+  evidence: number;
+  outcome: number;
+  structure: number;
+  confidence: number;
+};
+type InterviewPersona = {
+  id: InterviewPersonaId;
+  label: string;
+  focus: string;
+  pressure: string;
+};
+type InterviewCopy = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  role: string;
+  style: string;
+  coaching: string;
+  realistic: string;
+  start: string;
+  restart: string;
+  answer: string;
+  placeholder: string;
+  send: string;
+  speak: string;
+  mute: string;
+  listen: string;
+  listening: string;
+  unavailable: string;
+  scoreTitle: string;
+  relevance: string;
+  evidence: string;
+  outcome: string;
+  structure: string;
+  confidence: string;
+  storySpine: string;
+  proof: string;
+  gap: string;
+  focus: string;
+  privacy: string;
+  feedbackLead: string;
+  improveLead: string;
+};
 type BillingMarket = {
   code: string;
   currency: string;
@@ -151,6 +205,214 @@ const PROVIDERS = [
   "Hugging Face",
   "Gemini",
 ];
+const INTERVIEW_PERSONAS: InterviewPersona[] = [
+  {
+    id: "hr",
+    label: "HR screening",
+    focus: "Motivation, role fit, concise career narrative",
+    pressure: "Warm, time-boxed, and skeptical of vague claims",
+  },
+  {
+    id: "hiring-manager",
+    label: "Hiring manager",
+    focus: "Role-specific judgment, execution, and measurable outcomes",
+    pressure: "Detailed follow-ups on ownership and trade-offs",
+  },
+  {
+    id: "coo",
+    label: "COO",
+    focus: "Operating leverage, process quality, and cross-functional delivery",
+    pressure: "Tests scale, risk, and repeatability",
+  },
+  {
+    id: "ceo",
+    label: "CEO",
+    focus: "Business impact, strategic clarity, and why you",
+    pressure: "Expects a direct point of view and executive brevity",
+  },
+  {
+    id: "peer",
+    label: "Future teammate",
+    focus: "Collaboration, conflict, feedback, and working style",
+    pressure: "Looks for self-awareness and practical partnership",
+  },
+  {
+    id: "case",
+    label: "Case breakdown",
+    focus: "Problem framing, assumptions, prioritization, and synthesis",
+    pressure: "Introduces ambiguity and challenges your reasoning",
+  },
+];
+
+const INTERVIEW_COPY: Partial<Record<LocaleCode, Partial<InterviewCopy>>> = {
+  "zh-TW": {
+    eyebrow: "證據導向模擬面試",
+    title: "把你的經歷練成面試時說得出口的故事",
+    subtitle:
+      "面試官只根據履歷、JD 與已辨識的證據追問，不會替你編造經歷。",
+    role: "面試官角色",
+    style: "練習模式",
+    coaching: "教練模式",
+    realistic: "真實面試",
+    start: "開始模擬面試",
+    restart: "重新開始",
+    answer: "你的回答",
+    placeholder: "輸入回答，或使用語音作答……",
+    send: "送出回答",
+    speak: "朗讀問題",
+    mute: "停止朗讀",
+    listen: "語音作答",
+    listening: "正在聆聽",
+    unavailable: "此瀏覽器不支援語音輸入，仍可使用文字作答。",
+    scoreTitle: "回答訊號",
+    relevance: "JD 關聯",
+    evidence: "證據",
+    outcome: "成果",
+    structure: "結構",
+    confidence: "自信度",
+    storySpine: "故事主軸",
+    proof: "可用證據",
+    gap: "可能追問",
+    focus: "面試官關注",
+    privacy: "訪客模式的練習紀錄只留在此裝置。",
+    feedbackLead: "目前最強",
+    improveLead: "下一步加強",
+  },
+  "zh-CN": {
+    eyebrow: "证据导向模拟面试",
+    title: "把你的经历练成面试时讲得出的故事",
+    subtitle: "面试官只根据简历、JD 与已识别证据追问，不会替你编造经历。",
+    role: "面试官角色",
+    style: "练习模式",
+    coaching: "教练模式",
+    realistic: "真实面试",
+    start: "开始模拟面试",
+    restart: "重新开始",
+    answer: "你的回答",
+    placeholder: "输入回答，或使用语音作答……",
+    send: "提交回答",
+    speak: "朗读问题",
+    mute: "停止朗读",
+    listen: "语音作答",
+    listening: "正在聆听",
+    unavailable: "此浏览器不支持语音输入，仍可使用文字作答。",
+    scoreTitle: "回答信号",
+    relevance: "JD 关联",
+    evidence: "证据",
+    outcome: "成果",
+    structure: "结构",
+    confidence: "自信度",
+    storySpine: "故事主线",
+    proof: "可用证据",
+    gap: "可能追问",
+    focus: "面试官关注",
+    privacy: "访客模式的练习记录只保留在此设备。",
+    feedbackLead: "目前最强",
+    improveLead: "下一步加强",
+  },
+  ja: {
+    eyebrow: "根拠に基づく模擬面接",
+    title: "経験を、自信を持って話せる面接ストーリーへ",
+    subtitle: "履歴書と求人票の根拠だけを使い、経験を作り上げずに質問します。",
+    role: "面接官",
+    style: "練習モード",
+    coaching: "コーチング",
+    realistic: "本番モード",
+    start: "模擬面接を開始",
+    restart: "最初からやり直す",
+    answer: "回答",
+    placeholder: "回答を入力するか、音声で話してください…",
+    send: "回答を送信",
+    speak: "質問を読み上げる",
+    mute: "読み上げを停止",
+    listen: "音声で回答",
+    listening: "聞き取り中",
+    unavailable: "このブラウザでは音声入力を利用できません。",
+    scoreTitle: "回答シグナル",
+    relevance: "求人との関連",
+    evidence: "根拠",
+    outcome: "成果",
+    structure: "構成",
+    confidence: "自信",
+    storySpine: "ストーリーの軸",
+    proof: "使える根拠",
+    gap: "想定される追問",
+    focus: "面接官の視点",
+    privacy: "ゲストの練習履歴はこの端末にのみ保存されます。",
+    feedbackLead: "現在の強み",
+    improveLead: "次に改善する点",
+  },
+  ko: {
+    eyebrow: "근거 기반 모의 면접",
+    title: "경험을 자신 있게 말할 수 있는 면접 스토리로 바꾸세요",
+    subtitle: "이력서와 JD의 근거만으로 질문하며 경험을 만들어내지 않습니다.",
+    role: "면접관 역할",
+    style: "연습 모드",
+    coaching: "코칭 모드",
+    realistic: "실전 모드",
+    start: "모의 면접 시작",
+    restart: "다시 시작",
+    answer: "내 답변",
+    placeholder: "답변을 입력하거나 음성으로 말하세요…",
+    send: "답변 보내기",
+    speak: "질문 읽기",
+    mute: "읽기 중지",
+    listen: "음성 답변",
+    listening: "듣는 중",
+    unavailable: "이 브라우저에서는 음성 입력을 지원하지 않습니다.",
+    scoreTitle: "답변 신호",
+    relevance: "JD 연관성",
+    evidence: "근거",
+    outcome: "성과",
+    structure: "구조",
+    confidence: "자신감",
+    storySpine: "스토리 중심축",
+    proof: "사용할 근거",
+    gap: "예상 꼬리 질문",
+    focus: "면접관 초점",
+    privacy: "게스트 연습 기록은 이 기기에만 저장됩니다.",
+    feedbackLead: "현재 강점",
+    improveLead: "다음 개선점",
+  },
+};
+
+const EN_INTERVIEW_COPY: InterviewCopy = {
+  eyebrow: "Evidence-grounded mock interview",
+  title: "Practice the story you will actually tell in the interview",
+  subtitle:
+    "Your interviewer follows the resume, the JD, and your proof—not a generic question bank and never invented experience.",
+  role: "Interviewer role",
+  style: "Practice mode",
+  coaching: "Coaching",
+  realistic: "Realistic",
+  start: "Start mock interview",
+  restart: "Restart session",
+  answer: "Your answer",
+  placeholder: "Type your answer or respond by voice…",
+  send: "Submit answer",
+  speak: "Read question aloud",
+  mute: "Stop speaking",
+  listen: "Answer by voice",
+  listening: "Listening",
+  unavailable: "Voice input is not supported in this browser. You can still type.",
+  scoreTitle: "Answer signals",
+  relevance: "JD relevance",
+  evidence: "Evidence",
+  outcome: "Outcome",
+  structure: "Structure",
+  confidence: "Confidence",
+  storySpine: "Story spine",
+  proof: "Proof to use",
+  gap: "Likely follow-up",
+  focus: "Interviewer focus",
+  privacy: "Guest practice history stays on this device.",
+  feedbackLead: "Strongest signal",
+  improveLead: "Strengthen next",
+};
+
+function interviewCopyFor(locale: LocaleCode): InterviewCopy {
+  return { ...EN_INTERVIEW_COPY, ...(INTERVIEW_COPY[locale] || {}) };
+}
 const JOB_SOURCE_STATUS = [
   {
     name: "Employer ATS APIs",
@@ -609,6 +871,113 @@ function storyFitFor(matches: Match[]) {
     ),
   };
 }
+
+function firstEvidence(matches: Match[]) {
+  return matches.find(
+    (item) =>
+      item.status === "Strong evidence" &&
+      item.evidence !== "No source evidence found.",
+  );
+}
+
+function questionForInterview(
+  persona: InterviewPersonaId,
+  turn: number,
+  matches: Match[],
+) {
+  const proof = firstEvidence(matches);
+  const gap = matches.find((item) => item.status === "Gap");
+  const proofLabel = proof?.keyword || "the most relevant achievement on your resume";
+  const gapLabel = gap?.keyword || "an unfamiliar part of this role";
+  const questions: Record<InterviewPersonaId, string[]> = {
+    hr: [
+      `Give me the two-minute version of your career story, and connect it directly to this role—not just your job titles.`,
+      `Why is this role the right next step for you, and what does your ${proofLabel} experience let you contribute immediately?`,
+      `What should I understand about ${gapLabel}, and how would you address it without overstating your experience?`,
+    ],
+    "hiring-manager": [
+      `Walk me through your strongest ${proofLabel} example. What problem did you own, what did you decide, and what changed?`,
+      `Which trade-off in that example was genuinely yours to make, and what evidence told you it was the right call?`,
+      `If you joined this team, how would you apply that proof to the priorities in this job description during your first 90 days?`,
+    ],
+    coo: [
+      `Choose one example where your work improved an operating process. What was unreliable before, and how did the operating rhythm change?`,
+      `What did the process depend on besides you, and how did you make the result repeatable across people or teams?`,
+      `Where could your approach fail at ten times the scale, and what control would you put in place first?`,
+    ],
+    ceo: [
+      `In ninety seconds, tell me why your evidence makes you unusually useful for this role and this business.`,
+      `What business outcome did your strongest example influence, and why did that outcome matter beyond your immediate team?`,
+      `What point of view would you bring here that is supported by experience rather than aspiration?`,
+    ],
+    peer: [
+      `Tell me about a time you and a partner disagreed on how to solve a problem. What did you do, and what changed in the working relationship?`,
+      `Which part of that result belonged to someone else, and how did you make their contribution more effective?`,
+      `What feedback would that teammate give you about how you operate under pressure?`,
+    ],
+    case: [
+      `Case: a key product metric fell 12% in two weeks after a release. Structure how you would diagnose the problem before proposing a fix.`,
+      `Assume the decline is concentrated among new users on mobile. Which hypotheses move to the top, and what evidence would separate them?`,
+      `You have one analyst and five working days. Prioritize the plan, name the trade-offs, and give me your executive recommendation.`,
+    ],
+  };
+  return questions[persona][Math.min(turn, questions[persona].length - 1)];
+}
+
+function scoreInterviewAnswer(answer: string, matches: Match[]): InterviewScore {
+  const normalized = answer.toLowerCase();
+  const words = answer.trim().split(/\s+/).filter(Boolean);
+  const relevantSignals = matches.filter(
+    (item) =>
+      item.status !== "Gap" &&
+      includesPhrase(normalized, item.keyword.toLowerCase()),
+  ).length;
+  const evidenceLanguage =
+    /\b(?:built|led|owned|designed|launched|automated|analyzed|decided|partnered|delivered|created|managed|implemented|tested)\b|建立|建置|領導|主導|設計|推出|自動化|分析|決定|合作|交付|负责|主导|设计|自动化|分析|협업|주도|구축|분석|설계|実施|設計|分析|主導/iu.test(
+      answer,
+    );
+  const outcomeLanguage =
+    /\p{N}+(?:[.,]\p{N}+)?\s?%|[$€£¥₹₩]\s?\p{N}|\b(?:reduced|increased|grew|saved|improved|accelerated|revenue|adoption|retention|hours?|days?|users?|customers?)\b|降低|減少|提升|成長|增加|改善|節省|减少|增长|提高|节省|성과|증가|개선|절감|向上|削減|増加/iu.test(
+      answer,
+    );
+  const structureSignals = [
+    /\b(?:situation|context|problem|challenge)\b|情境|背景|問題|挑战|상황|문제|課題/iu,
+    /\b(?:task|goal|objective|responsible)\b|任務|目標|负责|과제|목표|役割/iu,
+    /\b(?:action|first|then|because|decided)\b|行動|首先|接著|因為|決定|먼저|결정|行動/iu,
+    /\b(?:result|impact|outcome|learned)\b|結果|影響|成果|學到|结果|影响|배운|결과|成果/iu,
+  ].filter((pattern) => pattern.test(answer)).length;
+  const hedgeCount = (
+    normalized.match(/\b(?:maybe|perhaps|i think|sort of|kind of|probably)\b/g) || []
+  ).length;
+  const relevance = Math.min(96, 48 + relevantSignals * 16 + (words.length > 45 ? 10 : 0));
+  const evidence = Math.min(96, 46 + (evidenceLanguage ? 27 : 0) + (relevantSignals ? 14 : 0));
+  const outcome = Math.min(98, 42 + (outcomeLanguage ? 42 : 0) + (words.length > 70 ? 7 : 0));
+  const structure = Math.min(96, 44 + structureSignals * 12 + (words.length >= 55 ? 7 : 0));
+  const confidence = Math.max(
+    35,
+    Math.min(95, 58 + (words.length >= 35 ? 16 : 0) - hedgeCount * 8),
+  );
+  return { relevance, evidence, outcome, structure, confidence };
+}
+
+function interviewFeedback(
+  scores: InterviewScore,
+  labels: InterviewCopy,
+  mode: InterviewMode,
+) {
+  const entries = [
+    [labels.relevance, scores.relevance],
+    [labels.evidence, scores.evidence],
+    [labels.outcome, scores.outcome],
+    [labels.structure, scores.structure],
+    [labels.confidence, scores.confidence],
+  ] as const;
+  const strongest = [...entries].sort((a, b) => b[1] - a[1])[0];
+  const weakest = [...entries].sort((a, b) => a[1] - b[1])[0];
+  if (mode === "Realistic")
+    return `${labels.feedbackLead}: ${strongest[0]} ${strongest[1]}/100. ${labels.improveLead}: ${weakest[0]} ${weakest[1]}/100.`;
+  return `${labels.feedbackLead}: ${strongest[0]} (${strongest[1]}/100). ${labels.improveLead}: add one specific decision, one measurable outcome, and a clearer link back to the JD to raise ${weakest[0].toLowerCase()}.`;
+}
 function compactNumber(value: number, locale: LocaleCode = "en") {
   return new Intl.NumberFormat(locale, {
     notation: "compact",
@@ -711,6 +1080,18 @@ export default function Home() {
   const [role, setRole] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
+  const [interviewPersona, setInterviewPersona] =
+    useState<InterviewPersonaId>("hiring-manager");
+  const [interviewMode, setInterviewMode] =
+    useState<InterviewMode>("Coaching");
+  const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([]);
+  const [interviewAnswer, setInterviewAnswer] = useState("");
+  const [interviewTurn, setInterviewTurn] = useState(0);
+  const [interviewScores, setInterviewScores] =
+    useState<InterviewScore | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceMessage, setVoiceMessage] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
@@ -719,7 +1100,9 @@ export default function Home() {
   const [billingMarketCode, setBillingMarketCode] = useState("US");
   const copy = copyFor(locale);
   const detail = detailFor(locale);
+  const interview = interviewCopyFor(locale);
   const preferencesLoaded = useRef(false);
+  const speechRecognitionRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -736,6 +1119,9 @@ export default function Home() {
       );
       const savedRadarAlerts = window.localStorage.getItem(
         "aptograph-story-radar-alerts",
+      );
+      const savedInterview = window.localStorage.getItem(
+        "aptograph-interview-session",
       );
       if (savedLocale && LANGUAGES.some(([code]) => code === savedLocale))
         setLocale(savedLocale);
@@ -786,6 +1172,26 @@ export default function Home() {
           window.localStorage.removeItem("aptograph-story-radar-alerts");
         }
       }
+      if (savedInterview) {
+        try {
+          const session = JSON.parse(savedInterview) as {
+            persona?: InterviewPersonaId;
+            mode?: InterviewMode;
+            messages?: ChatMessage[];
+            turn?: number;
+            scores?: InterviewScore | null;
+          };
+          if (INTERVIEW_PERSONAS.some((item) => item.id === session.persona))
+            setInterviewPersona(session.persona as InterviewPersonaId);
+          if (session.mode === "Coaching" || session.mode === "Realistic")
+            setInterviewMode(session.mode);
+          if (Array.isArray(session.messages)) setInterviewMessages(session.messages);
+          if (Number.isInteger(session.turn)) setInterviewTurn(session.turn || 0);
+          if (session.scores) setInterviewScores(session.scores);
+        } catch {
+          window.localStorage.removeItem("aptograph-interview-session");
+        }
+      }
       setNotificationPermission(
         "Notification" in window ? Notification.permission : "unsupported",
       );
@@ -822,6 +1228,28 @@ export default function Home() {
       }),
     );
   }, [autoTrackRadar, browserAlerts, radarThreshold]);
+
+  useEffect(() => {
+    if (!preferencesLoaded.current) return;
+    window.localStorage.setItem(
+      "aptograph-interview-session",
+      JSON.stringify({
+        persona: interviewPersona,
+        mode: interviewMode,
+        messages: interviewMessages.slice(-12),
+        turn: interviewTurn,
+        scores: interviewScores,
+      }),
+    );
+  }, [interviewMessages, interviewMode, interviewPersona, interviewScores, interviewTurn]);
+
+  useEffect(
+    () => () => {
+      speechRecognitionRef.current?.stop();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    },
+    [],
+  );
 
   function chooseLocale(nextLocale: LocaleCode) {
     setLocale(nextLocale);
@@ -1219,6 +1647,124 @@ export default function Home() {
     ]);
     setQuestion("");
   }
+
+  function startInterview() {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    const opening = questionForInterview(interviewPersona, 0, matches);
+    setInterviewMessages([{ role: "assistant", content: opening }]);
+    setInterviewTurn(0);
+    setInterviewScores(null);
+    setInterviewAnswer("");
+    setVoiceMessage("");
+    setIsSpeaking(false);
+  }
+
+  function submitInterviewAnswer(event: FormEvent) {
+    event.preventDefault();
+    const answer = interviewAnswer.trim();
+    if (!answer || !interviewMessages.length) return;
+    const scores = scoreInterviewAnswer(answer, matches);
+    const nextTurn = interviewTurn + 1;
+    const nextQuestion = questionForInterview(
+      interviewPersona,
+      nextTurn,
+      matches,
+    );
+    const feedback = interviewFeedback(scores, interview, interviewMode);
+    setInterviewMessages((current) => [
+      ...current,
+      { role: "user", content: answer },
+      {
+        role: "assistant",
+        content:
+          interviewMode === "Coaching"
+            ? `${feedback}\n\n${nextQuestion}`
+            : nextQuestion,
+      },
+    ]);
+    setInterviewScores(scores);
+    setInterviewTurn(nextTurn);
+    setInterviewAnswer("");
+    setVoiceMessage("");
+  }
+
+  function speakLatestInterviewQuestion() {
+    if (!("speechSynthesis" in window) || !interviewMessages.length) {
+      setVoiceMessage(interview.unavailable);
+      return;
+    }
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    const latest = [...interviewMessages]
+      .reverse()
+      .find((message) => message.role === "assistant");
+    if (!latest) return;
+    const utterance = new SpeechSynthesisUtterance(latest.content);
+    utterance.lang = locale;
+    utterance.rate = interviewMode === "Realistic" ? 1.04 : 0.94;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  }
+
+  function toggleInterviewListening() {
+    type BrowserRecognition = {
+      lang: string;
+      continuous: boolean;
+      interimResults: boolean;
+      start: () => void;
+      stop: () => void;
+      onresult:
+        | ((event: {
+            results: ArrayLike<ArrayLike<{ transcript: string }>>;
+          }) => void)
+        | null;
+      onend: (() => void) | null;
+      onerror: (() => void) | null;
+    };
+    type RecognitionConstructor = new () => BrowserRecognition;
+    const voiceWindow = window as typeof window & {
+      SpeechRecognition?: RecognitionConstructor;
+      webkitSpeechRecognition?: RecognitionConstructor;
+    };
+    const Recognition =
+      voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceMessage(interview.unavailable);
+      return;
+    }
+    if (isListening) {
+      speechRecognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = locale;
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript || "")
+        .join(" ")
+        .trim();
+      if (transcript)
+        setInterviewAnswer((current) => `${current} ${transcript}`.trim());
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => {
+      setIsListening(false);
+      setVoiceMessage(interview.unavailable);
+    };
+    speechRecognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+    setVoiceMessage("");
+  }
   async function sendFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedbackSubmitting(true);
@@ -1254,6 +1800,7 @@ export default function Home() {
     { id: "Recommendations", label: copy.recommendations },
     { id: "Market Insights", label: copy.market },
     { id: "Tracker", label: copy.tracker },
+    { id: "Interview Studio", label: copy.interview },
     { id: "Copilot", label: copy.copilot },
     { id: "Feedback", label: copy.feedback },
   ];
@@ -1284,6 +1831,21 @@ export default function Home() {
   const regionNames = new Intl.DisplayNames([locale], { type: "region" });
   const suggestedLanguageName = suggestedLocale
     ? LANGUAGES.find(([code]) => code === suggestedLocale)?.[1]
+    : null;
+  const selectedInterviewPersona =
+    INTERVIEW_PERSONAS.find((item) => item.id === interviewPersona) ||
+    INTERVIEW_PERSONAS[1];
+  const interviewProof = firstEvidence(matches);
+  const interviewGap = matches.find((item) => item.status === "Gap");
+  const interviewAverage = interviewScores
+    ? Math.round(
+        (interviewScores.relevance +
+          interviewScores.evidence +
+          interviewScores.outcome +
+          interviewScores.structure +
+          interviewScores.confidence) /
+          5,
+      )
     : null;
 
   return (
@@ -1367,6 +1929,13 @@ export default function Home() {
             >
               {detail.explore}
             </button>
+            <a
+              className="text-link"
+              href="#workspace"
+              onClick={() => setActive("Interview Studio")}
+            >
+              {copy.interview}
+            </a>
           </div>
           <div className="trust-row">
             <span>{detail.evidenceLinked}</span>
@@ -1405,7 +1974,7 @@ export default function Home() {
           </div>
           <p className="insight">
             {locale === "en"
-              ? "Recommendations rank role requirements against your source evidence. Gaps stay visible and are never rewritten as experience you do not have."
+              ? "Every interview story stays traceable to your resume evidence and the JD. Aptograph trains what you can prove, then pressures the gaps without inventing experience."
               : copy.heroBody}
           </p>
         </div>
@@ -1574,6 +2143,230 @@ export default function Home() {
                     <p className="empty-state">{detail.matrix}</p>
                   )}
                 </div>
+              </div>
+            </>
+          )}
+
+          {active === "Interview Studio" && (
+            <>
+              <div className="section-heading interview-heading">
+                <div>
+                  <p className="eyebrow">{interview.eyebrow}</p>
+                  <h2>{interview.title}</h2>
+                  <p>{interview.subtitle}</p>
+                </div>
+                <span className="status-pill light">Aptograph ProofLoop</span>
+              </div>
+
+              <div className="interview-setup">
+                <label>
+                  <span>{interview.role}</span>
+                  <select
+                    value={interviewPersona}
+                    onChange={(event) => {
+                      setInterviewPersona(
+                        event.target.value as InterviewPersonaId,
+                      );
+                      setInterviewMessages([]);
+                      setInterviewScores(null);
+                    }}
+                  >
+                    {INTERVIEW_PERSONAS.map((persona) => (
+                      <option value={persona.id} key={persona.id}>
+                        {persona.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <fieldset>
+                  <legend>{interview.style}</legend>
+                  <div className="interview-mode" role="radiogroup">
+                    {(["Coaching", "Realistic"] as InterviewMode[]).map(
+                      (mode) => (
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={interviewMode === mode}
+                          className={interviewMode === mode ? "active" : ""}
+                          key={mode}
+                          onClick={() => setInterviewMode(mode)}
+                        >
+                          {mode === "Coaching"
+                            ? interview.coaching
+                            : interview.realistic}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </fieldset>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={startInterview}
+                >
+                  {interviewMessages.length ? interview.restart : interview.start}
+                </button>
+              </div>
+
+              <div className="interview-brief" aria-label={interview.storySpine}>
+                <article>
+                  <span>{interview.focus}</span>
+                  <b>{selectedInterviewPersona.focus}</b>
+                  <small>{selectedInterviewPersona.pressure}</small>
+                </article>
+                <article>
+                  <span>{interview.proof}</span>
+                  <b>{interviewProof?.keyword || "Run evidence match first"}</b>
+                  <small>
+                    {interviewProof?.evidence ||
+                      "A specific action and measurable outcome will anchor your answer."}
+                  </small>
+                </article>
+                <article>
+                  <span>{interview.gap}</span>
+                  <b>{interviewGap?.keyword || "Depth and trade-offs"}</b>
+                  <small>
+                    {interviewGap
+                      ? "Address honestly; bridge with adjacent proof instead of inventing experience."
+                      : "Expect the interviewer to test ownership, decisions, and limits."}
+                  </small>
+                </article>
+              </div>
+
+              <div className="interview-stage">
+                <section className="interview-room" aria-label="Mock interview transcript">
+                  <div className="interview-room-bar">
+                    <div>
+                      <span className="interviewer-avatar" aria-hidden="true">
+                        {selectedInterviewPersona.label
+                          .split(/\s+/)
+                          .map((word) => word[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </span>
+                      <div>
+                        <b>{selectedInterviewPersona.label}</b>
+                        <small>
+                          {interviewMode === "Coaching"
+                            ? interview.coaching
+                            : interview.realistic}
+                        </small>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="voice-button"
+                      onClick={speakLatestInterviewQuestion}
+                      disabled={!interviewMessages.length}
+                      aria-pressed={isSpeaking}
+                    >
+                      {isSpeaking ? interview.mute : interview.speak}
+                    </button>
+                  </div>
+                  <div className="interview-transcript" aria-live="polite">
+                    {interviewMessages.length ? (
+                      interviewMessages.map((message, index) => (
+                        <div
+                          className={`interview-message ${message.role}`}
+                          key={`${message.role}-${index}`}
+                        >
+                          <b>
+                            {message.role === "assistant"
+                              ? selectedInterviewPersona.label
+                              : "You"}
+                          </b>
+                          <p>{message.content}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="interview-empty">
+                        <b>{interview.storySpine}</b>
+                        <p>{interview.subtitle}</p>
+                        <button
+                          type="button"
+                          className="button primary"
+                          onClick={startInterview}
+                        >
+                          {interview.start}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <form
+                    className="interview-answer-form"
+                    onSubmit={submitInterviewAnswer}
+                  >
+                    <label htmlFor="interview-answer">{interview.answer}</label>
+                    <textarea
+                      id="interview-answer"
+                      value={interviewAnswer}
+                      onChange={(event) => setInterviewAnswer(event.target.value)}
+                      placeholder={interview.placeholder}
+                      disabled={!interviewMessages.length}
+                    />
+                    <div className="interview-answer-actions">
+                      <button
+                        type="button"
+                        className={`button secondary ${isListening ? "listening" : ""}`}
+                        onClick={toggleInterviewListening}
+                        disabled={!interviewMessages.length}
+                        aria-pressed={isListening}
+                      >
+                        {isListening ? interview.listening : interview.listen}
+                      </button>
+                      <button
+                        className="button primary"
+                        disabled={!interviewMessages.length || !interviewAnswer.trim()}
+                      >
+                        {interview.send}
+                      </button>
+                    </div>
+                    <small className="voice-disclosure">
+                      {voiceMessage ||
+                        `${interview.privacy} Voice recognition may use your browser's speech service.`}
+                    </small>
+                  </form>
+                </section>
+
+                <aside className="answer-scorecard">
+                  <div className="scorecard-heading">
+                    <div>
+                      <span>{interview.scoreTitle}</span>
+                      <b>{interviewAverage === null ? "—" : interviewAverage}</b>
+                    </div>
+                    <small>{interviewAverage === null ? "Ready" : "/ 100"}</small>
+                  </div>
+                  {(
+                    [
+                      ["relevance", interview.relevance],
+                      ["evidence", interview.evidence],
+                      ["outcome", interview.outcome],
+                      ["structure", interview.structure],
+                      ["confidence", interview.confidence],
+                    ] as const
+                  ).map(([key, label]) => {
+                    const value = interviewScores?.[key] || 0;
+                    return (
+                      <div className="answer-signal" key={key}>
+                        <div>
+                          <span>{label}</span>
+                          <b>{interviewScores ? value : "—"}</b>
+                        </div>
+                        <i>
+                          <span style={{ width: `${value}%` }} />
+                        </i>
+                      </div>
+                    );
+                  })}
+                  <div className="scorecard-note">
+                    <b>Evidence before polish</b>
+                    <p>
+                      Aptograph rewards a specific decision, verifiable action,
+                      measurable outcome, and explicit link to this JD. Fluency
+                      alone cannot create a high score.
+                    </p>
+                  </div>
+                </aside>
               </div>
             </>
           )}
