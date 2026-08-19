@@ -7,19 +7,19 @@ async function render() {
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
-    new Request("https://careerproof.example/", { headers: { accept: "text/html", host: "careerproof.example" } }),
+    new Request("https://aptograph.example/", { headers: { accept: "text/html", host: "aptograph.example" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
-test("server-renders the CareerProof product experience", async () => {
+test("server-renders the Aptograph product experience", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /CareerProof/);
-  assert.match(html, /Evidence that travels/i);
+  assert.match(html, /Aptograph/);
+  assert.match(html, /Your evidence, mapped to what’s next/i);
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
   assert.match(html, /Market Insights/i);
@@ -32,10 +32,10 @@ test("ships product metadata and a social card", async () => {
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
   ]);
-  await access(new URL("../public/og-v2.png", import.meta.url));
+  await access(new URL("../public/og.png", import.meta.url));
   assert.match(layout, /openGraph/);
   assert.match(layout, /twitter/);
-  assert.match(layout, /\/og-v2\.png/);
+  assert.match(layout, /\/og\.png/);
   assert.match(layout, /application\/ld\+json/);
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);

@@ -471,10 +471,11 @@ export default function Home() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const savedLocale = window.localStorage.getItem(
-        "careerproof-locale",
-      ) as LocaleCode | null;
-      const savedTracker = window.localStorage.getItem("careerproof-tracker");
+      const savedLocale = (window.localStorage.getItem("aptograph-locale") ||
+        window.localStorage.getItem("careerproof-locale")) as LocaleCode | null;
+      const savedTracker =
+        window.localStorage.getItem("aptograph-tracker") ||
+        window.localStorage.getItem("careerproof-tracker");
       if (savedLocale && LANGUAGES.some(([code]) => code === savedLocale))
         setLocale(savedLocale);
       if (savedTracker) {
@@ -492,7 +493,7 @@ export default function Home() {
     document.documentElement.lang = locale;
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
     if (preferencesLoaded.current)
-      window.localStorage.setItem("careerproof-locale", locale);
+      window.localStorage.setItem("aptograph-locale", locale);
   }, [locale]);
 
   const score = useMemo(() => scoreMatches(matches), [matches]);
@@ -697,7 +698,7 @@ export default function Home() {
   }
   function persistTracker(next: TrackerItem[]) {
     setTracker(next);
-    window.localStorage.setItem("careerproof-tracker", JSON.stringify(next));
+    window.localStorage.setItem("aptograph-tracker", JSON.stringify(next));
   }
   function saveJob(job: Job) {
     if (!tracker.some((item) => item.id === job.id))
@@ -749,10 +750,12 @@ export default function Home() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const existing = JSON.parse(
-      window.localStorage.getItem("careerproof-feedback") || "[]",
+      window.localStorage.getItem("aptograph-feedback") ||
+        window.localStorage.getItem("careerproof-feedback") ||
+        "[]",
     );
     window.localStorage.setItem(
-      "careerproof-feedback",
+      "aptograph-feedback",
       JSON.stringify([...existing, Object.fromEntries(data.entries())]),
     );
     setFeedbackSent(true);
@@ -779,10 +782,10 @@ export default function Home() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="CareerProof Global home">
-          <span className="brand-mark">CP</span>
+        <a className="brand" href="#top" aria-label="Aptograph home">
+          <span className="brand-mark" aria-hidden="true">A</span>
           <span>
-            CareerProof <small>Global</small>
+            Aptograph <small>Career intelligence</small>
           </span>
         </a>
         <nav className="topnav" aria-label="Primary navigation">
@@ -813,7 +816,7 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">CareerProof Global · Evidence that travels.</p>
+          <p className="eyebrow">Aptograph · Your evidence, mapped to what’s next.</p>
           <h1>{copy.heroTitle}</h1>
           <p className="lede">{copy.heroBody}</p>
           <div className="hero-actions">
@@ -1627,7 +1630,7 @@ export default function Home() {
                   >
                     <b>
                       {message.role === "assistant"
-                        ? "CareerProof"
+                        ? "Aptograph"
                         : detail.privateTitle}
                     </b>
                     <p>{message.content}</p>

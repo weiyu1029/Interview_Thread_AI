@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
+import { LANGUAGES } from "./i18n";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -9,8 +10,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
+async function requestOrigin() {
   const requestHeaders = await headers();
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (configuredOrigin) return configuredOrigin;
   const host =
     requestHeaders.get("x-forwarded-host") ||
     requestHeaders.get("host") ||
@@ -18,27 +21,41 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol =
     requestHeaders.get("x-forwarded-proto") ||
     (host.startsWith("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
-  const title = "CareerProof Global — Evidence that travels";
+  return `${protocol}://${host}`;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = await requestOrigin();
+  const title = "Aptograph — Your evidence, mapped to what’s next";
   const description =
-    "Turn verified career stories into stronger global job matches, multilingual applications, and evidence-grounded interview narratives.";
-  const image = new URL("/og-v2.png", origin).toString();
+    "Map verified career evidence to better-fit jobs, multilingual applications, market insight, and stronger interview stories worldwide.";
+  const image = new URL("/og.png", origin).toString();
 
   return {
     metadataBase: new URL(origin),
-    title,
+    title: {
+      default: title,
+      template: "%s | Aptograph",
+    },
     description,
     alternates: { canonical: origin },
     keywords: [
       "career evidence",
-      "job matching",
+      "AI job matching",
+      "career intelligence",
       "resume analysis",
+      "resume keyword analysis",
       "global jobs",
+      "multilingual job search",
       "open source career tools",
     ],
-    applicationName: "CareerProof Global",
+    applicationName: "Aptograph",
     category: "career technology",
     manifest: "/site.webmanifest",
+    icons: {
+      icon: [{ url: "/icon.png", sizes: "512x512", type: "image/png" }],
+      apple: [{ url: "/icon.png", sizes: "512x512", type: "image/png" }],
+    },
     robots: {
       index: true,
       follow: true,
@@ -50,9 +67,20 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
+      type: "website",
+      siteName: "Aptograph",
+      url: origin,
       title,
       description,
-      images: [{ url: image, width: 1732, height: 908 }],
+      locale: "en_US",
+      images: [
+        {
+          url: image,
+          width: 1536,
+          height: 1024,
+          alt: "Aptograph — Your evidence, mapped to what’s next",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -63,20 +91,50 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "CareerProof Global",
-    applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
-    description:
-      "Evidence-grounded global job matching, career story development, market insights, and application tracking.",
-    isAccessibleForFree: true,
-    license: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
-  };
+  const origin = await requestOrigin();
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Aptograph",
+      slogan: "Your evidence, mapped to what’s next.",
+      url: origin,
+      sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Aptograph",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description:
+        "Evidence-grounded global job matching, resume keyword analysis, career story development, market insights, and application tracking.",
+      featureList: [
+        "Evidence-grounded resume and job description analysis",
+        "Global job recommendations from approved employer sources",
+        "Market insight by geography and role",
+        "Multilingual interface across 40 languages",
+        "Application tracker and career copilot",
+      ],
+      url: origin,
+      inLanguage: LANGUAGES.map(([code]) => code),
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      license: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Aptograph",
+      url: origin,
+      description:
+        "Open-source global career intelligence grounded in the evidence a candidate can support.",
+      inLanguage: LANGUAGES.map(([code]) => code),
+    },
+  ];
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
