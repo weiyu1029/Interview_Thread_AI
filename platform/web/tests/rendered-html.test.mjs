@@ -40,7 +40,12 @@ test("ships product metadata and a social card", async () => {
   assert.match(layout, /\/og-interview\.png/);
   assert.match(layout, /application\/ld\+json/);
   assert.match(page, /Ollama/);
-  assert.match(page, /Hugging Face/);
+  assert.match(page, /OpenAI-compatible/);
+  assert.match(page, /parseDocuments/);
+  assert.match(page, /Test connection/);
+  assert.match(page, /PDF · DOCX · PPTX · XLSX/);
+  assert.match(page, /Nothing is submitted automatically/);
+  assert.match(page, /Billing and checkout are not enabled/);
   assert.match(page, /\/api\/jobs/);
   assert.match(page, /\/api\/region/);
   assert.match(page, /\/api\/feedback/);
