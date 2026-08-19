@@ -18,6 +18,8 @@ Aptograph is an open-source, evidence-grounded career intelligence platform. It 
 ## Core capabilities
 - Resume and job-description keyword evidence analysis
 - Global job recommendations with visible source provenance
+- Proof-to-Role Radar alerts based on evidence, must-have coverage, and quantified outcome strength
+- One-click or automatic tracking of proof-qualified roles with the best defensible story attached
 - Geographic and role-based market insight
 - 40-language interface
 - Manual, hybrid, and governed automatic application modes
