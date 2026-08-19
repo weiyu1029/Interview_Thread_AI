@@ -1,18 +1,24 @@
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  "https://careerproof-open-source.wy-alicechen.chatgpt.site";
+  "https://careerstorymap.com";
 
 export function GET() {
-  const body = `# Aptograph
+  const body = `# CareerStoryMap
 
-> Your evidence, mapped to what’s next.
+> Map your evidence. Own your story.
 
-Aptograph is an open-source, evidence-grounded career intelligence platform. It helps people compare resume evidence with job descriptions, find stronger-fit roles from approved employer sources, understand market movement, prepare credible career stories, and track applications.
+CareerStoryMap is an open-source, evidence-grounded career intelligence platform. It helps people compare resume evidence with job descriptions, find stronger-fit roles from approved employer sources, understand market movement, prepare credible career stories, and track applications.
 
 ## Primary pages
 - Product: ${siteUrl}/#product
 - Workspace: ${siteUrl}/#workspace
 - Plans: ${siteUrl}/#plans
+- Resume and job-description matching: ${siteUrl}/resume-job-description-match
+- Career story builder: ${siteUrl}/career-story-builder
+- AI mock interview: ${siteUrl}/ai-mock-interview
+- Resume keyword analyzer: ${siteUrl}/resume-keyword-analyzer
+- Job match recommendations: ${siteUrl}/job-match-recommendations
+- Career market insights: ${siteUrl}/career-market-insights
 - Source code: https://github.com/weiyu1029/careerproof-agent
 
 ## Core capabilities
@@ -32,7 +38,7 @@ Aptograph is an open-source, evidence-grounded career intelligence platform. It 
 - Enterprise: custom annual agreement starting at US$15,000
 
 ## Data policy
-Aptograph uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
+CareerStoryMap uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
 `;
 
   return new Response(body, {

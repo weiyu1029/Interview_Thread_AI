@@ -26,16 +26,16 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const title = "Aptograph — Your evidence, mapped to what’s next";
+  const title = "CareerStoryMap — Map your evidence. Own your story.";
   const description =
-    "Turn resume evidence and job requirements into stronger interview stories, then rehearse them with evidence-grounded AI interviewers.";
-  const image = new URL("/og-interview.png", origin).toString();
+    "Match your resume to any job description, build credible career stories, practice AI interviews, and discover stronger-fit roles worldwide.";
+  const image = new URL("/og-careerstorymap.png", origin).toString();
 
   return {
     metadataBase: new URL(origin),
     title: {
       default: title,
-      template: "%s | Aptograph",
+      template: "%s | CareerStoryMap",
     },
     description,
     alternates: { canonical: origin },
@@ -51,7 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "multilingual job search",
       "open source career tools",
     ],
-    applicationName: "Aptograph",
+    applicationName: "CareerStoryMap",
     category: "career technology",
     manifest: "/site.webmanifest",
     icons: {
@@ -70,7 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      siteName: "Aptograph",
+      siteName: "CareerStoryMap",
       url: origin,
       title,
       description,
@@ -80,7 +80,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: image,
           width: 1536,
           height: 1024,
-          alt: "Aptograph — Your evidence, mapped to what’s next",
+          alt: "CareerStoryMap — Map your evidence. Own your story.",
         },
       ],
     },
@@ -101,15 +101,15 @@ export default async function RootLayout({
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "Aptograph",
-      slogan: "Your evidence, mapped to what’s next.",
+      name: "CareerStoryMap",
+      slogan: "Map your evidence. Own your story.",
       url: origin,
       sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
     },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Aptograph",
+      name: "CareerStoryMap",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
@@ -179,7 +179,8 @@ export default async function RootLayout({
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: "Aptograph",
+      name: "CareerStoryMap",
+      alternateName: "Career Story Map",
       url: origin,
       description:
         "Open-source global career intelligence grounded in the evidence a candidate can support.",

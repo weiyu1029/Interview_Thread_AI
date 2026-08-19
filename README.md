@@ -1,6 +1,6 @@
-# Aptograph Web
+# CareerStoryMap Web
 
-This is the professional guest-first interface for Aptograph. It provides a
+This is the professional guest-first interface for CareerStoryMap. It provides a
 working deterministic evidence match, device-local application tracker,
 evidence-aware copilot, public feedback form, Story Signal Radar, and clear
 model-provider selection.

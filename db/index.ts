@@ -23,7 +23,7 @@ let feedbackStorageReady: Promise<void> | null = null;
 
 export function ensureFeedbackStorage() {
   if (!env.DB) {
-    throw new Error("The Aptograph feedback database is unavailable.");
+    throw new Error("The CareerStoryMap feedback database is unavailable.");
   }
 
   if (!feedbackStorageReady) {
