@@ -36,9 +36,22 @@ npm run dev
 ```
 
 Run `npm run lint` and `npm run test` before contributing. The production Sites
-build is Cloudflare Worker-compatible. Account-backed persistence is implemented
-by the FastAPI service in `../api`; set `NEXT_PUBLIC_CAREERPROOF_API_URL` when
-integrating the authenticated routes.
+build is Cloudflare Worker-compatible.
+
+## Public accounts
+
+`/[locale]/account` provides registration and sign-in for Community, Pro, and
+Team visitors through the Sites-managed Sign in with ChatGPT flow. The app reads
+the authenticated identity only from dispatcher-injected headers; it does not
+store passwords or implement a parallel OAuth callback. Always validate
+authorization again in server-side APIs before adding account-owned data.
+
+The current account screen records a plan choice in the return URL only. Billing
+is intentionally disabled, and no payment or immigration details are requested.
+Account-backed tracker persistence can be connected to the FastAPI/Postgres
+service in `../api` after authorization, privacy, retention, and commercial
+requirements are approved. Set `NEXT_PUBLIC_CAREERPROOF_API_URL` when integrating
+those authenticated routes.
 
 Resume text, job descriptions, tracker items, and Story Signal alert settings
 remain on the device in the public guest preview. Submitted product feedback is

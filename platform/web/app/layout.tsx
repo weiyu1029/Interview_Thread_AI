@@ -109,7 +109,7 @@ export default async function RootLayout({
       name: "CareerStoryMap",
       slogan: "Map your evidence. Own your story.",
       url: origin,
-      sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
+      sameAs: ["https://github.com/weiyu1029/CareerStoryMap-agent"],
     },
     {
       "@context": "https://schema.org",
@@ -179,7 +179,7 @@ export default async function RootLayout({
           },
         },
       ],
-      license: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
+      license: "https://github.com/weiyu1029/CareerStoryMap-agent/blob/main/LICENSE",
     },
     {
       "@context": "https://schema.org",
