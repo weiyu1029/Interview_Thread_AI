@@ -36,17 +36,18 @@
 .seo-header {
   position: sticky;
   top: 0;
-  z-index: 40;
-  max-width: 1240px;
-  min-height: 76px;
-  margin: auto;
-  padding: 14px 28px;
+  z-index: 50;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px max(24px, calc((100vw - 1240px) / 2 + 28px));
   display: flex;
   align-items: center;
   gap: 28px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(244, 243, 239, 0.96);
-  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 206, 211, 0.78);
+  background: rgba(244, 243, 239, 0.84);
+  box-shadow: 0 7px 24px rgba(35, 45, 54, 0.045);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .seo-header > nav {
   display: flex;
@@ -584,17 +585,18 @@ label:focus-within {
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 40;
-  min-height: 72px;
-  max-width: 1320px;
-  margin: auto;
-  padding: 11px 28px;
+  z-index: 50;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px max(24px, calc((100vw - 1240px) / 2 + 28px));
   display: flex;
   align-items: center;
   gap: 28px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(246, 246, 243, 0.94);
-  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 206, 211, 0.78);
+  background: rgba(244, 243, 239, 0.84);
+  box-shadow: 0 7px 24px rgba(35, 45, 54, 0.045);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .mobile-nav {
   position: relative;
@@ -776,22 +778,22 @@ label:focus-within {
   color: var(--accent-deep);
 }
 .account-link {
-  min-height: 36px;
-  padding: 0 13px;
+  min-height: 38px;
+  padding: 0 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--accent-deep);
   border-radius: 8px;
-  background: var(--surface);
-  color: var(--accent-deep);
+  background: var(--accent-deep);
+  color: white;
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
 }
 .account-link:hover {
-  border-color: #91a1ad;
-  background: var(--accent-soft);
+  border-color: #3c5060;
+  background: #3c5060;
 }
 .locale-control {
   display: flex;
@@ -3349,16 +3351,19 @@ input:focus {
 .account-header {
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 50;
   max-width: 1180px;
-  min-height: 76px;
+  min-height: 64px;
   margin: 0 auto;
+  padding: 10px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-  background: rgba(244, 243, 239, 0.96);
-  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 206, 211, 0.78);
+  background: rgba(244, 243, 239, 0.84);
+  box-shadow: 0 7px 24px rgba(35, 45, 54, 0.045);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .account-language {
   padding: 7px 10px;

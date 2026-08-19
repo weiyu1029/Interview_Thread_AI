@@ -2496,18 +2496,9 @@ export default function Home({
           >
             {detail.workspace}
           </a>
-          <a href="#career-tools">Career tools</a>
+          <a href="#career-tools">{copy.market}</a>
           <a href="#plans">{detail.plans}</a>
-          <a href="https://github.com/weiyu1029/CareerStoryMap-agent">
-            {detail.source}
-          </a>
         </nav>
-        <a
-          className="account-link"
-          href={`${localizedPath(locale, "account")}?plan=community`}
-        >
-          {accountLabels.account}
-        </a>
         <label className="locale-control">
           <span>{copy.language}</span>
           <select
@@ -2523,6 +2514,12 @@ export default function Home({
             ))}
           </select>
         </label>
+        <a
+          className="account-link"
+          href={`${localizedPath(locale, "account")}?plan=community`}
+        >
+          {accountLabels.account}
+        </a>
         <MobileNav
           label={detail.product}
           items={[
