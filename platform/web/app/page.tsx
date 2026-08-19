@@ -225,6 +225,17 @@ const MODE_DISCLOSURES: Partial<
   },
 };
 
+const MODE_CONTEXT: Partial<Record<LocaleCode, string>> = {
+  en: "This setting only controls what happens after you find a suitable role. It does not change your resume–JD analysis.",
+  "zh-TW": "這項設定只控制找到適合職缺後，系統要協助到哪一步；不會改變履歷與 JD 的分析結果。",
+  "zh-CN": "此设置只控制找到合适职位后，系统协助到哪一步；不会改变简历与 JD 的分析结果。",
+  ja: "この設定は適した求人を見つけた後の支援範囲だけを決めます。履歴書と求人票の分析結果は変わりません。",
+  ko: "이 설정은 적합한 공고를 찾은 뒤 지원을 어디까지 도울지만 정합니다. 이력서와 JD 분석 결과는 바뀌지 않습니다.",
+  es: "Este ajuste solo controla la ayuda después de encontrar un puesto adecuado. No cambia el análisis entre el currículum y la oferta.",
+  fr: "Ce réglage contrôle uniquement l’aide après la découverte d’un poste adapté. Il ne modifie pas l’analyse CV–offre.",
+  de: "Diese Einstellung steuert nur die Unterstützung nach dem Finden einer passenden Stelle. Sie ändert nicht die Lebenslauf–Stellenanalyse.",
+};
+
 const KEYWORDS: Record<string, string[]> = {
   SQL: ["sql", "structured query language"],
   Python: ["python", "pandas", "numpy"],
@@ -2374,6 +2385,7 @@ export default function Home({
       : applicationMode === "Hybrid"
         ? "Pro preview. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
         : "Pro preview. Nothing is submitted automatically in this public version. A future release will require approved employer APIs, consent, rate limits, an audit log, and an emergency stop.");
+  const modeContext = MODE_CONTEXT[locale] || MODE_CONTEXT.en;
   const billingMarket =
     BILLING_MARKETS.find((market) => market.code === billingMarketCode) ||
     BILLING_MARKETS[0];
@@ -2491,30 +2503,57 @@ export default function Home({
         </aside>
       )}
 
+      <a className="skip-link" href="#workspace">
+        {copy.analyze}: {detail.resumeEvidence} + {detail.jobDescription}
+      </a>
+
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">CareerStoryMap · Map your evidence. Own your story.</p>
           <h1>{copy.heroTitle}</h1>
           <p className="lede">{copy.heroBody}</p>
           <div className="hero-actions">
-            <a className="button primary" href="#workspace">
-              {copy.enter}
+            <a
+              className="button primary hero-primary-action"
+              href="#workspace"
+              onClick={(event) => {
+                event.preventDefault();
+                openWorkspace("Analyze");
+              }}
+            >
+              {copy.analyze}: {detail.resumeEvidence} + {detail.jobDescription}
             </a>
             <button
-              className="text-link"
+              className="button secondary"
               type="button"
-              onClick={() => openWorkspace("Market Insights")}
+              onClick={() => {
+                setJd(SAMPLE_JD);
+                setResume(SAMPLE_RESUME);
+                setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
+                openWorkspace("Analyze");
+              }}
             >
-              {detail.explore}
-            </button>
-            <button
-              className="text-link"
-              type="button"
-              onClick={() => openWorkspace("Interview Studio")}
-            >
-              {copy.interview}
+              {detail.sample}
             </button>
           </div>
+          <ol className="journey-strip" aria-label={detail.workspace}>
+            <li>
+              <span>1</span>
+              <b>{detail.resumeEvidence}</b>
+            </li>
+            <li>
+              <span>2</span>
+              <b>{detail.jobDescription}</b>
+            </li>
+            <li>
+              <span>3</span>
+              <b>{detail.matrix}</b>
+            </li>
+            <li>
+              <span>4</span>
+              <b>{copy.interview}</b>
+            </li>
+          </ol>
           <div className="trust-row">
             <span>{detail.evidenceLinked}</span>
             <span>{detail.globalDiscovery}</span>
@@ -2558,40 +2597,25 @@ export default function Home({
         </div>
       </section>
 
-      <section className="control-deck">
-        <div>
-          <span className="control-label">{copy.mode}</span>
-          <div className="mode-switch" role="radiogroup" aria-label={copy.mode}>
-            {(["Manual", "Hybrid", "Automatic"] as ApplicationMode[]).map(
-              (mode) => (
-                <button
-                  role="radio"
-                  aria-checked={applicationMode === mode}
-                  className={applicationMode === mode ? "active" : ""}
-                  key={mode}
-                  onClick={() => setApplicationMode(mode)}
-                >
-                  <span>
-                    {mode === "Manual"
-                      ? copy.manual
-                      : mode === "Hybrid"
-                        ? copy.hybrid
-                        : copy.automatic}
-                  </span>
-                  <small>{mode === "Manual" ? "Free" : "Pro"}</small>
-                </button>
-              ),
-            )}
-          </div>
-        </div>
-        <p>{modeMessage}</p>
-      </section>
-
       <section className="workspace" id="workspace">
         <aside className="workspace-nav">
           <p className="workspace-label">{detail.workspace}</p>
+          <label className="workspace-nav-mobile">
+            <span>{detail.workspace}</span>
+            <select
+              value={active}
+              onChange={(event) => setActive(event.target.value as WorkspaceView)}
+            >
+              {views.map((item) => (
+                <option value={item.id} key={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
           {views.map((item) => (
             <button
+              type="button"
               className={active === item.id ? "active" : ""}
               key={item.id}
               onClick={() => setActive(item.id)}
@@ -2630,36 +2654,27 @@ export default function Home({
                   {detail.sample}
                 </button>
               </div>
+              <ol className="workspace-progress" aria-label={detail.workspace}>
+                <li className={resume.trim() ? "complete" : "current"}>
+                  <span>1</span>
+                  <b>{detail.resumeEvidence}</b>
+                </li>
+                <li className={jd.trim() ? "complete" : resume.trim() ? "current" : ""}>
+                  <span>2</span>
+                  <b>{detail.jobDescription}</b>
+                </li>
+                <li className={resume.trim() && jd.trim() ? "current" : ""}>
+                  <span>3</span>
+                  <b>{detail.runMatch}</b>
+                </li>
+              </ol>
               <div className="input-grid">
-                <div className="document-field">
-                  <label htmlFor="jd-text">
-                    <span>{detail.jobDescription}</span>
-                  </label>
-                  <textarea
-                    id="jd-text"
-                    value={jd}
-                    onChange={(event) => setJd(event.target.value)}
-                  />
-                  <label className="upload-control" htmlFor="jd-file">
-                    <input
-                      id="jd-file"
-                      type="file"
-                      accept="*/*"
-                      multiple
-                      onChange={(event) => loadFile(event, "jd")}
-                    />
-                    <span>
-                      {uploadingDestination === "jd"
-                        ? "Reading files…"
-                        : detail.importAny}
-                    </span>
-                    <small>PDF · DOCX · PPTX · XLSX · ODF · EPUB · text</small>
-                  </label>
-                </div>
-                <div className="document-field">
-                  <label htmlFor="resume-text">
-                    <span>{detail.resumeEvidence}</span>
-                  </label>
+                <div className="document-field guided-card">
+                  <div className="guided-card-heading">
+                    <span>1</span>
+                    <label htmlFor="resume-text">{detail.resumeEvidence}</label>
+                    {resume.trim() && <small>{detail.checked}</small>}
+                  </div>
                   <textarea
                     id="resume-text"
                     value={resume}
@@ -2681,13 +2696,56 @@ export default function Home({
                     <small>PDF · DOCX · PPTX · XLSX · ODF · EPUB · text</small>
                   </label>
                 </div>
+                <div className="document-field guided-card">
+                  <div className="guided-card-heading">
+                    <span>2</span>
+                    <label htmlFor="jd-text">{detail.jobDescription}</label>
+                    {jd.trim() && <small>{detail.checked}</small>}
+                  </div>
+                  <textarea
+                    id="jd-text"
+                    value={jd}
+                    onChange={(event) => setJd(event.target.value)}
+                  />
+                  <label className="upload-control" htmlFor="jd-file">
+                    <input
+                      id="jd-file"
+                      type="file"
+                      accept="*/*"
+                      multiple
+                      onChange={(event) => loadFile(event, "jd")}
+                    />
+                    <span>
+                      {uploadingDestination === "jd"
+                        ? "Reading files…"
+                        : detail.importAny}
+                    </span>
+                    <small>PDF · DOCX · PPTX · XLSX · ODF · EPUB · text</small>
+                  </label>
+                </div>
               </div>
               {uploadMessage && (
                 <p className="notice" role="status">
                   {uploadMessage}
                 </p>
               )}
-              <div className="action-row">
+              <div className="analysis-primary-action">
+                <div>
+                  <span>3</span>
+                  <b>{detail.runMatch}</b>
+                  <small>{detail.matrix}</small>
+                </div>
+                <button
+                  className="button primary"
+                  onClick={runModelAnalysis}
+                  disabled={modelRunning || !jd.trim() || !resume.trim()}
+                >
+                  {modelRunning ? "Running…" : detail.runMatch}
+                </button>
+              </div>
+              <details className="advanced-settings">
+                <summary>{detail.aiModel}</summary>
+                <div className="action-row">
                 <div>
                   <label htmlFor="model">{detail.aiModel}</label>
                   <select
@@ -2706,57 +2764,51 @@ export default function Home({
                     story coaching through an endpoint you control.
                   </small>
                 </div>
-                <button
-                  className="button primary"
-                  onClick={runModelAnalysis}
-                  disabled={modelRunning}
-                >
-                  {modelRunning ? "Running…" : detail.runMatch}
-                </button>
-              </div>
-              {selectedProvider.kind !== "built-in" && (
-                <section className="model-connection" aria-label="Local model connection">
-                  <div className="model-connection-fields">
-                    <label>
-                      <span>Local endpoint</span>
-                      <input
-                        value={modelEndpoint}
-                        onChange={(event) => setModelEndpoint(event.target.value)}
-                        placeholder={selectedProvider.endpoint}
-                        inputMode="url"
-                      />
-                    </label>
-                    <label>
-                      <span>Loaded model name</span>
-                      <input
-                        value={modelName}
-                        onChange={(event) => setModelName(event.target.value)}
-                        placeholder={selectedProvider.model}
-                      />
-                    </label>
-                    <button
-                      className="button secondary"
-                      type="button"
-                      onClick={testModelConnection}
-                      disabled={modelRunning}
-                    >
-                      Test connection
-                    </button>
-                  </div>
-                  <p>
-                    Direct local connection; no API key is requested or stored.
-                    Ollama may require <code>OLLAMA_ORIGINS</code>. Other servers
-                    must allow this site through CORS.
-                  </p>
-                </section>
-              )}
-              <div className="model-result" role="status">
-                <div>
-                  <span>{selectedProvider.label}</span>
-                  <b>{modelStatus}</b>
                 </div>
-                {modelInsight && <p>{modelInsight}</p>}
-              </div>
+                {selectedProvider.kind !== "built-in" && (
+                  <section className="model-connection" aria-label="Local model connection">
+                    <div className="model-connection-fields">
+                      <label>
+                        <span>Local endpoint</span>
+                        <input
+                          value={modelEndpoint}
+                          onChange={(event) => setModelEndpoint(event.target.value)}
+                          placeholder={selectedProvider.endpoint}
+                          inputMode="url"
+                        />
+                      </label>
+                      <label>
+                        <span>Loaded model name</span>
+                        <input
+                          value={modelName}
+                          onChange={(event) => setModelName(event.target.value)}
+                          placeholder={selectedProvider.model}
+                        />
+                      </label>
+                      <button
+                        className="button secondary"
+                        type="button"
+                        onClick={testModelConnection}
+                        disabled={modelRunning}
+                      >
+                        Test connection
+                      </button>
+                    </div>
+                    <p>
+                      Direct local connection; no API key is requested or stored.
+                      Ollama may require <code>OLLAMA_ORIGINS</code>. Other servers
+                      must allow this site through CORS.
+                    </p>
+                  </section>
+                )}
+                <div className="model-result" role="status">
+                  <div>
+                    <span>{selectedProvider.label}</span>
+                    <b>{modelStatus}</b>
+                  </div>
+                  {modelInsight && <p>{modelInsight}</p>}
+                </div>
+              </details>
               <div className="results-card">
                 <div className="results-title">
                   <h3>{detail.matrix}</h3>
@@ -2784,6 +2836,29 @@ export default function Home({
                     <p className="empty-state">{detail.matrix}</p>
                   )}
                 </div>
+              </div>
+              <div className="next-actions">
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => openWorkspace("Market Insights")}
+                >
+                  {copy.market}
+                </button>
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => setActive("Copilot")}
+                >
+                  {copy.copilot}
+                </button>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => openWorkspace("Interview Studio")}
+                >
+                  {copy.interview}
+                </button>
               </div>
             </>
           )}
@@ -3038,6 +3113,49 @@ export default function Home({
                   {sourceMeta ? "Live employer feed" : detail.exampleSnapshot}
                 </span>
               </div>
+              <section
+                className="application-assistance"
+                aria-labelledby="application-assistance-title"
+              >
+                <div className="application-assistance-heading">
+                  <div>
+                    <p className="eyebrow">{copy.recommendations}</p>
+                    <h3 id="application-assistance-title">{copy.mode}</h3>
+                    <p>{modeContext}</p>
+                  </div>
+                  <span className="status-pill light">
+                    {applicationMode === "Manual"
+                      ? copy.manual
+                      : applicationMode === "Hybrid"
+                        ? copy.hybrid
+                        : copy.automatic}
+                  </span>
+                </div>
+                <div className="mode-switch" role="radiogroup" aria-label={copy.mode}>
+                  {(["Manual", "Hybrid", "Automatic"] as ApplicationMode[]).map(
+                    (mode) => (
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={applicationMode === mode}
+                        className={applicationMode === mode ? "active" : ""}
+                        key={mode}
+                        onClick={() => setApplicationMode(mode)}
+                      >
+                        <span>
+                          {mode === "Manual"
+                            ? copy.manual
+                            : mode === "Hybrid"
+                              ? copy.hybrid
+                              : copy.automatic}
+                        </span>
+                        <small>{mode === "Manual" ? "Free" : "Pro"}</small>
+                      </button>
+                    ),
+                  )}
+                </div>
+                <p className="application-assistance-note">{modeMessage}</p>
+              </section>
               <p className="data-disclosure">
                 {sourceMeta
                   ? `${sourceMeta.coverage}. Retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}.`

@@ -48,8 +48,8 @@ export async function generateMetadata({
       images: [
         {
           url: "/og-careerstorymap.png",
-          width: 1536,
-          height: 1024,
+          width: 1200,
+          height: 630,
           alt: "CareerStoryMap — Map your evidence. Own your story.",
         },
       ],
