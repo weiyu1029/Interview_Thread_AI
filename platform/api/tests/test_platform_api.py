@@ -160,7 +160,7 @@ def test_market_insights_calculates_comparable_snapshot_change() -> None:
     assert response.json()["coverage"]["historical_change_requires"]
 
 
-def test_application_modes_enforce_plan_boundaries() -> None:
+def test_application_modes_are_open_but_never_submit_by_default() -> None:
     registered = client.post(
         "/v1/auth/register",
         json={"email": "modes@example.com", "display_name": "Mode Tester", "password": "correct-horse-modes"},
@@ -173,13 +173,14 @@ def test_application_modes_enforce_plan_boundaries() -> None:
 
     assert manual.json()["enabled"] is True
     assert manual.json()["submission_enabled"] is False
-    assert hybrid.json()["enabled"] is False
-    denied_update = client.put(
+    assert hybrid.json()["enabled"] is True
+    assert hybrid.json()["submission_enabled"] is False
+    updated = client.put(
         "/v1/application/preferences",
         headers=headers,
         json={"workspace_id": workspace_id, "application_mode": "hybrid"},
     )
-    assert denied_update.status_code == 402
+    assert updated.status_code == 200
 
 
 def test_extended_text_document_formats_extract_in_memory() -> None:
@@ -187,7 +188,9 @@ def test_extended_text_document_formats_extract_in_memory() -> None:
     assert "Example role" in extract_resume_text("role.xml", b"<job><title>Example role</title></job>")
 
 
-def test_pro_plan_includes_controlled_automatic_mode() -> None:
+def test_open_source_edition_includes_all_application_modes() -> None:
     plans = client.get("/v1/plans").json()["plans"]
-    pro = next(item for item in plans if item["id"] == "pro")
-    assert pro["application_modes"] == ["manual", "hybrid", "automatic"]
+    assert len(plans) == 1
+    community = plans[0]
+    assert community["id"] == "community"
+    assert community["application_modes"] == ["manual", "hybrid", "automatic"]

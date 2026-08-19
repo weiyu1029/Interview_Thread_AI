@@ -1,8 +1,8 @@
 # Platform Architecture
 
 CareerProof uses a progressive architecture: anyone can start without an
-account, while people who need permanent history, collaboration, or paid
-capacity can move into the account-backed platform without changing the
+account, while people who need permanent history or collaboration can move into
+the free account-backed platform without changing the
 evidence model.
 
 ## System boundary
@@ -21,9 +21,9 @@ FastAPI application
   ├─ story and chat orchestration
   ├─ global job-provider adapters and evidence ranking
   ├─ market snapshot aggregation and provenance
-  ├─ application-mode entitlements and safety policy
+  ├─ application-mode safety policy
   ├─ feedback and usage events
-  └─ plan entitlements
+  └─ open-source feature configuration
                │
                ▼
 PostgreSQL
@@ -32,7 +32,7 @@ PostgreSQL
   ├─ tracker items and conversations
   ├─ jobs, market metrics, and application preferences
   ├─ feedback
-  └─ subscriptions and usage events
+  └─ usage events
 ```
 
 The deterministic evidence result is canonical. A language model can improve
@@ -79,17 +79,9 @@ encryption, key rotation, access auditing, and a clear deletion flow.
 4. Add managed object storage only for features that require original files.
 5. Split services by operating need, not by feature count.
 
-## Paid-plan boundary
+## Open-source access boundary
 
-The database and API already separate plans, subscriptions, usage events, and
-workspace roles. Checkout is not enabled. A billing launch additionally needs:
-
-- a billing provider adapter and signed webhook verification;
-- idempotent entitlement updates;
-- usage reconciliation and visible limits;
-- taxes, invoices, cancellation, refund, and failed-payment handling;
-- privacy terms and a data-processing inventory;
-- support and incident-response processes.
-
-The free evidence engine, self-hosting path, data export, and core safety rules
-should remain available regardless of commercial plans.
+The public product exposes one free access level. Workspace roles protect data
+and collaboration boundaries, not commercial entitlements. The evidence engine,
+self-hosting path, data export, application modes, and safety rules remain open
+source and are never restricted by account status.

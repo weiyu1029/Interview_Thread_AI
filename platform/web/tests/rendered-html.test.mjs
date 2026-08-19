@@ -6,7 +6,7 @@ import {
   LANGUAGES,
   localeToPath,
 } from "../app/i18n.ts";
-import { accountCopyFor } from "../app/account-copy.ts";
+import { accountCopyFor, openSourceLabelFor } from "../app/account-copy.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -29,8 +29,8 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
   assert.match(html, /Market Insights/i);
-  assert.match(html, /US\$15 base/i);
-  assert.match(html, /Enterprise/i);
+  assert.match(html, /All features are free and open source/i);
+  assert.doesNotMatch(html, /US\$|>Pro<|>Team<|>Enterprise</i);
   assert.match(html, /mobile-nav-button/);
   assert.match(html, /aria-expanded="false"/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
@@ -58,13 +58,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Test connection/);
   assert.match(page, /PDF · DOCX · PPTX · XLSX/);
   assert.match(page, /Nothing is submitted automatically/);
-  assert.match(page, /Billing and checkout are not enabled/);
   assert.match(page, /\/api\/jobs/);
-  assert.match(page, /\/api\/region/);
   assert.match(page, /\/api\/feedback/);
-  assert.match(page, /Feedback is open to every plan/i);
-  assert.match(page, /Team · Priority/i);
-  assert.match(page, /Enterprise · Highest priority/i);
+  assert.match(page, /Feedback is open to everyone/i);
+  assert.match(page, /Every submission enters the same community queue/i);
   assert.match(page, /Proof-to-Role Radar/i);
   assert.match(page, /Story Signal alerts/i);
   assert.match(page, /aptograph-story-radar-settings/i);
@@ -87,9 +84,8 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /workspace-next-step/);
   assert.match(page, /workflow-prerequisite/);
   assert.match(page, /openWorkspace\(nextView\.id\)/);
-  assert.match(page, /localizedPath\(locale, "account"\).*plan=community/s);
-  assert.match(page, /localizedPath\(locale, "account"\).*plan=pro/s);
-  assert.match(page, /localizedPath\(locale, "account"\).*plan=team/s);
+  assert.match(page, /href=\{localizedPath\(locale, "account"\)\}/);
+  assert.doesNotMatch(page, /plan=(?:pro|team)|US\$15|US\$35/);
   assert.match(page, /disabled=\{!company\.trim\(\) \|\| !role\.trim\(\)\}/);
   assert.match(page, /disabled=\{tracker\.some\(\(item\) => item\.id === job\.id\)\}/);
   assert.doesNotMatch(page, /github\.com\/weiyu1029\/careerproof-agent/);
@@ -137,11 +133,11 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(mobileNav, /Escape/);
 });
 
-test("renders a localized registration page for free and paid plans without enabling billing", async () => {
+test("renders a localized registration page for free open-source access", async () => {
   const examples = [
-    ["/en/account?plan=pro", "Pro", accountCopyFor("en")],
-    ["/zh-tw/account?plan=community", "Community", accountCopyFor("zh-TW")],
-    ["/ja/account?plan=team", "Team", accountCopyFor("ja")],
+    ["/en/account", openSourceLabelFor("en"), accountCopyFor("en")],
+    ["/zh-tw/account", openSourceLabelFor("zh-TW"), accountCopyFor("zh-TW")],
+    ["/ja/account", openSourceLabelFor("ja"), accountCopyFor("ja")],
   ];
 
   for (const [path, plan, labels] of examples) {
@@ -155,7 +151,7 @@ test("renders a localized registration page for free and paid plans without enab
     assert.ok(html.includes(plan), path);
     assert.match(html, /\/signin-with-chatgpt\?return_to=/, path);
     assert.match(html, /name="robots" content="noindex, nofollow"/, path);
-    assert.doesNotMatch(html, /type="password"|card number|A-number/i, path);
+    assert.doesNotMatch(html, /type="password"|card number|A-number|US\$|>Pro<|>Team</i, path);
   }
 });
 
@@ -168,6 +164,7 @@ test("provides complete account safety copy in every supported language", () => 
     assert.ok(labels.selected, locale);
     assert.ok(labels.noCharge, locale);
     assert.ok(labels.privacy, locale);
+    assert.ok(openSourceLabelFor(locale), locale);
   }
 });
 

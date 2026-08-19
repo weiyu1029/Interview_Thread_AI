@@ -7,13 +7,7 @@ const CATEGORIES = new Set([
   "language",
   "feature",
 ]);
-const PLANS = new Set(["community", "pro", "team", "enterprise"]);
-
-function priorityForPlan(plan: string) {
-  if (plan === "enterprise") return 2;
-  if (plan === "team") return 1;
-  return 0;
-}
+const PLANS = new Set(["community"]);
 
 export async function POST(request: Request) {
   try {
@@ -45,7 +39,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
 
-    const priority = priorityForPlan(plan);
+    const priority = 0;
     const id = crypto.randomUUID();
     await insertFeedback({
       id,

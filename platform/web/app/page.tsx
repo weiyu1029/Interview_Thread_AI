@@ -17,7 +17,7 @@ import {
   LocaleCode,
   RTL_LOCALES,
 } from "./i18n";
-import { accountCopyFor } from "./account-copy";
+import { accountCopyFor, openSourceLabelFor } from "./account-copy";
 import { BrandMark } from "./BrandMark";
 import { MobileNav } from "./MobileNav";
 import { parseDocuments } from "./document-parser";
@@ -172,56 +172,50 @@ type InterviewCopy = {
   feedbackLead: string;
   improveLead: string;
 };
-type BillingMarket = {
-  code: string;
-  currency: string;
-  proMonthly: number;
-};
-
 const MODE_DISCLOSURES: Partial<
   Record<LocaleCode, Record<ApplicationMode, string>>
 > = {
   "zh-TW": {
     Manual: "開源免費。所有職缺、文件與投遞都由你自行檢查及送出。",
-    Hybrid: "Pro 功能預覽。AI 可準備客製草稿與下一步，但每次送出前都必須由你核准。",
+    Hybrid: "開源免費。AI 可準備客製草稿與下一步，但每次送出前都必須由你核准。",
     Automatic:
-      "Pro 功能預覽。目前公開版不會自動投遞；未來僅會透過核准 API，在取得同意、速率限制、稽核紀錄與緊急停止機制下執行。",
+      "開源免費。目前公開版不會自動投遞；未來僅會透過核准 API，在取得同意、速率限制、稽核紀錄與緊急停止機制下執行。",
   },
   "zh-CN": {
     Manual: "开源免费。所有职位、文件与投递都由你自行检查并提交。",
-    Hybrid: "Pro 功能预览。AI 可准备定制草稿和下一步，但每次提交前都必须由你批准。",
+    Hybrid: "免费开源。AI 可准备定制草稿和下一步，但每次提交前都必须由你批准。",
     Automatic:
-      "Pro 功能预览。目前公开版不会自动投递；未来仅会通过获准 API，在取得同意、速率限制、审计记录与紧急停止机制下执行。",
+      "免费开源。目前公开版不会自动投递；未来仅会通过获准 API，在取得同意、速率限制、审计记录与紧急停止机制下执行。",
   },
   ja: {
     Manual: "オープンソースで無料です。求人、書類、応募はすべて自分で確認して送信します。",
-    Hybrid: "Pro機能のプレビューです。AIが下書きを準備しますが、送信前に必ず本人の承認が必要です。",
+    Hybrid: "無料のオープンソース機能です。AIが下書きを準備しますが、送信前に必ず本人の承認が必要です。",
     Automatic:
-      "Pro機能のプレビューです。公開版は自動応募を行いません。将来は承認済みAPI、同意、速度制限、監査ログ、緊急停止を備えた場合にのみ実行します。",
+      "無料のオープンソース機能です。公開版は自動応募を行いません。将来は承認済みAPI、同意、速度制限、監査ログ、緊急停止を備えた場合にのみ実行します。",
   },
   ko: {
     Manual: "오픈 소스 무료 모드입니다. 모든 공고, 문서 및 지원서를 직접 검토하고 제출합니다.",
-    Hybrid: "Pro 기능 미리보기입니다. AI가 맞춤 초안을 준비하지만 제출 전에는 항상 사용자의 승인이 필요합니다.",
+    Hybrid: "무료 오픈 소스 기능입니다. AI가 맞춤 초안을 준비하지만 제출 전에는 항상 사용자의 승인이 필요합니다.",
     Automatic:
-      "Pro 기능 미리보기입니다. 공개 버전은 자동 지원하지 않습니다. 향후 승인된 API, 동의, 속도 제한, 감사 로그 및 긴급 중지 기능이 있을 때만 실행합니다.",
+      "무료 오픈 소스 기능입니다. 공개 버전은 자동 지원하지 않습니다. 향후 승인된 API, 동의, 속도 제한, 감사 로그 및 긴급 중지 기능이 있을 때만 실행합니다.",
   },
   es: {
     Manual: "Código abierto y gratuito. Revisas cada oferta, documento y solicitud antes de enviarla tú mismo.",
-    Hybrid: "Vista previa Pro. La IA prepara borradores, pero debes aprobar cada envío.",
+    Hybrid: "Gratis y de código abierto. La IA prepara borradores, pero debes aprobar cada envío.",
     Automatic:
-      "Vista previa Pro. La versión pública no envía solicitudes automáticamente; una versión futura requerirá APIs aprobadas, consentimiento, límites, auditoría y parada de emergencia.",
+      "Gratis y de código abierto. La versión pública no envía solicitudes automáticamente; una versión futura requerirá APIs aprobadas, consentimiento, límites, auditoría y parada de emergencia.",
   },
   fr: {
     Manual: "Open source et gratuit. Vous vérifiez chaque offre, document et candidature avant de l’envoyer vous-même.",
-    Hybrid: "Aperçu Pro. L’IA prépare les brouillons, mais vous devez approuver chaque envoi.",
+    Hybrid: "Gratuit et open source. L’IA prépare les brouillons, mais vous devez approuver chaque envoi.",
     Automatic:
-      "Aperçu Pro. La version publique n’envoie aucune candidature automatiquement ; une version future exigera des API approuvées, le consentement, des limites, un journal d’audit et un arrêt d’urgence.",
+      "Gratuit et open source. La version publique n’envoie aucune candidature automatiquement ; une version future exigera des API approuvées, le consentement, des limites, un journal d’audit et un arrêt d’urgence.",
   },
   de: {
     Manual: "Open Source und kostenlos. Du prüfst jede Stelle, jedes Dokument und sendest jede Bewerbung selbst.",
-    Hybrid: "Pro-Vorschau. Die KI bereitet Entwürfe vor, aber du musst jede Übermittlung freigeben.",
+    Hybrid: "Kostenlos und Open Source. Die KI bereitet Entwürfe vor, aber du musst jede Übermittlung freigeben.",
     Automatic:
-      "Pro-Vorschau. Die öffentliche Version bewirbt sich nicht automatisch; eine spätere Version benötigt freigegebene APIs, Einwilligung, Limits, Audit-Protokoll und Not-Aus.",
+      "Kostenlos und Open Source. Die öffentliche Version bewirbt sich nicht automatisch; eine spätere Version benötigt freigegebene APIs, Einwilligung, Limits, Audit-Protokoll und Not-Aus.",
   },
 };
 
@@ -800,101 +794,6 @@ const REGION_FACTORS: Record<string, number> = {
   "Middle East & Africa": 0.06,
 };
 
-const BILLING_MARKETS: BillingMarket[] = [
-  { code: "US", currency: "USD", proMonthly: 15 },
-  { code: "EU", currency: "EUR", proMonthly: 14 },
-  { code: "GB", currency: "GBP", proMonthly: 12 },
-  { code: "CA", currency: "CAD", proMonthly: 20 },
-  { code: "AU", currency: "AUD", proMonthly: 23 },
-  { code: "NZ", currency: "NZD", proMonthly: 25 },
-  { code: "JP", currency: "JPY", proMonthly: 2200 },
-  { code: "KR", currency: "KRW", proMonthly: 20000 },
-  { code: "TW", currency: "TWD", proMonthly: 490 },
-  { code: "CN", currency: "CNY", proMonthly: 108 },
-  { code: "HK", currency: "HKD", proMonthly: 118 },
-  { code: "SG", currency: "SGD", proMonthly: 20 },
-  { code: "IN", currency: "INR", proMonthly: 999 },
-  { code: "BR", currency: "BRL", proMonthly: 59 },
-  { code: "MX", currency: "MXN", proMonthly: 229 },
-  { code: "CH", currency: "CHF", proMonthly: 14 },
-  { code: "SE", currency: "SEK", proMonthly: 159 },
-  { code: "NO", currency: "NOK", proMonthly: 165 },
-  { code: "DK", currency: "DKK", proMonthly: 105 },
-  { code: "PL", currency: "PLN", proMonthly: 59 },
-  { code: "CZ", currency: "CZK", proMonthly: 349 },
-  { code: "AE", currency: "AED", proMonthly: 55 },
-  { code: "ZA", currency: "ZAR", proMonthly: 249 },
-  { code: "TH", currency: "THB", proMonthly: 499 },
-  { code: "ID", currency: "IDR", proMonthly: 219000 },
-  { code: "MY", currency: "MYR", proMonthly: 65 },
-  { code: "PH", currency: "PHP", proMonthly: 849 },
-  { code: "VN", currency: "VND", proMonthly: 379000 },
-];
-
-const EURO_COUNTRIES = new Set([
-  "AT",
-  "BE",
-  "CY",
-  "DE",
-  "EE",
-  "ES",
-  "FI",
-  "FR",
-  "GR",
-  "HR",
-  "IE",
-  "IT",
-  "LT",
-  "LU",
-  "LV",
-  "MT",
-  "NL",
-  "PT",
-  "SI",
-  "SK",
-]);
-
-const LANGUAGE_MARKETS: Record<string, string> = {
-  ja: "JP",
-  ko: "KR",
-  zh: "CN",
-  hi: "IN",
-  bn: "IN",
-  id: "ID",
-  ms: "MY",
-  th: "TH",
-  vi: "VN",
-  fil: "PH",
-  sv: "SE",
-  no: "NO",
-  da: "DK",
-  pl: "PL",
-  cs: "CZ",
-  pt: "BR",
-};
-
-const FRIENDLY_PRICE_STEPS: Record<string, number> = {
-  JPY: 100,
-  KRW: 1000,
-  TWD: 10,
-  CNY: 5,
-  HKD: 10,
-  INR: 50,
-  BRL: 5,
-  MXN: 10,
-  SEK: 5,
-  NOK: 5,
-  DKK: 5,
-  PLN: 5,
-  CZK: 10,
-  ZAR: 10,
-  THB: 10,
-  IDR: 10000,
-  MYR: 5,
-  PHP: 50,
-  VND: 10000,
-};
-
 function includesPhrase(text: string, phrase: string) {
   const escaped = phrase
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -1176,45 +1075,6 @@ function preferredLocale(languages: readonly string[]) {
   return "en";
 }
 
-function marketForCountry(countryCode: string | null) {
-  if (!countryCode) return "US";
-  const normalized = countryCode.toUpperCase();
-  if (EURO_COUNTRIES.has(normalized)) return "EU";
-  return BILLING_MARKETS.some((market) => market.code === normalized)
-    ? normalized
-    : "US";
-}
-
-function marketForLanguage(language: string) {
-  const normalized = language.replace("_", "-");
-  const region = normalized.split("-")[1]?.toUpperCase();
-  if (region) return marketForCountry(region);
-  return LANGUAGE_MARKETS[normalized.split("-")[0].toLowerCase()] || "US";
-}
-
-function friendlyPrice(value: number, currency: string) {
-  const step = FRIENDLY_PRICE_STEPS[currency] || 1;
-  return Math.round(value / step) * step;
-}
-
-function formatPrice(value: number, currency: string, locale: LocaleCode) {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    currencyDisplay: "symbol",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatBillingUnit(locale: LocaleCode, unit: "month" | "year") {
-  return new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit,
-    unitDisplay: "long",
-    maximumFractionDigits: 0,
-  }).format(1);
-}
-
 export default function Home({
   initialLocale,
 }: {
@@ -1289,10 +1149,10 @@ export default function Home({
   const [feedbackError, setFeedbackError] = useState("");
   const [suggestedLocale, setSuggestedLocale] =
     useState<LocaleCode | null>(null);
-  const [billingMarketCode, setBillingMarketCode] = useState("US");
   const copy = copyFor(locale);
   const detail = detailFor(locale);
   const accountLabels = accountCopyFor(locale);
+  const openSourceLabel = openSourceLabelFor(locale);
   const interview = interviewCopyFor(locale);
   const selectedProvider =
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
@@ -1327,9 +1187,6 @@ export default function Home({
       const savedTracker =
         window.localStorage.getItem("aptograph-tracker") ||
         window.localStorage.getItem("careerproof-tracker");
-      const savedBillingMarket = window.localStorage.getItem(
-        "aptograph-billing-market",
-      );
       const savedRadarSettings = window.localStorage.getItem(
         "aptograph-story-radar-settings",
       );
@@ -1355,12 +1212,6 @@ export default function Home({
         const detectedLocale = preferredLocale(navigator.languages);
         if (detectedLocale !== "en") setSuggestedLocale(detectedLocale);
       }
-      if (
-        savedBillingMarket &&
-        BILLING_MARKETS.some((market) => market.code === savedBillingMarket)
-      )
-        setBillingMarketCode(savedBillingMarket);
-      else setBillingMarketCode(marketForLanguage(navigator.language));
       if (savedTracker) {
         try {
           setTracker(JSON.parse(savedTracker));
@@ -1451,17 +1302,6 @@ export default function Home({
     return () => window.clearTimeout(timer);
   }, [initialLocale]);
   useEffect(() => {
-    if (window.localStorage.getItem("aptograph-billing-market")) return;
-    const controller = new AbortController();
-    fetch("/api/region", { signal: controller.signal })
-      .then((response) => response.json())
-      .then((data: { country?: string | null }) => {
-        if (data.country) setBillingMarketCode(marketForCountry(data.country));
-      })
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, []);
-  useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
     keepListeningRef.current = false;
@@ -1536,11 +1376,6 @@ export default function Home({
     window.location.assign(
       `${nextPath}${window.location.search}${window.location.hash}`,
     );
-  }
-
-  function chooseBillingMarket(nextMarket: string) {
-    setBillingMarketCode(nextMarket);
-    window.localStorage.setItem("aptograph-billing-market", nextMarket);
   }
 
   function openWorkspace(
@@ -2429,26 +2264,9 @@ export default function Home({
     (applicationMode === "Manual"
       ? "Open-source and free. You review every role, edit every document, and submit every application yourself."
       : applicationMode === "Hybrid"
-        ? "Pro preview. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
-        : "Pro preview. Nothing is submitted automatically in this public version. A future release will require approved employer APIs, consent, rate limits, an audit log, and an emergency stop.");
+        ? "Open-source and free. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
+        : "Open-source and free. Nothing is submitted automatically in this public version. A future release will require approved employer APIs, consent, rate limits, an audit log, and an emergency stop.");
   const modeContext = MODE_CONTEXT[locale] || MODE_CONTEXT.en;
-  const billingMarket =
-    BILLING_MARKETS.find((market) => market.code === billingMarketCode) ||
-    BILLING_MARKETS[0];
-  const proMonthly = billingMarket.proMonthly;
-  const teamMonthly = friendlyPrice(
-    proMonthly * (35 / 15),
-    billingMarket.currency,
-  );
-  const teamAnnualMonthly = friendlyPrice(
-    proMonthly * (29 / 15),
-    billingMarket.currency,
-  );
-  const enterpriseAnnual = friendlyPrice(
-    proMonthly * 1000,
-    billingMarket.currency,
-  );
-  const regionNames = new Intl.DisplayNames([locale], { type: "region" });
   const suggestedLanguageName = suggestedLocale
     ? LANGUAGES.find(([code]) => code === suggestedLocale)?.[1]
     : null;
@@ -2497,7 +2315,7 @@ export default function Home({
             {detail.workspace}
           </a>
           <a href="#career-tools">{copy.market}</a>
-          <a href="#plans">{detail.plans}</a>
+          <a href="#plans">{openSourceLabel}</a>
         </nav>
         <label className="locale-control">
           <span>{copy.language}</span>
@@ -2516,7 +2334,7 @@ export default function Home({
         </label>
         <a
           className="account-link"
-          href={`${localizedPath(locale, "account")}?plan=community`}
+          href={localizedPath(locale, "account")}
         >
           {accountLabels.account}
         </a>
@@ -2529,10 +2347,10 @@ export default function Home({
               href: `${localizedPath(locale)}?view=Analyze#workspace`,
             },
             { label: detail.explore, href: "#career-tools" },
-            { label: detail.plans, href: "#plans" },
+            { label: openSourceLabel, href: "#plans" },
             {
               label: accountLabels.account,
-              href: `${localizedPath(locale, "account")}?plan=community`,
+              href: localizedPath(locale, "account"),
             },
             {
               label: detail.source,
@@ -2730,7 +2548,7 @@ export default function Home({
               <b>{detail.privateTitle}</b>
               <p>
                 {locale === "en"
-                  ? "Guest work stays on this device. Accounts are for cloud history, collaboration, and paid workflows."
+                  ? "Guest work stays on this device. Accounts can support free history and collaboration without changing the open-source license."
                   : copy.heroBody}
               </p>
             </div>
@@ -3274,7 +3092,7 @@ export default function Home({
                               ? copy.hybrid
                               : copy.automatic}
                         </span>
-                        <small>{mode === "Manual" ? "Free" : "Pro"}</small>
+                        <small>{openSourceLabel}</small>
                       </button>
                     ),
                   )}
@@ -3518,7 +3336,7 @@ export default function Home({
                   </div>
                   <p>
                     {radarMessage ||
-                      "Manual scanning is open to everyone. Scheduled cross-device monitoring can become a Pro service when accounts launch."}
+                      "Scanning is free and open source. Scheduled cross-device monitoring will require an account and background delivery infrastructure."}
                   </p>
                 </div>
                 {radarAlerts.length > 0 && (
@@ -4084,41 +3902,18 @@ export default function Home({
                   <div>
                     <b>
                       {locale === "en"
-                        ? "Feedback is open to every plan"
+                        ? "Feedback is open to everyone"
                         : copy.feedback}
                     </b>
                     <p>
                       {locale === "en"
-                        ? "Community and Pro use the open queue. Team is prioritized. Enterprise receives the highest priority and a one-business-day acknowledgement target."
+                        ? "Every submission enters the same community queue with equal priority."
                         : copy.heroBody}
                     </p>
                   </div>
-                  <ol>
-                    <li>
-                      <span>Community · Pro</span>
-                      <strong>Open queue</strong>
-                    </li>
-                    <li className="priority">
-                      <span>Team</span>
-                      <strong>Priority</strong>
-                    </li>
-                    <li className="highest">
-                      <span>Enterprise</span>
-                      <strong>Highest priority</strong>
-                    </li>
-                  </ol>
+                  <strong>{openSourceLabel} · {locale === "zh-TW" ? "免費" : "Free"}</strong>
                 </div>
-                <label>
-                  <span>{detail.plans}</span>
-                  <select name="plan">
-                    <option value="community">Community</option>
-                    <option value="pro">Pro</option>
-                    <option value="team">Team · Priority</option>
-                    <option value="enterprise">
-                      Enterprise · Highest priority
-                    </option>
-                  </select>
-                </label>
+                <input name="plan" type="hidden" value="community" />
                 <label>
                   <span>{detail.product}</span>
                   <select name="category">
@@ -4240,7 +4035,7 @@ export default function Home({
             <h3>{copy.mode}</h3>
             <p>
               {locale === "en"
-                ? "Manual stays open. Paid assistance adds human approval. Automatic workflows require approved APIs, limits, consent, and an audit trail."
+                ? "All modes are free and open source. Hybrid always requires your approval, while automatic submission stays disabled until approved APIs, limits, consent, and an audit trail exist."
                 : modeMessage}
             </p>
           </article>
@@ -4271,137 +4066,31 @@ export default function Home({
       </section>
       <section className="plans" id="plans">
         <div className="plans-heading">
-          <p className="eyebrow">{detail.source}</p>
-          <h2>
-            {locale === "en"
-              ? "Open where trust matters. Paid where ongoing operations create value."
-              : copy.heroTitle}
-          </h2>
+          <p className="eyebrow">{openSourceLabel}</p>
+          <h2>{accountLabels.noCharge}</h2>
         </div>
-        <div className="pricing-controls">
-          <label>
-            <span>{copy.worldwide}</span>
-            <select
-              value={billingMarket.code}
-              onChange={(event) => chooseBillingMarket(event.target.value)}
-            >
-              {BILLING_MARKETS.map((market) => (
-                <option value={market.code} key={market.code}>
-                  {regionNames.of(market.code) || market.code} · {market.currency}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p>
-            {locale === "zh-TW"
-              ? `目前僅為區域價格預估（${billingMarket.currency}）；公開預覽版尚未啟用付款與結帳。價格不會依履歷、求職紀錄或使用行為調整。`
-              : locale === "zh-CN"
-                ? `目前仅为区域价格预估（${billingMarket.currency}）；公开预览版尚未启用付款与结账。价格不会依据简历、求职记录或使用行为调整。`
-                : `Regional price estimate in ${billingMarket.currency}. Billing and checkout are not enabled in this public preview. Pricing never uses your resume, job history, or behavior.`}
-          </p>
-        </div>
-        <div className="plan-grid">
-          <article>
-            <span>{detail.source}</span>
-            <h3>Community</h3>
-            <p className="price">Free</p>
+        <div className="plan-grid open-source-plan">
+          <article className="featured">
+            <span>{openSourceLabel}</span>
+            <h3>{openSourceLabel}</h3>
+            <p className="price">{accountLabels.noCharge}</p>
             <ul>
               <li>{detail.matrix}</li>
               <li>{detail.languageCount}</li>
               <li>{detail.recommendationsTitle}</li>
-              <li>{copy.manual}</li>
+              <li>{copy.manual} · {copy.hybrid} · {copy.automatic}</li>
               <li>{copy.tracker}</li>
-              <li>{copy.feedback} · Open queue</li>
+              <li>{copy.market}</li>
+              <li>{detail.assistantTitle}</li>
+              <li>{detail.aiModel}</li>
+              <li>{copy.feedback}</li>
             </ul>
             <a
               className="button primary"
-              href={`${localizedPath(locale, "account")}?plan=community`}
+              href={localizedPath(locale, "account")}
             >
               {accountLabels.signIn}
             </a>
-          </article>
-          <article className="featured">
-            <span>{detail.privateTitle}</span>
-            <h3>Pro</h3>
-            <p className="price">
-              <strong>
-                {formatPrice(proMonthly, billingMarket.currency, locale)}
-              </strong>
-              <small>/ {formatBillingUnit(locale, "month")}</small>
-            </p>
-            <p className="price-note">
-              {formatPrice(proMonthly * 10, billingMarket.currency, locale)} /{" "}
-              {formatBillingUnit(locale, "year")} · US$15 base
-            </p>
-            <ul>
-              <li>{detail.privateTitle}</li>
-              <li>{detail.assistantTitle}</li>
-              <li>
-                {copy.manual} · {copy.hybrid} · {copy.automatic}
-              </li>
-              <li>{copy.tracker}</li>
-              <li>{detail.aiModel}</li>
-              <li>{copy.feedback} · Open queue</li>
-            </ul>
-            <a
-              className="button primary"
-              href={`${localizedPath(locale, "account")}?plan=pro`}
-            >
-              Pro · {accountLabels.signIn}
-            </a>
-          </article>
-          <article>
-            <span>{detail.workspace}</span>
-            <h3>Team</h3>
-            <p className="price">
-              <strong>
-                {formatPrice(teamMonthly, billingMarket.currency, locale)}
-              </strong>
-              <small>/ {formatBillingUnit(locale, "month")} · 5+</small>
-            </p>
-            <p className="price-note">
-              {formatPrice(
-                teamAnnualMonthly,
-                billingMarket.currency,
-                locale,
-              )} × 12 · 5+ seats
-            </p>
-            <ul>
-              <li>{detail.workspace}</li>
-              <li>{copy.tracker}</li>
-              <li>{copy.feedback} · Priority</li>
-              <li>{copy.automatic}</li>
-              <li>{detail.checked}</li>
-              <li>{copy.market}</li>
-            </ul>
-            <a
-              className="button secondary"
-              href={`${localizedPath(locale, "account")}?plan=team`}
-            >
-              Team · {accountLabels.signIn}
-            </a>
-          </article>
-          <article>
-            <span>SSO · SLA · API</span>
-            <h3>Enterprise</h3>
-            <p className="price">
-              <strong>
-                ≥ {formatPrice(enterpriseAnnual, billingMarket.currency, locale)}
-              </strong>
-              <small>/ {formatBillingUnit(locale, "year")}</small>
-            </p>
-            <p className="price-note">Annual agreement · custom scope</p>
-            <ul>
-              <li>SSO · SCIM · audit log</li>
-              <li>Private models · data controls</li>
-              <li>API · SLA · onboarding</li>
-              <li>{copy.feedback} · Highest priority</li>
-              <li>{copy.market} · {detail.workspace}</li>
-              <li>{detail.checked}</li>
-            </ul>
-            <button className="button secondary" disabled>
-              Enterprise · {locale === "zh-TW" ? "尚未開放" : "Not yet available"}
-            </button>
           </article>
         </div>
       </section>

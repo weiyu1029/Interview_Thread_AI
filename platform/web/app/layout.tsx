@@ -133,50 +133,9 @@ export default async function RootLayout({
       offers: [
         {
           "@type": "Offer",
-          name: "Community",
+          name: "Open-source edition",
           price: "0",
           priceCurrency: "USD",
-        },
-        {
-          "@type": "Offer",
-          name: "Pro",
-          price: "15",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1M",
-          },
-        },
-        {
-          "@type": "Offer",
-          name: "Pro annual",
-          price: "150",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1Y",
-          },
-        },
-        {
-          "@type": "Offer",
-          name: "Team",
-          price: "35",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1M",
-            unitText: "seat",
-          },
-        },
-        {
-          "@type": "Offer",
-          name: "Enterprise",
-          price: "15000",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1Y",
-          },
         },
       ],
       license: "https://github.com/weiyu1029/CareerStoryMap-agent/blob/main/LICENSE",

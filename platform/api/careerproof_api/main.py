@@ -128,15 +128,9 @@ def unique_slug(db: Session, name: str) -> str:
 
 
 def application_mode_entitlement(plan: str, mode: str) -> tuple[bool, str]:
-    allowed = {
-        "manual": {"free", "pro", "team", "enterprise"},
-        "hybrid": {"pro", "team", "enterprise"},
-        "automatic": {"pro", "team", "enterprise"},
-    }
-    if plan in allowed[mode]:
-        return True, "enabled"
-    required = "Pro"
-    return False, f"{required} is required for {mode} mode"
+    if mode in {"manual", "hybrid", "automatic"}:
+        return True, "free and open source"
+    return False, "unsupported application mode"
 
 
 @app.get("/health")
@@ -148,12 +142,10 @@ def health() -> dict:
 def plans() -> dict:
     return {
         "plans": [
-            {"id": "free", "name": "Community", "monthly_analyses": 8, "members": 1, "application_modes": ["manual"], "features": ["Evidence matching", "40-language UI", "Basic recommendations", "Local models", "Personal tracker"]},
-            {"id": "pro", "name": "Pro", "monthly_analyses": 100, "members": 1, "application_modes": ["manual", "hybrid", "automatic"], "features": ["Permanent history", "Advanced story packs", "Approval queue", "Personal approved-API automation", "Saved searches and alerts"]},
-            {"id": "team", "name": "Team", "monthly_analyses": 500, "members": 10, "application_modes": ["manual", "hybrid", "automatic"], "features": ["Shared workspaces", "Role-based access", "Governed connectors", "Audit logs"]},
+            {"id": "community", "name": "Open-source edition", "monthly_analyses": None, "members": None, "application_modes": ["manual", "hybrid", "automatic"], "features": ["Evidence matching", "40-language UI", "Recommendations", "Local models", "Personal tracker", "Interview studio", "Market insights", "Collaboration foundation"]},
         ],
-        "billing_status": "adapter-ready",
-        "note": "Checkout is intentionally not enabled until a billing provider and refund policy are configured.",
+        "billing_status": "not_applicable",
+        "note": "Every public feature is free and open source. No checkout or paid entitlement is enabled.",
     }
 
 

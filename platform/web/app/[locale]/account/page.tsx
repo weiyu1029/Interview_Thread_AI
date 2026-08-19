@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { accountCopyFor } from "../../account-copy";
+import { accountCopyFor, openSourceLabelFor } from "../../account-copy";
 import { BrandMark } from "../../BrandMark";
 import { MobileNav } from "../../MobileNav";
 import {
@@ -21,17 +21,7 @@ export const dynamic = "force-dynamic";
 
 type AccountPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ plan?: string | string[] }>;
 };
-
-type PlanId = "community" | "pro" | "team";
-
-const PLAN_IDS = new Set<PlanId>(["community", "pro", "team"]);
-
-function selectedPlan(value: string | string[] | undefined): PlanId {
-  const plan = Array.isArray(value) ? value[0] : value;
-  return PLAN_IDS.has(plan as PlanId) ? (plan as PlanId) : "community";
-}
 
 export async function generateMetadata({
   params,
@@ -49,11 +39,9 @@ export async function generateMetadata({
 
 export default async function AccountPage({
   params,
-  searchParams,
 }: AccountPageProps) {
-  const [{ locale: pathLocale }, query, user] = await Promise.all([
+  const [{ locale: pathLocale }, user] = await Promise.all([
     params,
-    searchParams,
     getChatGPTUser(),
   ]);
   const locale = localeFromPath(pathLocale);
@@ -62,30 +50,24 @@ export default async function AccountPage({
   const core = copyFor(locale);
   const detail = detailFor(locale);
   const labels = accountCopyFor(locale);
-  const plan = selectedPlan(query.plan);
+  const openSourceLabel = openSourceLabelFor(locale);
   const accountPath = localizedPath(locale, "account");
   const workspacePath = `${localizedPath(locale)}#workspace`;
   const plans = [
     {
       id: "community" as const,
-      name: "Community",
-      price: locale === "zh-TW" ? "免費" : locale === "zh-CN" ? "免费" : "Free",
+      name: openSourceLabel,
+      price: labels.noCharge,
       note: detail.openCore,
-      features: [detail.matrix, core.recommendations, core.manual, core.feedback],
-    },
-    {
-      id: "pro" as const,
-      name: "Pro",
-      price: "US$15 / month",
-      note: detail.privateTitle,
-      features: [detail.assistantTitle, core.hybrid, core.automatic, core.tracker],
-    },
-    {
-      id: "team" as const,
-      name: "Team",
-      price: "US$35 / seat / month",
-      note: detail.workspace,
-      features: [detail.workspace, `${core.feedback} · Priority`, core.market, detail.checked],
+      features: [
+        detail.matrix,
+        core.recommendations,
+        detail.assistantTitle,
+        `${core.manual} · ${core.hybrid} · ${core.automatic}`,
+        core.tracker,
+        core.market,
+        core.feedback,
+      ],
     },
   ];
 
@@ -105,7 +87,7 @@ export default async function AccountPage({
           label={labels.account}
           items={[
             { label: "CareerStoryMap", href: localizedPath(locale) },
-            { label: detail.plans, href: "#account-plans" },
+            { label: openSourceLabel, href: "#account-plans" },
             { label: core.enter, href: workspacePath },
             ...(user
               ? [{ label: labels.signOut, href: chatGPTSignOutPath(accountPath) }]
@@ -117,7 +99,7 @@ export default async function AccountPage({
       <ol className="account-steps" aria-label={labels.account}>
         <li className="active">
           <span>1</span>
-          <b>{detail.plans}</b>
+          <b>{openSourceLabel}</b>
         </li>
         <li className={user ? "complete" : ""}>
           <span>2</span>
@@ -153,41 +135,31 @@ export default async function AccountPage({
       <section
         className="account-plans"
         id="account-plans"
-        aria-label={detail.plans}
+        aria-label={openSourceLabel}
       >
         <div className="account-section-heading">
-          <p className="eyebrow">{detail.plans}</p>
-          <h2>{labels.selected}: {plans.find((item) => item.id === plan)?.name}</h2>
+          <p className="eyebrow">{openSourceLabel}</p>
+          <h2>{plans[0].name}</h2>
           <p>{labels.noCharge}</p>
         </div>
         <div className="account-plan-grid">
           {plans.map((item) => {
-            const isSelected = item.id === plan;
-            const returnTo = `${accountPath}?plan=${item.id}`;
-            const href = user
-              ? isSelected
-                ? workspacePath
-                : returnTo
-              : chatGPTSignInPath(returnTo);
-            const actionLabel = user
-              ? isSelected
-                ? core.enter
-                : item.name
-              : labels.signIn;
+            const href = user ? workspacePath : chatGPTSignInPath(accountPath);
+            const actionLabel = user ? core.enter : labels.signIn;
             return (
-              <article className={isSelected ? "selected" : ""} key={item.id}>
+              <article className="selected" key={item.id}>
                 <div className="account-plan-title">
                   <div>
                     <span>{item.note}</span>
                     <h3>{item.name}</h3>
                   </div>
-                  {isSelected && <b>{labels.selected}</b>}
+                  <b>{openSourceLabel}</b>
                 </div>
                 <p className="account-price">{item.price}</p>
                 <ul>
                   {item.features.map((feature) => <li key={feature}>{feature}</li>)}
                 </ul>
-                <a className={`button ${isSelected ? "primary" : "secondary"}`} href={href}>
+                <a className="button primary" href={href}>
                   {actionLabel}
                 </a>
               </article>

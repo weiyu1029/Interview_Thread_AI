@@ -31,7 +31,7 @@ inspectable rule, not a claim that the product can predict recruiter decisions.
 Manual scans and device-local alerts belong to the open core. Scheduled,
 cross-device monitoring requires accounts, background workers, durable
 preferences, notification consent, delivery controls, and provider-aware rate
-limits before it can be offered as a hosted Pro capability.
+limits before it can be offered safely as a hosted open-source capability.
 
 The public web page uses fictional, explicitly labeled product-preview roles.
 It must never present example values as live job listings or market totals. The
@@ -78,13 +78,13 @@ market content retains its source language unless a configured translation
 model is used. Contributions should include native-speaker review and must not
 silently translate employer qualifications into different requirements.
 
-## Application modes and commercial boundary
+## Application modes and safety boundary
 
-| Mode | Plan | Behavior | Safety boundary |
+| Mode | Access | Behavior | Safety boundary |
 |---|---|---|---|
-| Manual | Community / open source | User reviews, edits, and submits | No automated submission |
-| Hybrid | Pro | AI prepares tailored drafts and a queue | Explicit approval for every submission |
-| Automatic | Team / Enterprise | Governed workflows through approved employer APIs | Consent, provider allowlist, rate limits, audit log, emergency stop |
+| Manual | Free and open source | User reviews, edits, and submits | No automated submission |
+| Hybrid | Free and open source | AI prepares tailored drafts and a queue | Explicit approval for every submission |
+| Automatic | Free and open source | Governed workflows through approved employer APIs | Consent, provider allowlist, rate limits, audit log, emergency stop |
 
 The repository does not enable a submission connector by default. Selecting a
 mode creates preferences and checks entitlements; it does not send an
@@ -92,7 +92,7 @@ application. A future connector must pass legal, privacy, abuse, data-retention,
 provider-policy, retry, and user-consent review before it can be enabled.
 
 The open-source boundary includes the canonical evidence engine, locale
-resources, basic recommendations, transparent scoring, market-data schema,
-manual mode, self-hosting, export, and safety rules. Paid value may include
-hosted history, alerts, model credits, approval queues, collaboration,
-governance, audited connectors, operational support, and licensed data costs.
+resources, recommendations, transparent scoring, market-data schema, all three
+application-mode controls, self-hosting, export, collaboration foundations, and
+safety rules. Accounts may support durable hosted state, but do not create a
+paid entitlement.

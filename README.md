@@ -55,8 +55,8 @@ The Streamlit app supports:
 
 ## Full platform foundation
 
-The `platform/` directory is the production-oriented evolution path requested
-for accounts, permanent tracking, collaboration, and paid plans:
+The `platform/` directory is the production-oriented evolution path for free
+accounts, permanent tracking, and open-source collaboration:
 
 - a professional, responsive, emoji-free React / Next-compatible interface;
 - guest analysis, 40 locale choices with eight reviewed end-to-end catalogs
@@ -68,7 +68,7 @@ for accounts, permanent tracking, collaboration, and paid plans:
   policies, analysis-linked chat, feedback, model discovery, usage, and plans;
 - PostgreSQL-ready multi-tenant data models and role-based workspace access;
 - Docker Compose for the web, API, and PostgreSQL services;
-- a billing-ready entitlement boundary without prematurely enabling checkout.
+- one free, open-source access level with no checkout or paid entitlement.
 
 Start the complete local stack:
 
@@ -143,9 +143,8 @@ Candidate-facing claims may come only from the pasted profile or uploaded resume
 Job descriptions and uploaded documents are treated as untrusted data. They can influence matching, but they cannot issue instructions to the agent, expose secrets, or override the evidence boundary.
 
 The open-source default never auto-submits an application or sends a message.
-Manual mode remains free. Hybrid mode is designed to require approval for each
-submission. Pro may expose Manual, Hybrid, or Automatic controls, but any
-future automatic workflow must use approved employer
+Manual, Hybrid, and Automatic controls are free and open source. Hybrid is
+designed to require approval for each submission, and any future automatic workflow must use approved employer
 APIs with explicit consent, rate limits, audit logs, and an emergency stop; no
 submission connector is enabled in this repository.
 

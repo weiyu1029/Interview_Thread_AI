@@ -12,7 +12,7 @@ CareerStoryMap is an open-source, evidence-grounded career intelligence platform
 ## Primary pages
 - Product: ${siteUrl}/en/#product
 - Workspace: ${siteUrl}/en/#workspace
-- Plans: ${siteUrl}/en/#plans
+- Free and open-source access: ${siteUrl}/en/#plans
 - Resume and job-description matching: ${siteUrl}/en/resume-job-description-match
 - Career story builder: ${siteUrl}/en/career-story-builder
 - AI mock interview: ${siteUrl}/en/ai-mock-interview
@@ -33,13 +33,12 @@ Every public page has an indexable, canonical language URL and reciprocal hrefla
 - Geographic and role-based market insight
 - 40-language interface
 - Manual, hybrid, and governed automatic application modes
-- Public feedback for every plan, with priority handling for Team and Enterprise
+- Public feedback for everyone through one equal community queue
 
-## Plans
-- Community: free and open-source core
-- Pro: US$15 per month or US$150 per year base price, with transparent regional currency options
-- Team: US$35 per seat per month, or US$29 per seat per month billed annually, with a five-seat minimum
-- Enterprise: custom annual agreement starting at US$15,000
+## Access
+- Every public feature is free and open source
+- There are no paid tiers, billing flows, or priority support levels
+- Accounts may be used for identity and future cross-device persistence, not payment
 
 ## Data policy
 CareerStoryMap uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
