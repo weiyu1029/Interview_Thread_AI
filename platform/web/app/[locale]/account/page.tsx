@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { accountCopyFor } from "../../account-copy";
 import { BrandMark } from "../../BrandMark";
+import { MobileNav } from "../../MobileNav";
 import {
   chatGPTSignInPath,
   chatGPTSignOutPath,
@@ -100,6 +101,17 @@ export default async function AccountPage({
           <span>CareerStoryMap <small>Evidence to opportunity</small></span>
         </a>
         <span className="account-language">{localeDisplayName(locale)}</span>
+        <MobileNav
+          label={labels.account}
+          items={[
+            { label: "CareerStoryMap", href: localizedPath(locale) },
+            { label: detail.plans, href: "#account-plans" },
+            { label: core.enter, href: workspacePath },
+            ...(user
+              ? [{ label: labels.signOut, href: chatGPTSignOutPath(accountPath) }]
+              : []),
+          ]}
+        />
       </header>
 
       <ol className="account-steps" aria-label={labels.account}>
@@ -138,7 +150,11 @@ export default async function AccountPage({
         )}
       </section>
 
-      <section className="account-plans" aria-label={detail.plans}>
+      <section
+        className="account-plans"
+        id="account-plans"
+        aria-label={detail.plans}
+      >
         <div className="account-section-heading">
           <p className="eyebrow">{detail.plans}</p>
           <h2>{labels.selected}: {plans.find((item) => item.id === plan)?.name}</h2>

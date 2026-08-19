@@ -3,6 +3,7 @@ import { localizedPath } from "./intl-routing";
 import { SEO_PAGE_KEYS, SeoPageKey } from "./seo-content";
 import { localizedSeoPage, seoUiFor } from "./seo-localization";
 import { BrandMark } from "./BrandMark";
+import { MobileNav } from "./MobileNav";
 
 export function SeoLandingPage({
   pageKey,
@@ -99,6 +100,19 @@ export function SeoLandingPage({
             {ui.openWorkspace}
           </a>
         </nav>
+        <MobileNav
+          label={ui.exploreWorkflow}
+          items={[
+            { label: "CareerStoryMap", href: homePath },
+            { label: ui.openWorkspace, href: workspaceHref },
+            { label: ui.howItWorks, href: "#how-it-works" },
+            { label: ui.questions, href: "#questions" },
+            {
+              label: core.enter,
+              href: `${localizedPath(locale, "account")}?plan=community`,
+            },
+          ]}
+        />
       </header>
 
       <nav className="seo-workflow-nav" aria-label={ui.exploreWorkflow}>

@@ -31,11 +31,13 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.match(html, /Market Insights/i);
   assert.match(html, /US\$15 base/i);
   assert.match(html, /Enterprise/i);
+  assert.match(html, /mobile-nav-button/);
+  assert.match(html, /aria-expanded="false"/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
-  const [layout, page, i18n, speech, seoPage, auth, brandMark] = await Promise.all([
+  const [layout, page, i18n, speech, seoPage, auth, brandMark, mobileNav] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
@@ -43,6 +45,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
     readFile(new URL("../app/SeoLandingPage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/chatgpt-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/BrandMark.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/MobileNav.tsx", import.meta.url), "utf8"),
   ]);
   await access(new URL("../public/og-careerstorymap.png", import.meta.url));
   assert.match(layout, /openGraph/);
@@ -129,6 +132,9 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(brandMark, /brand-mark-node-start/);
   assert.match(brandMark, /brand-mark-node-end/);
   assert.doesNotMatch(page, />CS<\/span>/);
+  assert.match(mobileNav, /aria-expanded=\{open\}/);
+  assert.match(mobileNav, /pointerdown/);
+  assert.match(mobileNav, /Escape/);
 });
 
 test("renders a localized registration page for free and paid plans without enabling billing", async () => {

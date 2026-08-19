@@ -19,6 +19,7 @@ import {
 } from "./i18n";
 import { accountCopyFor } from "./account-copy";
 import { BrandMark } from "./BrandMark";
+import { MobileNav } from "./MobileNav";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
 import {
@@ -2522,6 +2523,27 @@ export default function Home({
             ))}
           </select>
         </label>
+        <MobileNav
+          label={detail.product}
+          items={[
+            { label: detail.product, href: "#product" },
+            {
+              label: detail.workspace,
+              href: `${localizedPath(locale)}?view=Analyze#workspace`,
+            },
+            { label: detail.explore, href: "#career-tools" },
+            { label: detail.plans, href: "#plans" },
+            {
+              label: accountLabels.account,
+              href: `${localizedPath(locale, "account")}?plan=community`,
+            },
+            {
+              label: detail.source,
+              href: "https://github.com/weiyu1029/CareerStoryMap-agent",
+              external: true,
+            },
+          ]}
+        />
       </header>
 
       {suggestedLocale && suggestedLanguageName && (
