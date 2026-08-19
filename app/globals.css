@@ -1244,6 +1244,63 @@ input:focus {
   border: 1px solid var(--line);
   border-radius: 12px;
 }
+.feedback-access {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.feedback-access b {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.feedback-access p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+.feedback-access ol {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.feedback-access li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 9px;
+}
+.feedback-access li.priority {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+.feedback-access li.highest {
+  background: var(--accent-deep);
+  color: white;
+}
+.feedback-access strong {
+  font-size: 9px;
+}
+.feedback-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .feedback-form .full {
   grid-column: 1/-1;
 }
@@ -1591,6 +1648,9 @@ input:focus {
     grid-template-columns: 1fr;
   }
   .feedback-form {
+    grid-template-columns: 1fr;
+  }
+  .feedback-access {
     grid-template-columns: 1fr;
   }
   .feedback-form .full {

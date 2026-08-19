@@ -620,6 +620,8 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
   const [suggestedLocale, setSuggestedLocale] =
     useState<LocaleCode | null>(null);
   const [billingMarketCode, setBillingMarketCode] = useState("US");
@@ -942,20 +944,34 @@ export default function Home() {
     ]);
     setQuestion("");
   }
-  function sendFeedback(event: FormEvent<HTMLFormElement>) {
+  async function sendFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFeedbackSubmitting(true);
+    setFeedbackError("");
     const data = new FormData(event.currentTarget);
-    const existing = JSON.parse(
-      window.localStorage.getItem("aptograph-feedback") ||
-        window.localStorage.getItem("careerproof-feedback") ||
-        "[]",
-    );
-    window.localStorage.setItem(
-      "aptograph-feedback",
-      JSON.stringify([...existing, Object.fromEntries(data.entries())]),
-    );
-    setFeedbackSent(true);
-    event.currentTarget.reset();
+    const form = event.currentTarget;
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          ...Object.fromEntries(data.entries()),
+          rating: Number(data.get("rating")),
+          locale,
+        }),
+      });
+      if (!response.ok) throw new Error("Feedback submission failed");
+      setFeedbackSent(true);
+      form.reset();
+    } catch {
+      setFeedbackError(
+        locale === "en"
+          ? "Your feedback was not sent. Please try again."
+          : copy.heroBody,
+      );
+    } finally {
+      setFeedbackSubmitting(false);
+    }
   }
 
   const views: { id: WorkspaceView; label: string }[] = [
@@ -1908,6 +1924,45 @@ export default function Home() {
                 </div>
               </div>
               <form className="feedback-form" onSubmit={sendFeedback}>
+                <div className="feedback-access full">
+                  <div>
+                    <b>
+                      {locale === "en"
+                        ? "Feedback is open to every plan"
+                        : copy.feedback}
+                    </b>
+                    <p>
+                      {locale === "en"
+                        ? "Community and Pro use the open queue. Team is prioritized. Enterprise receives the highest priority and a one-business-day acknowledgement target."
+                        : copy.heroBody}
+                    </p>
+                  </div>
+                  <ol>
+                    <li>
+                      <span>Community · Pro</span>
+                      <strong>Open queue</strong>
+                    </li>
+                    <li className="priority">
+                      <span>Team</span>
+                      <strong>Priority</strong>
+                    </li>
+                    <li className="highest">
+                      <span>Enterprise</span>
+                      <strong>Highest priority</strong>
+                    </li>
+                  </ol>
+                </div>
+                <label>
+                  <span>{detail.plans}</span>
+                  <select name="plan">
+                    <option value="community">Community</option>
+                    <option value="pro">Pro</option>
+                    <option value="team">Team · Priority</option>
+                    <option value="enterprise">
+                      Enterprise · Highest priority
+                    </option>
+                  </select>
+                </label>
                 <label>
                   <span>{detail.product}</span>
                   <select name="category">
@@ -1928,6 +1983,10 @@ export default function Home() {
                     <option value="1">1</option>
                   </select>
                 </label>
+                <label className="feedback-honeypot" aria-hidden="true">
+                  <span>Website</span>
+                  <input name="website" tabIndex={-1} autoComplete="off" />
+                </label>
                 <label className="full">
                   <span>{detail.feedbackTitle}</span>
                   <textarea
@@ -1937,9 +1996,25 @@ export default function Home() {
                   />
                 </label>
                 <div className="full feedback-actions">
-                  <p>{feedbackSent ? copy.heroBody : detail.privateTitle}</p>
-                  <button className="button primary">
-                    {detail.submitFeedback}
+                  <p role="status">
+                    {feedbackError ||
+                      (feedbackSent
+                        ? locale === "en"
+                          ? "Thank you. Your feedback is now in the product queue."
+                          : copy.feedback
+                        : locale === "en"
+                          ? "No account is required to submit feedback."
+                          : detail.privateTitle)}
+                  </p>
+                  <button
+                    className="button primary"
+                    disabled={feedbackSubmitting}
+                  >
+                    {feedbackSubmitting
+                      ? locale === "en"
+                        ? "Sending…"
+                        : copy.feedback
+                      : detail.submitFeedback}
                   </button>
                 </div>
               </form>
@@ -2030,6 +2105,7 @@ export default function Home() {
               <li>{detail.recommendationsTitle}</li>
               <li>{copy.manual}</li>
               <li>{copy.tracker}</li>
+              <li>{copy.feedback} · Open queue</li>
             </ul>
             <a
               className="button secondary"
@@ -2059,6 +2135,7 @@ export default function Home() {
               </li>
               <li>{copy.tracker}</li>
               <li>{detail.aiModel}</li>
+              <li>{copy.feedback} · Open queue</li>
             </ul>
             <button
               className="button primary"
@@ -2085,7 +2162,8 @@ export default function Home() {
             </p>
             <ul>
               <li>{detail.workspace}</li>
-              <li>{copy.tracker} · {copy.feedback}</li>
+              <li>{copy.tracker}</li>
+              <li>{copy.feedback} · Priority</li>
               <li>{copy.automatic}</li>
               <li>{detail.checked}</li>
               <li>{copy.market}</li>
@@ -2111,6 +2189,7 @@ export default function Home() {
               <li>SSO · SCIM · audit log</li>
               <li>Private models · data controls</li>
               <li>API · SLA · onboarding</li>
+              <li>{copy.feedback} · Highest priority</li>
               <li>{copy.market} · {detail.workspace}</li>
               <li>{detail.checked}</li>
             </ul>

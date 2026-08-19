@@ -21,6 +21,7 @@ Aptograph is an open-source, evidence-grounded career intelligence platform. It 
 - Geographic and role-based market insight
 - 40-language interface
 - Manual, hybrid, and governed automatic application modes
+- Public feedback for every plan, with priority handling for Team and Enterprise
 
 ## Plans
 - Community: free and open-source core
