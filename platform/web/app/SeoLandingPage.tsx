@@ -2,6 +2,7 @@ import { copyFor, LocaleCode, RTL_LOCALES } from "./i18n";
 import { localizedPath } from "./intl-routing";
 import { SEO_PAGE_KEYS, SeoPageKey } from "./seo-content";
 import { localizedSeoPage, seoUiFor } from "./seo-localization";
+import { BrandMark } from "./BrandMark";
 
 export function SeoLandingPage({
   pageKey,
@@ -79,7 +80,7 @@ export function SeoLandingPage({
       />
       <header className="seo-header">
         <a className="brand" href={homePath} aria-label="CareerStoryMap home">
-          <span className="brand-mark" aria-hidden="true">CS</span>
+          <BrandMark />
           <span>
             CareerStoryMap <small>Evidence to opportunity</small>
           </span>
