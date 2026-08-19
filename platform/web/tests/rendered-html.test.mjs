@@ -39,6 +39,6 @@ test("ships product metadata and a social card", async () => {
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
-  assert.equal(i18n.match(/\["[^\"]+",\s*"[^\"]+"\]/g)?.length, 40);
+  assert.equal(i18n.match(/\["[^"]+",\s*"[^"]+"\]/g)?.length, 40);
   assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);
 });
