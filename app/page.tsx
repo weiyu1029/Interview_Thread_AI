@@ -1531,6 +1531,21 @@ export default function Home({
     window.localStorage.setItem("aptograph-billing-market", nextMarket);
   }
 
+  function openWorkspace(
+    nextView: WorkspaceView,
+    nextMode?: ApplicationMode,
+  ) {
+    if (nextMode) setApplicationMode(nextMode);
+    setActive(nextView);
+    window.history.pushState(null, "", "#workspace");
+    window.requestAnimationFrame(() => {
+      document.getElementById("workspace")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
   const score = useMemo(() => scoreMatches(matches), [matches]);
   const strongCount = matches.filter(
     (item) => item.status === "Strong evidence",
@@ -2414,7 +2429,7 @@ export default function Home({
           <a href="#workspace">{detail.workspace}</a>
           <a href="#career-tools">Career tools</a>
           <a href="#plans">{detail.plans}</a>
-          <a href="https://github.com/weiyu1029/careerproof-agent">
+          <a href="https://github.com/weiyu1029/CareerStoryMap-agent">
             {detail.source}
           </a>
         </nav>
@@ -2478,17 +2493,18 @@ export default function Home({
             </a>
             <button
               className="text-link"
-              onClick={() => setActive("Market Insights")}
+              type="button"
+              onClick={() => openWorkspace("Market Insights")}
             >
               {detail.explore}
             </button>
-            <a
+            <button
               className="text-link"
-              href="#workspace"
-              onClick={() => setActive("Interview Studio")}
+              type="button"
+              onClick={() => openWorkspace("Interview Studio")}
             >
               {copy.interview}
-            </a>
+            </button>
           </div>
           <div className="trust-row">
             <span>{detail.evidenceLinked}</span>
@@ -3400,10 +3416,13 @@ export default function Home({
                           )}
                           <button
                             className="button secondary"
+                            disabled={tracker.some((item) => item.id === job.id)}
                             onClick={() => saveJob(job)}
                           >
                             {tracker.some((item) => item.id === job.id)
-                              ? copy.tracker
+                              ? locale === "en"
+                                ? "Tracked"
+                                : copy.tracker
                               : detail.saveRole}
                           </button>
                           <button
@@ -3654,22 +3673,29 @@ export default function Home({
               </div>
               <form className="tracker-form" onSubmit={addTrackerItem}>
                 <label>
-                  <span>{detail.product}</span>
+                  <span>{locale === "en" ? "Company" : detail.product}</span>
                   <input
                     value={company}
                     onChange={(event) => setCompany(event.target.value)}
-                    placeholder={detail.product}
+                    placeholder={locale === "en" ? "Company" : detail.product}
+                    required
                   />
                 </label>
                 <label>
-                  <span>{detail.recommendationsTitle}</span>
+                  <span>{locale === "en" ? "Role" : detail.recommendationsTitle}</span>
                   <input
                     value={role}
                     onChange={(event) => setRole(event.target.value)}
-                    placeholder={detail.recommendationsTitle}
+                    placeholder={locale === "en" ? "Role" : detail.recommendationsTitle}
+                    required
                   />
                 </label>
-                <button className="button primary">{detail.runMatch}</button>
+                <button
+                  className="button primary"
+                  disabled={!company.trim() || !role.trim()}
+                >
+                  {locale === "en" ? "Add to tracker" : copy.tracker}
+                </button>
               </form>
               <div className="tracker-list">
                 {tracker.length ? (
@@ -4009,7 +4035,7 @@ export default function Home({
             </ul>
             <a
               className="button secondary"
-              href="https://github.com/weiyu1029/careerproof-agent"
+              href="https://github.com/weiyu1029/CareerStoryMap-agent"
             >
               {detail.source}
             </a>
@@ -4039,7 +4065,8 @@ export default function Home({
             </ul>
             <button
               className="button primary"
-              onClick={() => setApplicationMode("Automatic")}
+              type="button"
+              onClick={() => openWorkspace("Analyze", "Automatic")}
             >
               Pro · {copy.automatic}
             </button>
@@ -4070,7 +4097,8 @@ export default function Home({
             </ul>
             <button
               className="button secondary"
-              onClick={() => setApplicationMode("Automatic")}
+              type="button"
+              onClick={() => openWorkspace("Tracker", "Automatic")}
             >
               Team · {detail.plans}
             </button>
