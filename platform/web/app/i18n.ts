@@ -43,6 +43,24 @@ export const LANGUAGES = [
 
 export type LocaleCode = (typeof LANGUAGES)[number][0];
 
+export const DEFAULT_LOCALE: LocaleCode = "en";
+
+export function localeToPath(locale: LocaleCode) {
+  return locale.toLowerCase();
+}
+
+export function localeFromPath(pathLocale: string): LocaleCode | null {
+  const normalized = pathLocale.toLowerCase();
+  return (
+    LANGUAGES.find(([locale]) => locale.toLowerCase() === normalized)?.[0] ||
+    null
+  );
+}
+
+export function localeDisplayName(locale: LocaleCode) {
+  return LANGUAGES.find(([code]) => code === locale)?.[1] || locale;
+}
+
 export type CoreCopy = {
   heroTitle: string;
   heroBody: string;

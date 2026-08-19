@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { LANGUAGES } from "./i18n";
+import { languageAlternates } from "./intl-routing";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -30,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const description =
     "Match your resume to any job description, build credible career stories, practice AI interviews, and discover stronger-fit roles worldwide.";
   const image = new URL("/og-careerstorymap.png", origin).toString();
+  const englishHome = new URL("/en", origin).toString();
 
   return {
     metadataBase: new URL(origin),
@@ -38,7 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | CareerStoryMap",
     },
     description,
-    alternates: { canonical: origin },
+    alternates: {
+      canonical: englishHome,
+      languages: languageAlternates(),
+    },
     keywords: [
       "career evidence",
       "AI job matching",
@@ -71,7 +76,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       siteName: "CareerStoryMap",
-      url: origin,
+      url: englishHome,
       title,
       description,
       locale: "en_US",

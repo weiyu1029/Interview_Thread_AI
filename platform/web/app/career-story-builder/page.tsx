@@ -1,8 +1,5 @@
-import { SeoLandingPage } from "../SeoLandingPage";
-import { metadataFor } from "../seo-content";
-
-export const metadata = metadataFor("career-story-builder");
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <SeoLandingPage pageKey="career-story-builder" />;
+  redirect("/en/career-story-builder");
 }

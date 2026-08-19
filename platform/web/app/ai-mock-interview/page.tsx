@@ -1,8 +1,5 @@
-import { SeoLandingPage } from "../SeoLandingPage";
-import { metadataFor } from "../seo-content";
-
-export const metadata = metadataFor("ai-mock-interview");
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <SeoLandingPage pageKey="ai-mock-interview" />;
+  redirect("/en/ai-mock-interview");
 }

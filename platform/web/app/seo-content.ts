@@ -11,6 +11,10 @@ export const SEO_PAGE_KEYS = [
 
 export type SeoPageKey = (typeof SEO_PAGE_KEYS)[number];
 
+export function isSeoPageKey(value: string): value is SeoPageKey {
+  return SEO_PAGE_KEYS.includes(value as SeoPageKey);
+}
+
 export type SeoPageSpec = {
   path: `/${SeoPageKey}`;
   navLabel: string;

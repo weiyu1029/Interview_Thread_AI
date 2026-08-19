@@ -1,8 +1,5 @@
-import { SeoLandingPage } from "../SeoLandingPage";
-import { metadataFor } from "../seo-content";
-
-export const metadata = metadataFor("resume-keyword-analyzer");
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <SeoLandingPage pageKey="resume-keyword-analyzer" />;
+  redirect("/en/resume-keyword-analyzer");
 }

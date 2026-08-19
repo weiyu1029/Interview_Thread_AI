@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
+import {
+  copyFor,
+  LANGUAGES,
+  localeToPath,
+} from "../app/i18n.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -74,12 +79,12 @@ test("ships product metadata and a social card", async () => {
 
 test("server-renders every searchable CareerStoryMap page", async () => {
   const pages = [
-    ["/resume-job-description-match", /Match your resume to a job description/i],
-    ["/career-story-builder", /Build interview stories from work you can prove/i],
-    ["/ai-mock-interview", /Practice the interview behind the interview/i],
-    ["/resume-keyword-analyzer", /Find the keywords that matter/i],
-    ["/job-match-recommendations", /job recommendations your story can actually support/i],
-    ["/career-market-insights", /where career demand is moving/i],
+    ["/en/resume-job-description-match", /Match your resume to a job description/i],
+    ["/en/career-story-builder", /Build interview stories from work you can prove/i],
+    ["/en/ai-mock-interview", /Practice the interview behind the interview/i],
+    ["/en/resume-keyword-analyzer", /Find the keywords that matter/i],
+    ["/en/job-match-recommendations", /job recommendations your story can actually support/i],
+    ["/en/career-market-insights", /where career demand is moving/i],
   ];
   for (const [path, heading] of pages) {
     const response = await render(path);
@@ -93,8 +98,8 @@ test("server-renders every searchable CareerStoryMap page", async () => {
 
 test("search pages emit route-specific metadata without the homepage social card", async () => {
   const examples = [
-    ["/ai-mock-interview", "AI Mock Interview", "Rehearse with evidence-grounded AI interviewers"],
-    ["/career-market-insights", "Market Insights", "Explore job openings, momentum"],
+    ["/en/ai-mock-interview", "AI Mock Interview", "Rehearse with evidence-grounded AI interviewers"],
+    ["/en/career-market-insights", "Market Insights", "Explore job openings, momentum"],
   ];
   for (const [path, title, description] of examples) {
     const response = await render(path);
@@ -105,4 +110,73 @@ test("search pages emit route-specific metadata without the homepage social card
     assert.match(html, new RegExp(`name="twitter:title" content="${title} \\| CareerStoryMap"`));
     assert.doesNotMatch(html, /og-careerstorymap\.png/);
   }
+});
+
+test("server-renders all 40 indexable language home pages", async () => {
+  assert.equal(LANGUAGES.length, 40);
+  for (const [locale] of LANGUAGES) {
+    const response = await render(`/${localeToPath(locale)}`);
+    assert.equal(response.status, 200, locale);
+    const html = await response.text();
+    assert.ok(html.includes(copyFor(locale).heroTitle), locale);
+    assert.ok(html.includes(`lang="${locale}"`), locale);
+  }
+});
+
+test("localized search pages emit canonical and reciprocal hreflang links", async () => {
+  const examples = [
+    ["/zh-tw/ai-mock-interview", "AI 模擬面試", "zh-TW"],
+    ["/ja/career-story-builder", "キャリアストーリー作成", "ja"],
+    ["/de/resume-keyword-analyzer", "Lebenslauf-Keyword-Analyse", "de"],
+    ["/ar/job-match-recommendations", copyFor("ar").recommendations, "ar"],
+  ];
+
+  for (const [path, title, locale] of examples) {
+    const response = await render(path);
+    assert.equal(response.status, 200, path);
+    const html = await response.text();
+    assert.ok(html.includes(title), path);
+    assert.match(
+      html,
+      new RegExp(`<link rel="canonical" href="https://careerstorymap\\.example${path}">`),
+      path,
+    );
+    assert.match(html, new RegExp(`hreflang="${locale}"`), path);
+    assert.match(html, /hreflang="en"/, path);
+    assert.match(html, /hreflang="zh-TW"/, path);
+    assert.match(html, /hreflang="x-default"/, path);
+    assert.equal((html.match(/rel="alternate"/g) ?? []).length, 41, path);
+  }
+});
+
+test("sitemap publishes all 280 localized canonical pages and their alternates", async () => {
+  const response = await render("/sitemap.xml");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /xml/i);
+  const xml = await response.text();
+  assert.equal((xml.match(/<url>/g) ?? []).length, LANGUAGES.length * 7);
+  for (const [locale] of LANGUAGES) {
+    const pathLocale = localeToPath(locale);
+    assert.ok(
+      xml.includes(`<loc>https://careerstorymap.com/${pathLocale}</loc>`),
+      locale,
+    );
+    assert.ok(
+      xml.includes(
+        `<loc>https://careerstorymap.com/${pathLocale}/ai-mock-interview</loc>`,
+      ),
+      locale,
+    );
+  }
+  assert.match(xml, /hreflang="x-default" href="https:\/\/careerstorymap\.com\/en\/ai-mock-interview"/);
+  assert.doesNotMatch(
+    xml,
+    /<loc>https:\/\/careerstorymap\.com\/ai-mock-interview<\/loc>/,
+  );
+});
+
+test("legacy unprefixed search pages redirect to English canonicals", async () => {
+  const response = await render("/ai-mock-interview");
+  assert.equal(response.status, 307);
+  assert.equal(response.headers.get("location"), "/en/ai-mock-interview");
 });
