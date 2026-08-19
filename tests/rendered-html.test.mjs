@@ -19,16 +19,18 @@ test("server-renders the CareerProof product experience", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /CareerProof/);
-  assert.match(html, /Evidence-first career intelligence/i);
+  assert.match(html, /Evidence that travels/i);
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
+  assert.match(html, /Market Insights/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
 test("ships product metadata and a social card", async () => {
-  const [layout, page] = await Promise.all([
+  const [layout, page, i18n] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
   ]);
   await access(new URL("../public/og.png", import.meta.url));
   assert.match(layout, /openGraph/);
@@ -37,4 +39,6 @@ test("ships product metadata and a social card", async () => {
   assert.match(page, /Ollama/);
   assert.match(page, /Hugging Face/);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
+  assert.equal(i18n.match(/\["[^\"]+",\s*"[^\"]+"\]/g)?.length, 40);
+  assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);
 });

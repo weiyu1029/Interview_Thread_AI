@@ -11,15 +11,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "CareerProof — Evidence-first career intelligence";
-  const description = "Match role requirements to verified career evidence, improve keyword coverage, and build credible interview stories.";
+  const title = "CareerProof Global — Evidence that travels";
+  const description = "Turn verified career stories into stronger global job matches, multilingual applications, and evidence-grounded interview narratives.";
   const image = new URL("/og.png", origin).toString();
 
   return {
     metadataBase: new URL(origin),
     title,
     description,
-    openGraph: { title, description, images: [{ url: image, width: 1731, height: 909 }] },
+    openGraph: { title, description, images: [{ url: image, width: 1732, height: 908 }] },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
