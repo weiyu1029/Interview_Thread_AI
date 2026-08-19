@@ -23,6 +23,12 @@ import { MobileNav } from "./MobileNav";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
 import {
+  countryLabelFor,
+  marketValueFor,
+  regionLabelFor,
+  timeRangeLabelFor,
+} from "./market-localization";
+import {
   bestSpeechVoice,
   InterviewPersonaId,
   localizedInterviewQuestion,
@@ -3187,7 +3193,9 @@ export default function Home({
                   >
                     {REGIONS.map((item) => (
                       <option key={item} value={item}>
-                        {item === "Worldwide" ? copy.worldwide : item}
+                        {item === "Worldwide"
+                          ? copy.worldwide
+                          : regionLabelFor(locale, item)}
                       </option>
                     ))}
                   </select>
@@ -3200,7 +3208,9 @@ export default function Home({
                   >
                     {COUNTRIES[region].map((item) => (
                       <option key={item} value={item}>
-                        {item === "All countries" ? detail.country : item}
+                        {item === "All countries"
+                          ? detail.country
+                          : countryLabelFor(locale, item)}
                       </option>
                     ))}
                   </select>
@@ -3238,7 +3248,9 @@ export default function Home({
                   >
                     {INDUSTRIES.map((item) => (
                       <option key={item} value={item}>
-                        {item === "All industries" ? detail.industry : item}
+                        {item === "All industries"
+                          ? detail.industry
+                          : marketValueFor(locale, item)}
                       </option>
                     ))}
                   </select>
@@ -3401,8 +3413,8 @@ export default function Home({
                             <p>{job.company}</p>
                             <h3>{job.title}</h3>
                             <span>
-                              {job.city}, {job.country} · {job.workStyle} ·{" "}
-                              {job.industry}
+                              {job.city}, {countryLabelFor(locale, job.country)} ·{" "}
+                              {job.workStyle} · {marketValueFor(locale, job.industry)}
                             </span>
                             {job.source && (
                               <small className="job-provenance">
@@ -3524,7 +3536,7 @@ export default function Home({
                   <h2>{detail.marketTitle}</h2>
                 </div>
                 <span className="status-pill light">
-                  {sourceMeta ? "Live employer snapshot" : detail.providerPreview}
+                  {detail.providerPreview}
                 </span>
               </div>
               <p className="data-disclosure">
@@ -3539,7 +3551,7 @@ export default function Home({
                 {JOB_SOURCE_STATUS.map((source) => (
                   <article key={source.name}>
                     <div>
-                      <b>{source.name}</b>
+                      <b>{marketValueFor(locale, source.name)}</b>
                       <span>
                         {locale === "en" ? source.detail : detail.sourcePolicy}
                       </span>
@@ -3559,7 +3571,9 @@ export default function Home({
                   >
                     {REGIONS.map((item) => (
                       <option key={item} value={item}>
-                        {item === "Worldwide" ? copy.worldwide : item}
+                        {item === "Worldwide"
+                          ? copy.worldwide
+                          : regionLabelFor(locale, item)}
                       </option>
                     ))}
                   </select>
@@ -3572,7 +3586,9 @@ export default function Home({
                   >
                     {COUNTRIES[region].map((item) => (
                       <option key={item} value={item}>
-                        {item === "All countries" ? detail.country : item}
+                        {item === "All countries"
+                          ? detail.country
+                          : countryLabelFor(locale, item)}
                       </option>
                     ))}
                   </select>
@@ -3585,7 +3601,9 @@ export default function Home({
                   >
                     {INDUSTRIES.map((item) => (
                       <option key={item} value={item}>
-                        {item === "All industries" ? detail.industry : item}
+                        {item === "All industries"
+                          ? detail.industry
+                          : marketValueFor(locale, item)}
                       </option>
                     ))}
                   </select>
@@ -3601,7 +3619,9 @@ export default function Home({
                     </option>
                     {[...new Set(MARKET_BASE.map((item) => item.role))].map(
                       (item) => (
-                        <option key={item}>{item}</option>
+                        <option key={item} value={item}>
+                          {marketValueFor(locale, item)}
+                        </option>
                       ),
                     )}
                   </select>
@@ -3612,22 +3632,30 @@ export default function Home({
                     value={timeRange}
                     onChange={(event) => setTimeRange(event.target.value)}
                   >
-                    <option value="Last 30 days">{detail.timeRange}</option>
-                    <option>Last 3 months</option>
-                    <option>Last 6 months</option>
-                    <option>Last 12 months</option>
+                    {[
+                      "Last 30 days",
+                      "Last 3 months",
+                      "Last 6 months",
+                      "Last 12 months",
+                    ].map((item) => (
+                      <option key={item} value={item}>
+                        {timeRangeLabelFor(locale, item)}
+                      </option>
+                    ))}
                   </select>
                 </label>
               </div>
               <div className="market-kpis">
                 <article>
                   <span>
-                    {sourceMeta ? "Published openings" : detail.exampleOpenings}
+                    {detail.exampleOpenings}
                   </span>
                   <b>{compactNumber(totalOpenings, locale)}</b>
                   <small>
                     {sourceMeta?.employer ||
-                      (country === "All countries" ? copy.worldwide : country)}
+                      (country === "All countries"
+                        ? copy.worldwide
+                        : countryLabelFor(locale, country))}
                   </small>
                 </article>
                 <article>
@@ -3641,7 +3669,9 @@ export default function Home({
                     </b>
                   )}
                   <small>
-                    {weightedChange === null ? "Needs a prior snapshot" : detail.timeRange}
+                    {weightedChange === null
+                      ? detail.exampleSnapshot
+                      : timeRangeLabelFor(locale, timeRange)}
                   </small>
                 </article>
                 <article>
@@ -3666,7 +3696,7 @@ export default function Home({
                           : detail.sourcePolicy}
                       </p>
                     </div>
-                    <span>{detail.timeRange}</span>
+                    <span>{timeRangeLabelFor(locale, timeRange)}</span>
                   </div>
                   <div className="bar-chart">
                     {marketRows.map((item) => (
@@ -3675,8 +3705,8 @@ export default function Home({
                         key={`${item.industry}-${item.role}`}
                       >
                         <div>
-                          <b>{item.industry}</b>
-                          <span>{item.role}</span>
+                          <b>{marketValueFor(locale, item.industry)}</b>
+                          <span>{marketValueFor(locale, item.role)}</span>
                         </div>
                         <div className="bar-track">
                           <i
@@ -3714,7 +3744,7 @@ export default function Home({
                       .sort((a, b) => b.change - a.change)
                       .map((item) => (
                         <article key={item.industry}>
-                          <span>{item.industry}</span>
+                          <span>{marketValueFor(locale, item.industry)}</span>
                           <b
                             className={
                               item.change >= 0 ? "positive" : "negative"

@@ -7,6 +7,12 @@ import {
   localeToPath,
 } from "../app/i18n.ts";
 import { accountCopyFor, openSourceLabelFor } from "../app/account-copy.ts";
+import {
+  countryLabelFor,
+  marketValueFor,
+  regionLabelFor,
+  timeRangeLabelFor,
+} from "../app/market-localization.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -34,6 +40,21 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.match(html, /mobile-nav-button/);
   assert.match(html, /aria-expanded="false"/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("localizes market filters while retaining canonical values", () => {
+  assert.equal(regionLabelFor("zh-TW", "Europe"), "歐洲");
+  assert.equal(countryLabelFor("zh-TW", "United Kingdom"), "英國");
+  assert.equal(marketValueFor("zh-TW", "Healthcare"), "醫療保健");
+  assert.equal(marketValueFor("zh-TW", "Analytics"), "資料分析");
+  assert.match(timeRangeLabelFor("zh-TW", "Last 3 months"), /3/);
+
+  for (const [locale] of LANGUAGES) {
+    assert.notEqual(regionLabelFor(locale, "Europe"), "");
+    assert.notEqual(countryLabelFor(locale, "United Kingdom"), "");
+    assert.notEqual(marketValueFor(locale, "Healthcare"), "");
+    assert.notEqual(timeRangeLabelFor(locale, "Last 3 months"), "");
+  }
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
