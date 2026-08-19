@@ -6,6 +6,7 @@ import {
   LANGUAGES,
   localeToPath,
 } from "../app/i18n.ts";
+import { accountCopyFor } from "../app/account-copy.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -33,13 +34,14 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("ships product metadata, multilingual speech, and a social card", async () => {
-  const [layout, page, i18n, speech, seoPage] = await Promise.all([
+test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
+  const [layout, page, i18n, speech, seoPage, auth] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/interview-speech.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/SeoLandingPage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/chatgpt-auth.ts", import.meta.url), "utf8"),
   ]);
   await access(new URL("../public/og-careerstorymap.png", import.meta.url));
   assert.match(layout, /openGraph/);
@@ -79,8 +81,9 @@ test("ships product metadata, multilingual speech, and a social card", async () 
   assert.match(page, /function openWorkspace/);
   assert.match(page, /openWorkspace\("Market Insights"\)/);
   assert.match(page, /openWorkspace\("Interview Studio"\)/);
-  assert.match(page, /openWorkspace\("Analyze", "Automatic"\)/);
-  assert.match(page, /openWorkspace\("Tracker", "Automatic"\)/);
+  assert.match(page, /localizedPath\(locale, "account"\).*plan=community/s);
+  assert.match(page, /localizedPath\(locale, "account"\).*plan=pro/s);
+  assert.match(page, /localizedPath\(locale, "account"\).*plan=team/s);
   assert.match(page, /disabled=\{!company\.trim\(\) \|\| !role\.trim\(\)\}/);
   assert.match(page, /disabled=\{tracker\.some\(\(item\) => item\.id === job\.id\)\}/);
   assert.doesNotMatch(page, /github\.com\/weiyu1029\/careerproof-agent/);
@@ -112,6 +115,44 @@ test("ships product metadata, multilingual speech, and a social card", async () 
   assert.doesNotMatch(seoPage, /next\/link|<Link\b/);
   assert.match(seoPage, /href=\{`\$\{homePath\}#workspace`\}/);
   assert.doesNotMatch(seoPage, /github\.com\/weiyu1029\/careerproof-agent/);
+  assert.match(auth, /oai-authenticated-user-id/);
+  assert.match(auth, /oai-authenticated-user-email/);
+  assert.match(auth, /safeRelativeReturnPath/);
+  assert.match(auth, /value\.startsWith\("\/\/"\)/);
+});
+
+test("renders a localized registration page for free and paid plans without enabling billing", async () => {
+  const examples = [
+    ["/en/account?plan=pro", "Pro", accountCopyFor("en")],
+    ["/zh-tw/account?plan=community", "Community", accountCopyFor("zh-TW")],
+    ["/ja/account?plan=team", "Team", accountCopyFor("ja")],
+  ];
+
+  for (const [path, plan, labels] of examples) {
+    const response = await render(path);
+    assert.equal(response.status, 200, path);
+    const html = await response.text();
+    assert.ok(html.includes(labels.account), path);
+    assert.ok(html.includes(labels.signIn), path);
+    assert.ok(html.includes(labels.noCharge), path);
+    assert.ok(html.includes(labels.privacy), path);
+    assert.ok(html.includes(plan), path);
+    assert.match(html, /\/signin-with-chatgpt\?return_to=/, path);
+    assert.match(html, /name="robots" content="noindex, nofollow"/, path);
+    assert.doesNotMatch(html, /type="password"|card number|A-number/i, path);
+  }
+});
+
+test("provides complete account safety copy in every supported language", () => {
+  for (const [locale] of LANGUAGES) {
+    const labels = accountCopyFor(locale);
+    assert.ok(labels.account, locale);
+    assert.ok(labels.signIn, locale);
+    assert.ok(labels.signOut, locale);
+    assert.ok(labels.selected, locale);
+    assert.ok(labels.noCharge, locale);
+    assert.ok(labels.privacy, locale);
+  }
 });
 
 test("server-renders every searchable CareerStoryMap page", async () => {

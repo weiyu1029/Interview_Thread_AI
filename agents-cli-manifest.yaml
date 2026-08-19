@@ -1,0 +1,5 @@
+project_name: careerproof-agent
+agent_directory: app
+region: us-east1
+a2a: true
+deployment_target: null

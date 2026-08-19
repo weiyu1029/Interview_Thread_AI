@@ -1,0 +1,202 @@
+{
+  "Enterprise SaaS / B2B Software": {
+    "roles": ["Business Analyst", "Data Analyst", "Product Analyst", "Revenue Operations Analyst", "Customer Success Operations Analyst", "Growth Analyst"],
+    "business_model": ["subscription revenue", "ARR", "MRR", "usage-based pricing", "enterprise contracts", "seat-based pricing", "upsell and expansion revenue"],
+    "metrics": ["ARR", "MRR", "NRR", "GRR", "churn rate", "activation rate", "CAC", "LTV", "trial-to-paid conversion", "feature adoption"],
+    "business_problems": ["reduce churn", "improve activation", "increase product adoption", "grow expansion revenue", "identify high-value customers", "improve sales funnel conversion"],
+    "interview_cases": ["Churn increased by 10%. Diagnose why.", "Design a dashboard for customer success managers.", "How would you identify accounts likely to expand?", "Activation dropped after onboarding redesign. What do you check?"],
+    "hiring_signals": ["SaaS metrics fluency", "product usage analysis", "stakeholder communication", "dashboarding", "retention and funnel thinking"]
+  },
+  "AI / Data Product / MLOps": {
+    "roles": ["AI Product Analyst", "Data Product Analyst", "AI Product Manager", "MLOps Analyst", "Analytics Engineer", "Business Analyst for AI Products"],
+    "business_model": ["AI workflow automation", "API usage", "enterprise AI tools", "model-powered products", "internal productivity improvement"],
+    "metrics": ["adoption rate", "automation rate", "task completion rate", "human override rate", "latency", "accuracy", "cost per request", "hallucination rate", "user trust", "time saved"],
+    "business_problems": ["measure AI feature ROI", "increase user trust", "reduce inference cost", "evaluate model performance in business terms", "prioritize AI use cases"],
+    "interview_cases": ["How would you evaluate an AI assistant feature?", "How do you measure productivity improvement from AI automation?", "A model is accurate but users do not trust it. What would you analyze?", "How do you decide whether an AI workflow should be automated?"],
+    "hiring_signals": ["AI product thinking", "human-in-the-loop awareness", "trust and safety reasoning", "model-to-business metric translation", "workflow automation understanding"]
+  },
+  "FinTech / Credit / Lending": {
+    "roles": ["Risk Analyst", "Credit Analyst", "Fraud Analyst", "Data Analyst", "Business Analyst", "Product Analyst"],
+    "business_model": ["interest income", "loan origination fees", "interchange fees", "subscription products", "risk-based pricing", "financial services marketplace"],
+    "metrics": ["approval rate", "default rate", "delinquency rate", "loss rate", "fraud rate", "repayment rate", "credit utilization", "risk score", "CAC", "LTV"],
+    "business_problems": ["approve more good borrowers without increasing default risk", "reduce fraud", "improve credit scoring", "detect risky customer segments", "optimize repayment behavior"],
+    "interview_cases": ["Approval rate dropped but default rate improved. Is this good?", "Fraud increased 20%. How would you investigate?", "Design a credit risk dashboard.", "How would you evaluate a new credit scoring model?"],
+    "hiring_signals": ["risk tradeoff thinking", "financial metrics fluency", "regulatory awareness", "analytical rigor", "anomaly detection"]
+  },
+  "Banking / Financial Services": {
+    "roles": ["Financial Analyst", "Business Analyst", "Operations Analyst", "Risk Analyst", "Strategy Analyst", "Data Analyst"],
+    "business_model": ["interest spread", "fees", "deposits", "loans", "wealth management", "credit products", "treasury services"],
+    "metrics": ["net interest margin", "deposit growth", "loan volume", "cost-to-income ratio", "customer profitability", "NPL ratio", "fraud rate", "digital adoption"],
+    "business_problems": ["improve branch or digital banking adoption", "reduce operational risk", "improve customer profitability", "manage portfolio risk", "detect suspicious activity"],
+    "interview_cases": ["Digital adoption is low among older customers. What would you analyze?", "How do you segment profitable banking customers?", "Design a dashboard for branch performance.", "How would you detect unusual account activity?"],
+    "hiring_signals": ["financial product understanding", "risk thinking", "regulated data handling", "operational dashboarding", "stakeholder communication"]
+  },
+  "Investment / Asset Management / WealthTech": {
+    "roles": ["Investment Analyst", "WealthTech Analyst", "Data Analyst", "Product Analyst", "Portfolio Analytics Analyst", "Strategy Analyst"],
+    "business_model": ["assets under management fees", "advisory fees", "trading or platform fees", "subscription research tools", "robo-advisor products"],
+    "metrics": ["AUM", "net inflows", "portfolio return", "Sharpe ratio", "risk exposure", "client retention", "advisory conversion", "trade volume"],
+    "business_problems": ["improve client portfolio performance visibility", "segment investors by behavior", "reduce churn among wealth clients", "explain risk-adjusted returns"],
+    "interview_cases": ["Clients are withdrawing assets. How would you investigate?", "Design a dashboard for portfolio advisors.", "How would you segment wealth management users?", "How do you evaluate a robo-advisor feature?"],
+    "hiring_signals": ["financial performance analysis", "risk communication", "client behavior analytics", "trust-sensitive data handling"]
+  },
+  "Insurance / InsurTech": {
+    "roles": ["Actuarial Analyst", "Data Analyst", "Claims Analyst", "Risk Analyst", "Product Analyst", "Operations Analyst"],
+    "business_model": ["premiums", "underwriting margin", "policy fees", "claims management efficiency", "risk pricing"],
+    "metrics": ["loss ratio", "combined ratio", "claim frequency", "claim severity", "policy retention", "fraud rate", "underwriting accuracy", "processing time"],
+    "business_problems": ["price risk accurately", "reduce claims leakage", "detect fraud", "improve policy retention", "speed up claims processing"],
+    "interview_cases": ["Claims cost increased. How would you investigate?", "Design a fraud detection dashboard.", "How would you segment policyholders by risk?", "Retention dropped after price increase. What do you analyze?"],
+    "hiring_signals": ["risk pricing", "claims operations", "frequency vs severity thinking", "anomaly detection", "regulated process understanding"]
+  },
+  "Healthcare Operations / HealthTech": {
+    "roles": ["Healthcare Data Analyst", "Business Analyst", "Operations Analyst", "Product Analyst", "Clinical Operations Analyst"],
+    "business_model": ["provider services", "insurance reimbursement", "SaaS for providers", "care management", "clinical workflow tools", "patient engagement platforms"],
+    "metrics": ["patient wait time", "no-show rate", "provider utilization", "readmission rate", "claim denial rate", "cost per patient", "appointment availability", "patient satisfaction"],
+    "business_problems": ["reduce wait time", "improve patient access", "reduce claim denials", "optimize provider capacity", "improve care coordination"],
+    "interview_cases": ["Patient wait time increased. Diagnose why.", "Design a dashboard for clinic operations.", "How would you reduce appointment no-shows?", "How would you measure impact of a care coordination tool?"],
+    "hiring_signals": ["healthcare workflow thinking", "compliance sensitivity", "operations metrics", "patient journey reasoning", "stakeholder communication"]
+  },
+  "Pharma / Biotech": {
+    "roles": ["Commercial Analyst", "Market Access Analyst", "Clinical Operations Analyst", "Data Analyst", "Strategy Analyst", "Product Analyst"],
+    "business_model": ["drug sales", "licensing", "clinical pipeline", "market access", "specialty therapies", "partnerships"],
+    "metrics": ["trial enrollment", "patient adherence", "prescription volume", "market share", "launch uptake", "sales by region", "access coverage", "treatment persistence"],
+    "business_problems": ["forecast drug demand", "analyze market access barriers", "improve clinical trial recruitment", "segment physicians or patients", "evaluate launch performance"],
+    "interview_cases": ["A drug launch underperforms. What would you analyze?", "How would you improve clinical trial enrollment?", "Design a dashboard for commercial performance.", "How do you segment physicians for outreach?"],
+    "hiring_signals": ["regulated market understanding", "commercial analytics", "patient and provider journey reasoning", "complex stakeholder communication"]
+  },
+  "Retail / E-commerce": {
+    "roles": ["E-commerce Analyst", "Business Analyst", "Category Analyst", "Growth Analyst", "Product Analyst", "BI Analyst"],
+    "business_model": ["product sales", "marketplace commission", "advertising", "subscriptions", "loyalty programs"],
+    "metrics": ["GMV", "conversion rate", "AOV", "cart abandonment", "repeat purchase rate", "inventory turnover", "gross margin", "return rate", "CAC", "LTV"],
+    "business_problems": ["improve conversion", "increase average order value", "reduce cart abandonment", "optimize inventory", "improve customer retention"],
+    "interview_cases": ["Conversion dropped last week. How would you diagnose?", "A promotion increased sales but reduced margin. Is it successful?", "Design a dashboard for category managers.", "How would you improve repeat purchase?"],
+    "hiring_signals": ["funnel analysis", "margin tradeoff thinking", "customer behavior analytics", "inventory and merchandising awareness"]
+  },
+  "CPG / Consumer Brands": {
+    "roles": ["Brand Analyst", "Category Analyst", "Sales Analyst", "Marketing Analyst", "Strategy Analyst", "Data Analyst"],
+    "business_model": ["wholesale", "retail distribution", "brand portfolio", "trade promotions", "consumer demand", "channel partnerships"],
+    "metrics": ["market share", "sell-through", "gross margin", "promotion lift", "distribution coverage", "repeat purchase", "brand awareness", "household penetration"],
+    "business_problems": ["grow market share", "evaluate promotion effectiveness", "optimize product assortment", "forecast demand", "understand consumer segments"],
+    "interview_cases": ["A product line is losing market share. What do you analyze?", "Did a promotion actually work?", "How would you optimize shelf assortment?", "Forecast demand for a new product launch."],
+    "hiring_signals": ["commercial analytics", "pricing and promotion thinking", "consumer insight", "channel performance analysis"]
+  },
+  "Logistics / Supply Chain / Last-mile Delivery": {
+    "roles": ["Operations Analyst", "Supply Chain Analyst", "Logistics Analyst", "Data Analyst", "Process Improvement Analyst"],
+    "business_model": ["delivery fees", "fulfillment contracts", "warehousing", "transportation services", "route optimization", "B2B logistics platforms"],
+    "metrics": ["on-time delivery", "cost per delivery", "delivery time", "defect rate", "warehouse throughput", "utilization", "SLA compliance", "route efficiency"],
+    "business_problems": ["reduce delivery cost", "improve on-time delivery", "reduce warehouse bottlenecks", "optimize staffing", "reduce defect or complaint rate"],
+    "interview_cases": ["On-time delivery dropped. Diagnose why.", "Warehouse throughput is low. What do you check?", "Design an operations dashboard.", "How would you optimize delivery routes?"],
+    "hiring_signals": ["operations analytics", "bottleneck diagnosis", "process improvement", "physical workflow understanding"]
+  },
+  "Manufacturing / Industrial IoT": {
+    "roles": ["Manufacturing Analyst", "Operations Analyst", "Industrial Data Analyst", "Supply Chain Analyst", "Process Improvement Analyst"],
+    "business_model": ["product manufacturing", "equipment utilization", "service contracts", "industrial automation", "predictive maintenance"],
+    "metrics": ["OEE", "yield", "scrap rate", "downtime", "cycle time", "throughput", "defect rate", "maintenance cost"],
+    "business_problems": ["reduce downtime", "improve yield", "detect quality issues", "optimize production schedules", "predict maintenance needs"],
+    "interview_cases": ["Production yield dropped. Diagnose why.", "How would you predict equipment failure?", "Design a quality dashboard.", "How do you reduce downtime?"],
+    "hiring_signals": ["root-cause analysis", "process metrics", "industrial operations understanding", "quality and throughput thinking"]
+  },
+  "Energy / ClimateTech / Utilities": {
+    "roles": ["Energy Analyst", "Climate Data Analyst", "Operations Analyst", "Strategy Analyst", "Sustainability Analyst"],
+    "business_model": ["energy generation", "utility billing", "carbon credits", "grid services", "climate software", "energy efficiency products"],
+    "metrics": ["energy consumption", "peak demand", "grid reliability", "carbon emissions", "cost per kWh", "renewable mix", "energy savings", "utilization"],
+    "business_problems": ["forecast demand", "optimize energy usage", "measure emissions reduction", "manage grid reliability", "evaluate climate project ROI"],
+    "interview_cases": ["Energy demand spikes unexpectedly. What do you analyze?", "How would you measure carbon reduction?", "Design a dashboard for utility operations.", "Evaluate ROI of an energy efficiency program."],
+    "hiring_signals": ["forecasting", "sustainability metrics", "business-impact reasoning", "operations and policy tradeoffs"]
+  },
+  "Real Estate / PropTech": {
+    "roles": ["Real Estate Analyst", "PropTech Analyst", "Operations Analyst", "Strategy Analyst", "Market Analyst"],
+    "business_model": ["property transactions", "rent", "property management fees", "marketplace fees", "SaaS for landlords or brokers", "mortgage or financing services"],
+    "metrics": ["occupancy rate", "rental yield", "cap rate", "NOI", "property value", "vacancy rate", "maintenance cost", "lead conversion"],
+    "business_problems": ["forecast property demand", "improve occupancy", "price rentals", "reduce maintenance cost", "analyze market supply and demand"],
+    "interview_cases": ["Occupancy dropped in one region. Diagnose why.", "How would you price a rental property?", "Design a dashboard for property managers.", "Evaluate expansion into a new city."],
+    "hiring_signals": ["market dynamics", "asset performance", "location-based analysis", "finance and operations connection"]
+  },
+  "Travel / Hospitality": {
+    "roles": ["Revenue Analyst", "Operations Analyst", "Hospitality Analyst", "Growth Analyst", "Data Analyst"],
+    "business_model": ["room bookings", "travel packages", "commission", "dynamic pricing", "loyalty programs", "ancillary services"],
+    "metrics": ["occupancy", "ADR", "RevPAR", "cancellation rate", "booking conversion", "customer satisfaction", "repeat booking", "revenue per guest"],
+    "business_problems": ["optimize pricing", "improve occupancy", "reduce cancellations", "segment travelers", "improve guest experience"],
+    "interview_cases": ["Hotel occupancy dropped. Diagnose why.", "How would you price rooms for a holiday weekend?", "Design a dashboard for hotel revenue managers.", "How do you reduce cancellations?"],
+    "hiring_signals": ["seasonality analysis", "pricing thinking", "customer segmentation", "revenue operations"]
+  },
+  "Marketplace Platforms": {
+    "roles": ["Marketplace Analyst", "Product Analyst", "Growth Analyst", "Operations Analyst", "Data Analyst"],
+    "business_model": ["transaction commission", "service fees", "ads", "subscriptions", "supply-side tools", "demand-side products"],
+    "metrics": ["GMV", "take rate", "liquidity", "match rate", "supply growth", "demand growth", "conversion", "repeat transaction rate", "cancellation rate"],
+    "business_problems": ["balance supply and demand", "improve liquidity", "reduce fraud", "improve matching", "increase repeat transactions"],
+    "interview_cases": ["Demand is high but supply is low. What do you do?", "Match rate dropped. Diagnose why.", "How would you measure marketplace liquidity?", "Design a marketplace health dashboard."],
+    "hiring_signals": ["two-sided market thinking", "supply and demand diagnosis", "balanced metrics", "network effects"]
+  },
+  "Consumer Apps / Subscription Apps": {
+    "roles": ["Product Analyst", "Growth Analyst", "Data Analyst", "Retention Analyst", "User Insights Analyst"],
+    "business_model": ["subscriptions", "in-app purchases", "ads", "freemium conversion", "premium features"],
+    "metrics": ["DAU", "MAU", "retention", "churn", "activation", "conversion", "ARPU", "session length", "feature adoption"],
+    "business_problems": ["improve activation", "improve retention", "increase paid conversion", "reduce churn", "improve engagement"],
+    "interview_cases": ["DAU increased but revenue stayed flat. Why?", "Retention dropped after app redesign. Diagnose why.", "How would you evaluate a new onboarding flow?", "Design a dashboard for product health."],
+    "hiring_signals": ["product analytics", "funnel analysis", "retention cohorts", "user behavior reasoning"]
+  },
+  "Media / Streaming / Entertainment": {
+    "roles": ["Content Analyst", "Product Analyst", "Marketing Analyst", "Data Analyst", "Strategy Analyst"],
+    "business_model": ["subscriptions", "ads", "content licensing", "live events", "merchandising", "platform fees"],
+    "metrics": ["watch time", "engagement", "subscriber churn", "ARPU", "content completion", "ad fill rate", "CPM", "recommendation CTR"],
+    "business_problems": ["improve engagement", "reduce churn", "recommend content", "evaluate content investment", "optimize ad monetization"],
+    "interview_cases": ["A new show has high views but low completion. What does that mean?", "How would you evaluate recommendation quality?", "Churn increased after price change. What do you analyze?", "Design a dashboard for content performance."],
+    "hiring_signals": ["engagement analysis", "content performance thinking", "monetization tradeoffs", "audience insights"]
+  },
+  "Gaming / Interactive Entertainment": {
+    "roles": ["Game Data Analyst", "Product Analyst", "LiveOps Analyst", "Monetization Analyst", "User Research Analyst"],
+    "business_model": ["in-game purchases", "subscriptions", "ads", "battle passes", "DLC", "virtual goods"],
+    "metrics": ["D1 retention", "D7 retention", "D30 retention", "ARPU", "ARPPU", "payer conversion", "session length", "event participation"],
+    "business_problems": ["improve retention", "balance monetization and player experience", "identify spenders", "evaluate live events", "reduce churn"],
+    "interview_cases": ["D7 retention dropped. Diagnose why.", "A live event increased revenue but hurt retention. Is it good?", "How would you segment players?", "Design a monetization dashboard."],
+    "hiring_signals": ["cohort analysis", "engagement loop thinking", "monetization ethics", "retention and player segmentation"]
+  },
+  "AdTech / MarTech": {
+    "roles": ["Marketing Analyst", "AdOps Analyst", "Growth Analyst", "Data Analyst", "Campaign Analyst"],
+    "business_model": ["ad spend", "campaign management fees", "SaaS subscriptions", "attribution tools", "marketing automation"],
+    "metrics": ["CTR", "CVR", "CPA", "CAC", "ROAS", "CPM", "CPC", "attribution", "impressions", "conversion lift"],
+    "business_problems": ["improve ROAS", "attribute conversions", "reduce acquisition cost", "detect low-quality traffic", "optimize campaign spend"],
+    "interview_cases": ["ROAS dropped. Diagnose why.", "Campaign has high CTR but low conversion. What does it mean?", "How would you allocate budget across channels?", "How do you detect ad fraud?"],
+    "hiring_signals": ["funnel quality", "attribution limits", "channel optimization", "marketing-to-revenue connection"]
+  },
+  "EdTech": {
+    "roles": ["Learning Analytics Analyst", "Product Analyst", "Business Analyst", "Growth Analyst", "Operations Analyst"],
+    "business_model": ["subscriptions", "course fees", "school contracts", "credential programs", "tutoring marketplaces", "enterprise learning"],
+    "metrics": ["course completion", "engagement", "learning outcome", "retention", "subscription conversion", "time to completion", "assessment score", "NPS"],
+    "business_problems": ["improve course completion", "increase learner engagement", "reduce churn", "measure learning outcomes", "improve learner-course matching"],
+    "interview_cases": ["Course completion dropped. Diagnose why.", "How would you measure learning effectiveness?", "Design a dashboard for instructors.", "How would you personalize course recommendations?"],
+    "hiring_signals": ["learner behavior", "outcome measurement", "education stakeholder communication", "engagement vs outcome tradeoffs"]
+  },
+  "HR Tech / Workforce / Recruiting": {
+    "roles": ["People Analytics Analyst", "Recruiting Operations Analyst", "HR Tech Product Analyst", "Workforce Analyst", "Business Analyst"],
+    "business_model": ["SaaS subscriptions", "recruiting platform fees", "assessment tools", "payroll and workforce management", "talent marketplace fees"],
+    "metrics": ["time-to-hire", "offer acceptance rate", "candidate conversion", "attrition", "employee engagement", "quality of hire", "cost per hire", "pipeline diversity"],
+    "business_problems": ["improve hiring funnel conversion", "reduce time-to-hire", "measure candidate quality", "reduce attrition", "improve workforce planning"],
+    "interview_cases": ["Offer acceptance dropped. Diagnose why.", "How would you measure quality of hire?", "Design a recruiting funnel dashboard.", "How would you reduce attrition?"],
+    "hiring_signals": ["people analytics", "funnel thinking", "fairness and bias awareness", "sensitive data handling"]
+  },
+  "Cybersecurity": {
+    "roles": ["Security Analyst", "Cyber Risk Analyst", "Product Analyst", "Operations Analyst", "Data Analyst", "GRC Analyst"],
+    "business_model": ["security software subscriptions", "managed security services", "compliance tools", "threat intelligence", "risk management platforms"],
+    "metrics": ["MTTD", "MTTR", "false positive rate", "incident volume", "risk score", "patch compliance", "alert fatigue", "vulnerability severity"],
+    "business_problems": ["prioritize security alerts", "reduce false positives", "measure risk", "improve incident response", "demonstrate compliance"],
+    "interview_cases": ["Security alerts doubled. What do you analyze?", "How would you prioritize vulnerabilities?", "Design a dashboard for security operations.", "How do you measure incident response improvement?"],
+    "hiring_signals": ["risk prioritization", "security operations", "technical-to-business communication", "uncertainty handling"]
+  },
+  "GovTech / Public Sector": {
+    "roles": ["Policy Analyst", "Data Analyst", "Operations Analyst", "Program Analyst", "Civic Tech Analyst"],
+    "business_model": ["government contracts", "public funding", "SaaS for agencies", "civic service delivery", "grant-funded programs"],
+    "metrics": ["processing time", "service utilization", "cost per case", "program outcome", "citizen satisfaction", "backlog", "equity metrics", "compliance"],
+    "business_problems": ["improve public service delivery", "measure program effectiveness", "reduce processing time", "allocate resources fairly", "improve citizen experience"],
+    "interview_cases": ["A public benefit application backlog increased. What do you analyze?", "How would you measure program effectiveness?", "Design a dashboard for city service delivery.", "How do you allocate limited resources fairly?"],
+    "hiring_signals": ["public-sector metrics", "impact measurement", "fairness thinking", "non-technical stakeholder communication"]
+  },
+  "Consulting / Strategy / Professional Services": {
+    "roles": ["Strategy Analyst", "Consultant", "Business Analyst", "Operations Consultant", "Management Consultant"],
+    "business_model": ["client projects", "advisory fees", "implementation services", "retainers", "transformation programs"],
+    "metrics": ["revenue", "gross margin", "market size", "cost savings", "utilization", "ROI", "growth rate", "customer profitability"],
+    "business_problems": ["enter a new market", "improve profitability", "reduce cost", "design operating model", "prioritize growth opportunities"],
+    "interview_cases": ["Should a company enter a new market?", "Profit declined. Diagnose why.", "How would you reduce operating cost?", "Estimate market size for a new product."],
+    "hiring_signals": ["structured thinking", "quantitative reasoning", "business frameworks", "executive-level communication"]
+  }
+}

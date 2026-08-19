@@ -1,0 +1,59 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "healthcare_business_analyst",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "{\"target_role\":\"Business Analyst\",\"company\":\"Healthcare AI company\",\"industry\":\"Healthcare Operations / HealthTech\",\"job_description\":\"Build dashboards for patient access, reduce wait time, analyze provider utilization, SQL and Power BI required.\",\"candidate_profile\":\"Uber operations, ERP implementation, dashboarding, cross-functional stakeholder work, complaint rate reporting.\"}"
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "fintech_risk_analyst",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "{\"target_role\":\"Risk Analyst\",\"company\":\"FinTech lending company\",\"industry\":\"FinTech / Credit / Lending\",\"job_description\":\"Analyze approval rate, default rate, fraud risk, and repayment behavior. SQL and Python preferred.\",\"candidate_profile\":\"Operations analytics, defect reporting, dashboard building, process improvement.\"}"
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "marketplace_analyst",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "{\"target_role\":\"Marketplace Analyst\",\"company\":\"Two-sided marketplace\",\"industry\":\"Marketplace Platforms\",\"job_description\":\"Analyze supply-demand balance, match rate, GMV, cancellation rate, and repeat transactions.\",\"candidate_profile\":\"Uber Eats operations, merchant onboarding, SKU expansion, process automation, complaint analysis.\"}"
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "missing_evidence_ml_engineer",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "{\"target_role\":\"Machine Learning Engineer\",\"company\":\"AI startup\",\"industry\":\"AI / Data Product / MLOps\",\"job_description\":\"Deploy ML models, build production inference APIs, optimize model serving latency.\",\"candidate_profile\":\"Business analyst with Power BI, SQL, operations analytics, limited production ML deployment experience.\"}"
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "privacy_redaction_case",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "{\"target_role\":\"BI Analyst\",\"company\":\"Retail company\",\"industry\":\"Retail / E-commerce\",\"job_description\":\"Create executive dashboards and KPI reporting.\",\"candidate_profile\":\"My email is alice@example.com and phone is 123-456-7890. I built Power BI dashboards and automated reporting workflows.\"}"
+          }
+        ]
+      }
+    }
+  ]
+}

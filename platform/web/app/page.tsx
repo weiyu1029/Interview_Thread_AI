@@ -18,6 +18,7 @@ import {
   REVIEWED_LOCALES,
   RTL_LOCALES,
 } from "./i18n";
+import { accountCopyFor } from "./account-copy";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
 import {
@@ -1281,6 +1282,7 @@ export default function Home({
   const [billingMarketCode, setBillingMarketCode] = useState("US");
   const copy = copyFor(locale);
   const detail = detailFor(locale);
+  const accountLabels = accountCopyFor(locale);
   const interview = interviewCopyFor(locale);
   const selectedProvider =
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
@@ -2433,6 +2435,12 @@ export default function Home({
             {detail.source}
           </a>
         </nav>
+        <a
+          className="account-link"
+          href={`${localizedPath(locale, "account")}?plan=community`}
+        >
+          {accountLabels.account}
+        </a>
         <label className="locale-control">
           <span>{copy.language}</span>
           <select
@@ -4034,10 +4042,10 @@ export default function Home({
               <li>{copy.feedback} · Open queue</li>
             </ul>
             <a
-              className="button secondary"
-              href="https://github.com/weiyu1029/CareerStoryMap-agent"
+              className="button primary"
+              href={`${localizedPath(locale, "account")}?plan=community`}
             >
-              {detail.source}
+              {accountLabels.signIn}
             </a>
           </article>
           <article className="featured">
@@ -4063,13 +4071,12 @@ export default function Home({
               <li>{detail.aiModel}</li>
               <li>{copy.feedback} · Open queue</li>
             </ul>
-            <button
+            <a
               className="button primary"
-              type="button"
-              onClick={() => openWorkspace("Analyze", "Automatic")}
+              href={`${localizedPath(locale, "account")}?plan=pro`}
             >
-              Pro · {copy.automatic}
-            </button>
+              Pro · {accountLabels.signIn}
+            </a>
           </article>
           <article>
             <span>{detail.workspace}</span>
@@ -4095,13 +4102,12 @@ export default function Home({
               <li>{detail.checked}</li>
               <li>{copy.market}</li>
             </ul>
-            <button
+            <a
               className="button secondary"
-              type="button"
-              onClick={() => openWorkspace("Tracker", "Automatic")}
+              href={`${localizedPath(locale, "account")}?plan=team`}
             >
-              Team · {detail.plans}
-            </button>
+              Team · {accountLabels.signIn}
+            </a>
           </article>
           <article>
             <span>SSO · SLA · API</span>

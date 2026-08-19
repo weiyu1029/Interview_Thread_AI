@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a focused, evidence-grounded improvement.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who needs this and what cannot they do today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: evidence_boundary
+    attributes:
+      label: Evidence and privacy impact
+      description: Explain any changes to candidate data, external model calls, or scoring.
+    validations:
+      required: true
+
