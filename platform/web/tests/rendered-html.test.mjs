@@ -34,11 +34,12 @@ test("server-renders the CareerStoryMap product experience", async () => {
 });
 
 test("ships product metadata, multilingual speech, and a social card", async () => {
-  const [layout, page, i18n, speech] = await Promise.all([
+  const [layout, page, i18n, speech, seoPage] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/interview-speech.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/SeoLandingPage.tsx", import.meta.url), "utf8"),
   ]);
   await access(new URL("../public/og-careerstorymap.png", import.meta.url));
   assert.match(layout, /openGraph/);
@@ -75,6 +76,14 @@ test("ships product metadata, multilingual speech, and a social card", async () 
   assert.match(page, /questionOnly/);
   assert.match(page, /keepListeningRef/);
   assert.match(page, /voice-live-transcript/);
+  assert.match(page, /function openWorkspace/);
+  assert.match(page, /openWorkspace\("Market Insights"\)/);
+  assert.match(page, /openWorkspace\("Interview Studio"\)/);
+  assert.match(page, /openWorkspace\("Analyze", "Automatic"\)/);
+  assert.match(page, /openWorkspace\("Tracker", "Automatic"\)/);
+  assert.match(page, /disabled=\{!company\.trim\(\) \|\| !role\.trim\(\)\}/);
+  assert.match(page, /disabled=\{tracker\.some\(\(item\) => item\.id === job\.id\)\}/);
+  assert.doesNotMatch(page, /github\.com\/weiyu1029\/careerproof-agent/);
   assert.match(page, /Evidence before polish/i);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
@@ -100,6 +109,9 @@ test("ships product metadata, multilingual speech, and a social card", async () 
   assert.match(speech, /सबसे मजबूत/);
   assert.match(speech, /เล่าตัวอย่าง/);
   assert.match(speech, /Nieleze/);
+  assert.doesNotMatch(seoPage, /next\/link|<Link\b/);
+  assert.match(seoPage, /href=\{`\$\{homePath\}#workspace`\}/);
+  assert.doesNotMatch(seoPage, /github\.com\/weiyu1029\/careerproof-agent/);
 });
 
 test("server-renders every searchable CareerStoryMap page", async () => {

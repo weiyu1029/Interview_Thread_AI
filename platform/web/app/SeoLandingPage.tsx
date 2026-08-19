@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { copyFor, LocaleCode, RTL_LOCALES } from "./i18n";
 import { localizedPath } from "./intl-routing";
 import { SEO_PAGE_KEYS, SeoPageKey } from "./seo-content";
@@ -79,36 +78,36 @@ export function SeoLandingPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="seo-header">
-        <Link className="brand" href={homePath} aria-label="CareerStoryMap home">
+        <a className="brand" href={homePath} aria-label="CareerStoryMap home">
           <span className="brand-mark" aria-hidden="true">CS</span>
           <span>
             CareerStoryMap <small>Evidence to opportunity</small>
           </span>
-        </Link>
+        </a>
         <nav aria-label="Page navigation">
           <a href="#how-it-works">{ui.howItWorks}</a>
           <a href="#questions">{ui.questions}</a>
-          <Link className="button secondary" href={`${homePath}#workspace`}>
+          <a className="button secondary" href={`${homePath}#workspace`}>
             {ui.openWorkspace}
-          </Link>
+          </a>
         </nav>
       </header>
 
       <section className="seo-hero">
         <div>
-          <Link className="seo-backlink" href={homePath}>
+          <a className="seo-backlink" href={homePath}>
             CareerStoryMap / {page.navLabel}
-          </Link>
+          </a>
           <p className="eyebrow">{page.eyebrow}</p>
           <h1>{page.title}</h1>
           <p className="lede">{page.description}</p>
           <div className="hero-actions">
-            <Link
+            <a
               className="button primary"
               href={`${homePath}?view=${encodeURIComponent(page.workspaceView)}#workspace`}
             >
               {page.primaryCta}
-            </Link>
+            </a>
             <a className="text-link" href="#how-it-works">
               {ui.seeHow}
             </a>
@@ -201,13 +200,13 @@ export function SeoLandingPage({
         <h2>{ui.connectedDecisions}</h2>
         <div>
           {related.map((candidate) => (
-            <Link
+            <a
               href={localizedPath(locale, candidate.path)}
               key={candidate.path}
             >
               <span>{candidate.navLabel}</span>
               <small>{candidate.eyebrow}</small>
-            </Link>
+            </a>
           ))}
         </div>
       </section>
@@ -215,15 +214,15 @@ export function SeoLandingPage({
       <section className="seo-final-cta">
         <p className="eyebrow">Map your evidence. Own your story.</p>
         <h2>{ui.finalTitle}</h2>
-        <Link className="button primary" href={`${homePath}#workspace`}>
+        <a className="button primary" href={`${homePath}#workspace`}>
           {ui.openProduct}
-        </Link>
+        </a>
       </section>
 
       <footer className="seo-footer">
         <span>CareerStoryMap</span>
         <span>{locale === "en" ? "Evidence that travels." : core.heroTitle}</span>
-        <a href="https://github.com/weiyu1029/careerproof-agent">
+        <a href="https://github.com/weiyu1029/CareerStoryMap-agent">
           {ui.repository}
         </a>
       </footer>
