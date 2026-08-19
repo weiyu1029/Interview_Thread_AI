@@ -3725,20 +3725,23 @@ input:focus {
 }
 @media (max-width: 650px) {
   .topbar {
-    padding: 10px 17px;
-    gap: 12px;
+    padding: 10px 12px;
+    gap: 8px;
   }
   .brand > span:last-child {
-    font-size: 0;
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
   }
   .brand small {
     display: none;
   }
   .brand {
+    gap: 8px;
     margin-right: auto;
   }
   .locale-control select {
-    width: 135px;
+    width: 88px;
   }
   .account-link {
     display: none;
@@ -3747,7 +3750,7 @@ input:focus {
     padding: 0 17px 36px;
   }
   .account-header .brand > span:last-child {
-    font-size: 0;
+    font-size: 13px;
   }
   .account-header {
     gap: 10px;
@@ -4102,5 +4105,17 @@ input:focus {
   .seo-hub,
   .plans {
     padding: 0 18px;
+  }
+}
+@media (max-width: 360px) {
+  .brand > span:last-child {
+    max-width: 94px;
+    font-size: 12px;
+  }
+  .locale-control select {
+    width: 82px;
+  }
+  .account-language {
+    display: none;
   }
 }
