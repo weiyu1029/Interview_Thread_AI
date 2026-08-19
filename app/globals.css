@@ -2243,6 +2243,31 @@ input:focus {
   background: #f2f3f3;
   cursor: not-allowed;
 }
+.voice-live-transcript {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #c9d7df;
+  border-radius: 10px;
+  background: #f2f7f9;
+}
+.voice-live-transcript span,
+.voice-live-transcript b {
+  color: #526674;
+  font-size: 8px;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.voice-live-transcript p {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  color: #25333d;
+  font-size: 11px;
+  line-height: 1.5;
+}
 .interview-answer-actions {
   display: flex;
   justify-content: flex-end;

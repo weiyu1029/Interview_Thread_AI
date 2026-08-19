@@ -33,11 +33,12 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("ships product metadata and a social card", async () => {
-  const [layout, page, i18n] = await Promise.all([
+test("ships product metadata, multilingual speech, and a social card", async () => {
+  const [layout, page, i18n, speech] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/interview-speech.ts", import.meta.url), "utf8"),
   ]);
   await access(new URL("../public/og-careerstorymap.png", import.meta.url));
   assert.match(layout, /openGraph/);
@@ -66,6 +67,14 @@ test("ships product metadata and a social card", async () => {
   assert.match(page, /Hiring manager/i);
   assert.match(page, /Case breakdown/i);
   assert.match(page, /SpeechRecognition/i);
+  assert.match(page, /recognition\.continuous = true/);
+  assert.match(page, /recognition\.interimResults = true/);
+  assert.match(page, /recognition\.maxAlternatives = 3/);
+  assert.match(page, /event\.resultIndex/);
+  assert.match(page, /bestSpeechVoice/);
+  assert.match(page, /questionOnly/);
+  assert.match(page, /keepListeningRef/);
+  assert.match(page, /voice-live-transcript/);
   assert.match(page, /Evidence before polish/i);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
@@ -75,6 +84,22 @@ test("ships product metadata and a social card", async () => {
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
   assert.equal(i18n.match(/\["[^"]+",\s*"[^"]+"\]/g)?.length, 40);
   assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);
+  const speechLocaleBlock = speech.match(
+    /export const SPEECH_LOCALES[\s\S]*?\n};/,
+  )?.[0];
+  assert.ok(speechLocaleBlock);
+  assert.equal(
+    speechLocaleBlock.match(/^\s{2}(?:"[^"]+"|[a-z]+):/gmu)?.length,
+    40,
+  );
+  assert.match(speech, /"zh-TW": "zh-TW"/);
+  assert.match(speech, /no: "nb-NO"/);
+  assert.match(speech, /請用你最有力/);
+  assert.match(speech, /最も強い/);
+  assert.match(speech, /حدّثني/);
+  assert.match(speech, /सबसे मजबूत/);
+  assert.match(speech, /เล่าตัวอย่าง/);
+  assert.match(speech, /Nieleze/);
 });
 
 test("server-renders every searchable CareerStoryMap page", async () => {
