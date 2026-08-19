@@ -19,6 +19,7 @@ import {
   RTL_LOCALES,
 } from "./i18n";
 import { accountCopyFor } from "./account-copy";
+import { BrandMark } from "./BrandMark";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
 import {
@@ -2421,7 +2422,7 @@ export default function Home({
     <main className="app-shell">
       <header className="topbar">
         <a className="brand" href="#top" aria-label="CareerStoryMap home">
-          <span className="brand-mark" aria-hidden="true">CS</span>
+          <BrandMark />
           <span>
             CareerStoryMap <small>Evidence to opportunity</small>
           </span>

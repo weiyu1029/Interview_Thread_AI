@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { accountCopyFor } from "../../account-copy";
+import { BrandMark } from "../../BrandMark";
 import {
   chatGPTSignInPath,
   chatGPTSignOutPath,
@@ -95,7 +96,7 @@ export default async function AccountPage({
     >
       <header className="account-header">
         <a className="brand" href={localizedPath(locale)} aria-label="CareerStoryMap">
-          <span className="brand-mark" aria-hidden="true">CS</span>
+          <BrandMark />
           <span>CareerStoryMap <small>Evidence to opportunity</small></span>
         </a>
         <span className="account-language">{localeDisplayName(locale)}</span>
