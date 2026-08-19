@@ -15,7 +15,6 @@ import {
   localeFromPath,
   localeToPath,
   LocaleCode,
-  REVIEWED_LOCALES,
   RTL_LOCALES,
 } from "./i18n";
 import { accountCopyFor } from "./account-copy";
@@ -2468,9 +2467,6 @@ export default function Home({
               </option>
             ))}
           </select>
-          <small>
-            {REVIEWED_LOCALES.has(locale) ? "Reviewed" : "Community beta"}
-          </small>
         </label>
       </header>
 

@@ -645,14 +645,6 @@ label:focus-within {
   text-transform: none;
   letter-spacing: 0;
 }
-.locale-control small {
-  padding: 4px 6px;
-  border-radius: 5px;
-  background: var(--accent-soft);
-  color: var(--accent-deep);
-  font-size: 7px;
-  white-space: nowrap;
-}
 
 .button {
   border: 0;
@@ -3345,9 +3337,6 @@ input:focus {
   }
   .locale-control select {
     width: 135px;
-  }
-  .locale-control small {
-    display: none;
   }
   .account-link {
     padding: 0 10px;
