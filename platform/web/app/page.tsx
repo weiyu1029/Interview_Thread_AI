@@ -560,11 +560,15 @@ export default function Home() {
       if (destination === "jd") setJd(text);
       else setResume(text);
       setUploadMessage(
-        `${file.name} was loaded immediately. ${files.length > 1 ? `${files.length - 1} additional file(s) are queued for the API parser.` : ""}`.trim(),
+        locale === "en"
+          ? `${file.name} was loaded immediately. ${files.length > 1 ? `${files.length - 1} additional file(s) are queued for the API parser.` : ""}`.trim()
+          : `${file.name} · ${detail.importAny}`,
       );
     } else
       setUploadMessage(
-        `${files.length} file(s) selected. This preview accepts every format; document, spreadsheet, slide, image, email, and archive extraction is validated by the self-hosted parser before use.`,
+        locale === "en"
+          ? `${files.length} file(s) selected. Every format can be selected. Supported documents are parsed now; images, audio, archives, and legacy binaries require configured OCR, transcription, or quarantine adapters.`
+          : `${files.length} · ${detail.importAny}. ${detail.sourcePolicy}`,
       );
   }
   function persistTracker(next: TrackerItem[]) {
