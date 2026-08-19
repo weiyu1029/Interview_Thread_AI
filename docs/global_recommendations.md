@@ -12,10 +12,26 @@ stories, role and industry interests, country or region, radius, and work-style
 preferences. Each result returns:
 
 - a deterministic evidence-match score;
+- a separate Story Signal score composed of evidence coverage, required-role
+  coverage, and outcome strength;
 - the strongest matched requirements;
 - gaps that still need proof or learning;
 - the best source-backed story to lead with;
 - data source and listing URL when the provider permits them.
+
+## Proof-qualified alerts
+
+The public Radar is intentionally stricter than ordinary job matching. A role
+must clear the user-selected Story Signal threshold, include at least two
+source-backed proof signals, and contain no unsupported must-have requirement.
+Qualified roles can create an in-app or browser notification and can be added
+to the device-local tracker with the triggering story attached. This is an
+inspectable rule, not a claim that the product can predict recruiter decisions.
+
+Manual scans and device-local alerts belong to the open core. Scheduled,
+cross-device monitoring requires accounts, background workers, durable
+preferences, notification consent, delivery controls, and provider-aware rate
+limits before it can be offered as a hosted Pro capability.
 
 The public web page uses fictional, explicitly labeled product-preview roles.
 It must never present example values as live job listings or market totals. The

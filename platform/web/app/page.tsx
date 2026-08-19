@@ -29,8 +29,25 @@ type TrackerItem = {
   company: string;
   role: string;
   status: string;
+  source?: "Saved" | "Story Signal";
+  storyFit?: number;
+  story?: string;
+  sourceUrl?: string;
+  trackedAt?: string;
 };
 type ChatMessage = { role: "assistant" | "user"; content: string };
+type RadarAlert = {
+  id: string;
+  jobId: string;
+  company: string;
+  role: string;
+  storyFit: number;
+  reason: string;
+  story: string;
+  sourceUrl?: string;
+  createdAt: string;
+  tracked: boolean;
+};
 type ApprovedSourceId = "greenhouse" | "lever" | "lever-eu" | "ashby";
 type ApprovedSourceMeta = {
   id: ApprovedSourceId;
@@ -63,6 +80,20 @@ type Job = {
   story?: string;
   strengths?: string[];
   gaps?: string[];
+};
+type RankedJob = Job & {
+  match: number;
+  storyFit: number;
+  requiredCoverage: number;
+  outcomeStrength: number;
+  proofCount: number;
+  requiredGapCount: number;
+  alertEligible: boolean;
+  alertReason: string;
+  whyNow: string;
+  story: string;
+  strengths: string[];
+  gaps: string[];
 };
 type WorkspaceView =
   | "Analyze"
@@ -525,6 +556,59 @@ function scoreMatches(matches: Match[]) {
       100,
   );
 }
+function coverageFor(matches: Match[], priority?: Match["priority"]) {
+  const filtered = priority
+    ? matches.filter((item) => item.priority === priority)
+    : matches;
+  if (!filtered.length) return scoreMatches(matches);
+  const values = { "Strong evidence": 1, "Partial evidence": 0.55, Gap: 0 };
+  return Math.round(
+    (filtered.reduce((sum, item) => sum + values[item.status], 0) /
+      filtered.length) *
+      100,
+  );
+}
+function outcomeStrengthFor(matches: Match[]) {
+  const evidence = matches
+    .filter(
+      (item) =>
+        item.status !== "Gap" && item.evidence !== "No source evidence found.",
+    )
+    .map((item) => item.evidence);
+  if (!evidence.length) return 0;
+  if (
+    evidence.some((line) =>
+      /\p{N}+(?:[.,]\p{N}+)?\s?%|[$€£¥₹₩]\s?\p{N}|\p{N}+\s?(?:x|倍|hours?|days?|weeks?|months?|users?|customers?)|reduc|increas|grew|saved|improv|accelerat|revenue|adoption|降低|減少|提升|成長|增加|改善|節省|减少|增长|提高|节省|削減|向上|増加|성장|증가|개선|절감|reduj|aument|mejor|ahorr|rédu|amélior|économ|reduzier|steiger|verbesser|eingespart/iu.test(
+        line,
+      ),
+    )
+  )
+    return 100;
+  if (
+    evidence.some((line) =>
+      /\b(?:built|led|launched|owned|designed|automated|delivered|created|managed|partnered)\b|建立|建置|領導|推出|設計|自動化|交付|管理|合作|领导|发布|自动化|協働|主導|設計した|自動化した|구축|주도|출시|설계|자동화|lider|diseñ|automatiz|dirig|conçu|automatis|livré|geleitet|entwickelt|automatisiert/iu.test(
+        line,
+      ),
+    )
+  )
+    return 72;
+  return 45;
+}
+function storyFitFor(matches: Match[]) {
+  const evidenceCoverage = scoreMatches(matches);
+  const requiredCoverage = coverageFor(matches, "Required");
+  const outcomeStrength = outcomeStrengthFor(matches);
+  return {
+    evidenceCoverage,
+    requiredCoverage,
+    outcomeStrength,
+    storyFit: Math.round(
+      evidenceCoverage * 0.5 +
+        requiredCoverage * 0.3 +
+        outcomeStrength * 0.2,
+    ),
+  };
+}
 function compactNumber(value: number, locale: LocaleCode = "en") {
   return new Intl.NumberFormat(locale, {
     notation: "compact",
@@ -615,6 +699,14 @@ export default function Home() {
   const [sourceLoading, setSourceLoading] = useState(false);
   const [sourceError, setSourceError] = useState("");
   const [tracker, setTracker] = useState<TrackerItem[]>([]);
+  const [radarThreshold, setRadarThreshold] = useState(78);
+  const [autoTrackRadar, setAutoTrackRadar] = useState(true);
+  const [browserAlerts, setBrowserAlerts] = useState(true);
+  const [radarAlerts, setRadarAlerts] = useState<RadarAlert[]>([]);
+  const [radarMessage, setRadarMessage] = useState("");
+  const [notificationPermission, setNotificationPermission] = useState<
+    NotificationPermission | "unsupported" | "unknown"
+  >("unknown");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -639,6 +731,12 @@ export default function Home() {
       const savedBillingMarket = window.localStorage.getItem(
         "aptograph-billing-market",
       );
+      const savedRadarSettings = window.localStorage.getItem(
+        "aptograph-story-radar-settings",
+      );
+      const savedRadarAlerts = window.localStorage.getItem(
+        "aptograph-story-radar-alerts",
+      );
       if (savedLocale && LANGUAGES.some(([code]) => code === savedLocale))
         setLocale(savedLocale);
       else if (
@@ -660,6 +758,37 @@ export default function Home() {
           setTracker([]);
         }
       }
+      if (savedRadarSettings) {
+        try {
+          const settings = JSON.parse(savedRadarSettings) as {
+            threshold?: number;
+            autoTrack?: boolean;
+            browserAlerts?: boolean;
+          };
+          if (
+            Number.isInteger(settings.threshold) &&
+            Number(settings.threshold) >= 65 &&
+            Number(settings.threshold) <= 90
+          )
+            setRadarThreshold(Number(settings.threshold));
+          if (typeof settings.autoTrack === "boolean")
+            setAutoTrackRadar(settings.autoTrack);
+          if (typeof settings.browserAlerts === "boolean")
+            setBrowserAlerts(settings.browserAlerts);
+        } catch {
+          window.localStorage.removeItem("aptograph-story-radar-settings");
+        }
+      }
+      if (savedRadarAlerts) {
+        try {
+          setRadarAlerts(JSON.parse(savedRadarAlerts));
+        } catch {
+          window.localStorage.removeItem("aptograph-story-radar-alerts");
+        }
+      }
+      setNotificationPermission(
+        "Notification" in window ? Notification.permission : "unsupported",
+      );
       preferencesLoaded.current = true;
     }, 0);
     return () => window.clearTimeout(timer);
@@ -681,6 +810,18 @@ export default function Home() {
     if (preferencesLoaded.current)
       window.localStorage.setItem("aptograph-locale", locale);
   }, [locale]);
+
+  useEffect(() => {
+    if (!preferencesLoaded.current) return;
+    window.localStorage.setItem(
+      "aptograph-story-radar-settings",
+      JSON.stringify({
+        threshold: radarThreshold,
+        autoTrack: autoTrackRadar,
+        browserAlerts,
+      }),
+    );
+  }, [autoTrackRadar, browserAlerts, radarThreshold]);
 
   function chooseLocale(nextLocale: LocaleCode) {
     setLocale(nextLocale);
@@ -706,7 +847,7 @@ export default function Home() {
           100,
       )
     : score;
-  const recommendedJobs = useMemo(
+  const recommendedJobs = useMemo<RankedJob[]>(
     () =>
       (sourceJobs || JOBS)
         .filter((job) => region === "Worldwide" || job.region === region)
@@ -732,6 +873,7 @@ export default function Home() {
         )
         .map((job) => {
           const evidence = runMatch(job.description, resume);
+          const fit = storyFitFor(evidence);
           const supported = evidence
             .filter((item) => item.status !== "Gap")
             .map((item) => item.keyword)
@@ -740,15 +882,34 @@ export default function Home() {
             .filter((item) => item.status === "Gap")
             .map((item) => item.keyword)
             .slice(0, 5);
-          const storyEvidence = evidence.find(
+          const proof = evidence.filter(
             (item) =>
               item.status === "Strong evidence" &&
               item.evidence !== "No source evidence found.",
           );
+          const storyEvidence =
+            proof.find((item) => outcomeStrengthFor([item]) === 100) || proof[0];
+          const requiredGapCount = evidence.filter(
+            (item) => item.priority === "Required" && item.status === "Gap",
+          ).length;
+          const alertEligible =
+            fit.storyFit >= radarThreshold &&
+            proof.length >= 2 &&
+            requiredGapCount === 0;
           return {
             ...job,
             trend: job.trend || 0,
-            match: scoreMatches(evidence),
+            match: fit.evidenceCoverage,
+            storyFit: fit.storyFit,
+            requiredCoverage: fit.requiredCoverage,
+            outcomeStrength: fit.outcomeStrength,
+            proofCount: proof.length,
+            requiredGapCount,
+            alertEligible,
+            alertReason: `${proof.length} proof-backed signals · ${requiredGapCount} unsupported must-haves · ${fit.outcomeStrength}% outcome strength`,
+            whyNow: job.isLive
+              ? `New from ${job.source || "an approved employer source"}; your evidence supports ${proof.length} of its strongest signals.`
+              : `${job.trend && job.trend > 0 ? `Demand signal +${job.trend}%` : "Current demand signal"}; your profile carries ${proof.length} defensible proof points.`,
             strengths: job.isLive ? supported : job.strengths || supported,
             gaps: job.isLive ? gaps : job.gaps || gaps,
             story: job.isLive
@@ -757,8 +918,20 @@ export default function Home() {
               : job.story || "Add a verified story before tailoring this role.",
           };
         })
-        .sort((a, b) => b.match - a.match),
-    [country, industry, region, resume, roleQuery, sourceJobs, workStyle],
+        .sort((a, b) => b.storyFit - a.storyFit),
+    [
+      country,
+      industry,
+      radarThreshold,
+      region,
+      resume,
+      roleQuery,
+      sourceJobs,
+      workStyle,
+    ],
+  );
+  const proofQualifiedJobs = recommendedJobs.filter(
+    (job) => job.alertEligible,
   );
   const marketRows = useMemo(() => {
     if (sourceJobs) {
@@ -898,7 +1071,14 @@ export default function Home() {
     setTracker(next);
     window.localStorage.setItem("aptograph-tracker", JSON.stringify(next));
   }
-  function saveJob(job: Job) {
+  function persistRadarAlerts(next: RadarAlert[]) {
+    setRadarAlerts(next);
+    window.localStorage.setItem(
+      "aptograph-story-radar-alerts",
+      JSON.stringify(next),
+    );
+  }
+  function saveJob(job: RankedJob, source: TrackerItem["source"] = "Saved") {
     if (!tracker.some((item) => item.id === job.id))
       persistTracker([
         {
@@ -906,9 +1086,104 @@ export default function Home() {
           company: job.company,
           role: job.title,
           status: "Interested",
+          source,
+          storyFit: job.storyFit,
+          story: job.story,
+          sourceUrl: job.sourceUrl,
+          trackedAt: new Date().toISOString(),
         },
         ...tracker,
       ]);
+  }
+  function trackRadarAlert(alert: RadarAlert) {
+    if (!tracker.some((item) => item.id === alert.jobId))
+      persistTracker([
+        {
+          id: alert.jobId,
+          company: alert.company,
+          role: alert.role,
+          status: "Interested",
+          source: "Story Signal",
+          storyFit: alert.storyFit,
+          story: alert.story,
+          sourceUrl: alert.sourceUrl,
+          trackedAt: new Date().toISOString(),
+        },
+        ...tracker,
+      ]);
+    persistRadarAlerts(
+      radarAlerts.map((item) =>
+        item.id === alert.id ? { ...item, tracked: true } : item,
+      ),
+    );
+  }
+  async function scanStoryRadar() {
+    const existingJobIds = new Set(radarAlerts.map((alert) => alert.jobId));
+    const trackerIds = new Set(tracker.map((item) => item.id));
+    const newlyQualified = proofQualifiedJobs.filter(
+      (job) => !existingJobIds.has(job.id),
+    );
+    const createdAt = new Date().toISOString();
+
+    if (autoTrackRadar) {
+      const trackerAdditions = proofQualifiedJobs
+        .filter((job) => !trackerIds.has(job.id))
+        .map((job) => ({
+          id: job.id,
+          company: job.company,
+          role: job.title,
+          status: "Interested",
+          source: "Story Signal" as const,
+          storyFit: job.storyFit,
+          story: job.story,
+          sourceUrl: job.sourceUrl,
+          trackedAt: createdAt,
+        }));
+      if (trackerAdditions.length)
+        persistTracker([...trackerAdditions, ...tracker]);
+    }
+
+    const qualifiedAlerts = proofQualifiedJobs.map((job) => {
+      const existing = radarAlerts.find((alert) => alert.jobId === job.id);
+      return {
+        id: existing?.id || crypto.randomUUID(),
+        jobId: job.id,
+        company: job.company,
+        role: job.title,
+        storyFit: job.storyFit,
+        reason: job.alertReason,
+        story: job.story,
+        sourceUrl: job.sourceUrl,
+        createdAt: existing?.createdAt || createdAt,
+        tracked:
+          autoTrackRadar || trackerIds.has(job.id) || Boolean(existing?.tracked),
+      };
+    });
+    const qualifiedIds = new Set(qualifiedAlerts.map((alert) => alert.jobId));
+    persistRadarAlerts([
+      ...qualifiedAlerts,
+      ...radarAlerts.filter((alert) => !qualifiedIds.has(alert.jobId)),
+    ].slice(0, 24));
+
+    let permission = notificationPermission;
+    if (browserAlerts && "Notification" in window) {
+      if (Notification.permission === "default")
+        permission = await Notification.requestPermission();
+      else permission = Notification.permission;
+      setNotificationPermission(permission);
+      const top = newlyQualified[0];
+      if (permission === "granted" && top)
+        new Notification("Aptograph Story Signal", {
+          body: `${top.storyFit}% story fit · ${top.title} at ${top.company}. ${top.proofCount} proof-backed signals.`,
+          tag: `aptograph-${top.id}`,
+        });
+    }
+
+    setRadarMessage(
+      proofQualifiedJobs.length
+        ? `${proofQualifiedJobs.length} proof-qualified role${proofQualifiedJobs.length === 1 ? "" : "s"} found${autoTrackRadar ? " and added to your tracker" : ""}.`
+        : `No role cleared the ${radarThreshold}% story-fit threshold with two proof signals and zero unsupported must-haves.`,
+    );
   }
   function addTrackerItem(event: FormEvent) {
     event.preventDefault();
@@ -1459,6 +1734,128 @@ export default function Home() {
                   </select>
                 </label>
               </div>
+              <section className="story-radar" aria-labelledby="story-radar-title">
+                <div className="story-radar-heading">
+                  <div>
+                    <p className="eyebrow">Aptograph Story Signal</p>
+                    <h3 id="story-radar-title">Proof-to-Role Radar</h3>
+                    <p>
+                      Alerts only when your evidence can carry a credible story—not
+                      when a title or keyword merely matches.
+                    </p>
+                  </div>
+                  <span className="radar-distinction">Evidence-qualified</span>
+                </div>
+                <div className="radar-method">
+                  <div>
+                    <span>Evidence coverage</span>
+                    <b>50%</b>
+                  </div>
+                  <div>
+                    <span>Must-have coverage</span>
+                    <b>30%</b>
+                  </div>
+                  <div>
+                    <span>Outcome strength</span>
+                    <b>20%</b>
+                  </div>
+                  <p>
+                    A notification also requires at least two proof-backed signals
+                    and zero unsupported must-haves.
+                  </p>
+                </div>
+                <div className="radar-controls">
+                  <label className="radar-threshold">
+                    <span>Minimum story fit</span>
+                    <input
+                      type="range"
+                      min="65"
+                      max="90"
+                      step="1"
+                      value={radarThreshold}
+                      onChange={(event) =>
+                        setRadarThreshold(Number(event.target.value))
+                      }
+                    />
+                    <b>{radarThreshold}%</b>
+                  </label>
+                  <label className="radar-toggle">
+                    <input
+                      type="checkbox"
+                      checked={autoTrackRadar}
+                      onChange={(event) => setAutoTrackRadar(event.target.checked)}
+                    />
+                    <span>Auto-track proof-qualified roles</span>
+                  </label>
+                  <label className="radar-toggle">
+                    <input
+                      type="checkbox"
+                      checked={browserAlerts}
+                      onChange={(event) => setBrowserAlerts(event.target.checked)}
+                    />
+                    <span>Browser notification</span>
+                  </label>
+                  <button
+                    className="button primary"
+                    type="button"
+                    onClick={scanStoryRadar}
+                  >
+                    Scan proof-qualified roles
+                  </button>
+                </div>
+                <div className="radar-status" role="status">
+                  <div>
+                    <span>Qualified now</span>
+                    <b>{proofQualifiedJobs.length}</b>
+                  </div>
+                  <div>
+                    <span>Highest story fit</span>
+                    <b>{recommendedJobs[0]?.storyFit || 0}%</b>
+                  </div>
+                  <div>
+                    <span>Notification access</span>
+                    <b>
+                      {notificationPermission === "granted"
+                        ? "Enabled"
+                        : notificationPermission === "denied"
+                          ? "Blocked"
+                          : notificationPermission === "unsupported"
+                            ? "In-app only"
+                            : "On request"}
+                    </b>
+                  </div>
+                  <p>
+                    {radarMessage ||
+                      "Manual scanning is open to everyone. Scheduled cross-device monitoring can become a Pro service when accounts launch."}
+                  </p>
+                </div>
+                {radarAlerts.length > 0 && (
+                  <div className="radar-alerts">
+                    <div className="radar-alerts-title">
+                      <b>Story Signal alerts</b>
+                      <span>{radarAlerts.length} retained on this device</span>
+                    </div>
+                    {radarAlerts.slice(0, 3).map((alert) => (
+                      <article key={alert.id}>
+                        <strong>{alert.storyFit}%</strong>
+                        <div>
+                          <b>{alert.role}</b>
+                          <span>{alert.company} · {alert.reason}</span>
+                          <p>{alert.story}</p>
+                        </div>
+                        <button
+                          className="button secondary"
+                          type="button"
+                          disabled={alert.tracked}
+                          onClick={() => trackRadarAlert(alert)}
+                        >
+                          {alert.tracked ? "Tracked" : "Track role"}
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
               <div className="recommendation-summary">
                 <div>
                   <span>{detail.evidenceProfile}</span>
@@ -1484,8 +1881,9 @@ export default function Home() {
                   recommendedJobs.map((job) => (
                     <article className="job-card" key={job.id}>
                       <div className="job-score">
-                        <strong>{job.match}</strong>
-                        <span>{detail.requiredMatch}</span>
+                        <strong>{job.storyFit}</strong>
+                        <span>Story fit</span>
+                        <small>{job.match}% evidence</small>
                       </div>
                       <div className="job-body">
                         <div className="job-heading">
@@ -1505,18 +1903,27 @@ export default function Home() {
                               </small>
                             )}
                           </div>
-                          {job.isLive ? (
-                            <span className="trend live">Published</span>
-                          ) : (
-                            <span
-                              className={
-                                (job.trend || 0) >= 0 ? "trend up" : "trend down"
-                              }
-                            >
-                              {(job.trend || 0) >= 0 ? "+" : ""}
-                              {job.trend || 0}% {copy.market}
-                            </span>
-                          )}
+                          <div className="job-badges">
+                            {job.alertEligible && (
+                              <span className="proof-qualified">
+                                Proof-qualified
+                              </span>
+                            )}
+                            {job.isLive ? (
+                              <span className="trend live">Published</span>
+                            ) : (
+                              <span
+                                className={
+                                  (job.trend || 0) >= 0
+                                    ? "trend up"
+                                    : "trend down"
+                                }
+                              >
+                                {(job.trend || 0) >= 0 ? "+" : ""}
+                                {job.trend || 0}% {copy.market}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="story-callout">
                           <span>{detail.bestStory}</span>
@@ -1525,6 +1932,22 @@ export default function Home() {
                               ? job.story
                               : `${detail.bestStory}: ${job.strengths.join(", ")}`}
                           </p>
+                          <small>{job.whyNow}</small>
+                        </div>
+                        <div className="story-fit-breakdown">
+                          <div>
+                            <span>Evidence</span>
+                            <b>{job.match}%</b>
+                          </div>
+                          <div>
+                            <span>Must-haves</span>
+                            <b>{job.requiredCoverage}%</b>
+                          </div>
+                          <div>
+                            <span>Outcomes</span>
+                            <b>{job.outcomeStrength}%</b>
+                          </div>
+                          <p>{job.alertReason}</p>
                         </div>
                         <div className="job-signals">
                           <div>
@@ -1828,30 +2251,49 @@ export default function Home() {
                 {tracker.length ? (
                   tracker.map((item) => (
                     <article key={item.id}>
-                      <div>
+                      <div className="tracker-role">
                         <b>{item.role}</b>
-                        <p>{item.company}</p>
+                        <p>
+                          {item.company}
+                          {item.source ? ` · ${item.source}` : ""}
+                          {item.storyFit ? ` · ${item.storyFit}% story fit` : ""}
+                        </p>
+                        {item.story && (
+                          <small className="tracker-story">{item.story}</small>
+                        )}
                       </div>
-                      <select
-                        value={item.status}
-                        aria-label={`Status for ${item.role}`}
-                        onChange={(event) =>
-                          persistTracker(
-                            tracker.map((row) =>
-                              row.id === item.id
-                                ? { ...row, status: event.target.value }
-                                : row,
-                            ),
-                          )
-                        }
-                      >
-                        <option>Interested</option>
-                        <option>Preparing</option>
-                        <option>Applied</option>
-                        <option>Interviewing</option>
-                        <option>Offer</option>
-                        <option>Closed</option>
-                      </select>
+                      <div className="tracker-actions">
+                        {item.sourceUrl && (
+                          <a
+                            className="text-link"
+                            href={item.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Official posting
+                          </a>
+                        )}
+                        <select
+                          value={item.status}
+                          aria-label={`Status for ${item.role}`}
+                          onChange={(event) =>
+                            persistTracker(
+                              tracker.map((row) =>
+                                row.id === item.id
+                                  ? { ...row, status: event.target.value }
+                                  : row,
+                              ),
+                            )
+                          }
+                        >
+                          <option>Interested</option>
+                          <option>Preparing</option>
+                          <option>Applied</option>
+                          <option>Interviewing</option>
+                          <option>Offer</option>
+                          <option>Closed</option>
+                        </select>
+                      </div>
                     </article>
                   ))
                 ) : (

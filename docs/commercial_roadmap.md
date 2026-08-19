@@ -8,6 +8,7 @@
 - Device-local tracker, copilot, and feedback in the public web experience
 - 40-locale interface foundation and open translation contribution workflow
 - Basic evidence-ranked global job recommendations with transparent sources
+- Manual Story Signal scans, browser alerts, and device-local auto-tracking
 - Manual application mode and an explicitly labeled Market Insights preview
 
 Exit criteria: keyword extraction and evidence linking have repeatable tests;
@@ -20,7 +21,8 @@ unsupported-claim rate is measured; privacy behavior is documented.
 - Explicit retention, delete-account, and data-export controls
 - Saved master career profile with version history
 - Background document processing and optional OCR
-- Permanent job-search preferences, saved recommendations, and market alerts
+- Permanent job-search preferences, saved recommendations, scheduled Story
+  Signal monitoring, and cross-device market alerts
 
 Exit criteria: authorization tests cover every workspace resource; backup and
 restore are exercised; deletion is verified end to end.
