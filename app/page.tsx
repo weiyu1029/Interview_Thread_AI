@@ -16,6 +16,7 @@ import {
   REVIEWED_LOCALES,
   RTL_LOCALES,
 } from "./i18n";
+import { parseDocuments } from "./document-parser";
 
 type MatchStatus = "Strong evidence" | "Partial evidence" | "Gap";
 type Match = {
@@ -163,6 +164,53 @@ type BillingMarket = {
   proMonthly: number;
 };
 
+const MODE_DISCLOSURES: Partial<
+  Record<LocaleCode, Record<ApplicationMode, string>>
+> = {
+  "zh-TW": {
+    Manual: "開源免費。所有職缺、文件與投遞都由你自行檢查及送出。",
+    Hybrid: "Pro 功能預覽。AI 可準備客製草稿與下一步，但每次送出前都必須由你核准。",
+    Automatic:
+      "Pro 功能預覽。目前公開版不會自動投遞；未來僅會透過核准 API，在取得同意、速率限制、稽核紀錄與緊急停止機制下執行。",
+  },
+  "zh-CN": {
+    Manual: "开源免费。所有职位、文件与投递都由你自行检查并提交。",
+    Hybrid: "Pro 功能预览。AI 可准备定制草稿和下一步，但每次提交前都必须由你批准。",
+    Automatic:
+      "Pro 功能预览。目前公开版不会自动投递；未来仅会通过获准 API，在取得同意、速率限制、审计记录与紧急停止机制下执行。",
+  },
+  ja: {
+    Manual: "オープンソースで無料です。求人、書類、応募はすべて自分で確認して送信します。",
+    Hybrid: "Pro機能のプレビューです。AIが下書きを準備しますが、送信前に必ず本人の承認が必要です。",
+    Automatic:
+      "Pro機能のプレビューです。公開版は自動応募を行いません。将来は承認済みAPI、同意、速度制限、監査ログ、緊急停止を備えた場合にのみ実行します。",
+  },
+  ko: {
+    Manual: "오픈 소스 무료 모드입니다. 모든 공고, 문서 및 지원서를 직접 검토하고 제출합니다.",
+    Hybrid: "Pro 기능 미리보기입니다. AI가 맞춤 초안을 준비하지만 제출 전에는 항상 사용자의 승인이 필요합니다.",
+    Automatic:
+      "Pro 기능 미리보기입니다. 공개 버전은 자동 지원하지 않습니다. 향후 승인된 API, 동의, 속도 제한, 감사 로그 및 긴급 중지 기능이 있을 때만 실행합니다.",
+  },
+  es: {
+    Manual: "Código abierto y gratuito. Revisas cada oferta, documento y solicitud antes de enviarla tú mismo.",
+    Hybrid: "Vista previa Pro. La IA prepara borradores, pero debes aprobar cada envío.",
+    Automatic:
+      "Vista previa Pro. La versión pública no envía solicitudes automáticamente; una versión futura requerirá APIs aprobadas, consentimiento, límites, auditoría y parada de emergencia.",
+  },
+  fr: {
+    Manual: "Open source et gratuit. Vous vérifiez chaque offre, document et candidature avant de l’envoyer vous-même.",
+    Hybrid: "Aperçu Pro. L’IA prépare les brouillons, mais vous devez approuver chaque envoi.",
+    Automatic:
+      "Aperçu Pro. La version publique n’envoie aucune candidature automatiquement ; une version future exigera des API approuvées, le consentement, des limites, un journal d’audit et un arrêt d’urgence.",
+  },
+  de: {
+    Manual: "Open Source und kostenlos. Du prüfst jede Stelle, jedes Dokument und sendest jede Bewerbung selbst.",
+    Hybrid: "Pro-Vorschau. Die KI bereitet Entwürfe vor, aber du musst jede Übermittlung freigeben.",
+    Automatic:
+      "Pro-Vorschau. Die öffentliche Version bewirbt sich nicht automatisch; eine spätere Version benötigt freigegebene APIs, Einwilligung, Limits, Audit-Protokoll und Not-Aus.",
+  },
+};
+
 const KEYWORDS: Record<string, string[]> = {
   SQL: ["sql", "structured query language"],
   Python: ["python", "pandas", "numpy"],
@@ -196,15 +244,56 @@ const SAMPLE_JD =
 const SAMPLE_RESUME =
   "Product analyst who built SQL dashboards used by product and operations leaders. Partnered with cross-functional stakeholders to translate customer behavior into decisions and automated a weekly validation workflow, reducing preparation time by 30%.";
 const PROVIDERS = [
-  "Evidence engine",
-  "Ollama",
-  "LM Studio",
-  "vLLM",
-  "llama.cpp",
-  "LocalAI",
-  "Hugging Face",
-  "Gemini",
-];
+  {
+    id: "Evidence engine",
+    label: "Evidence engine · Built in",
+    kind: "built-in",
+    endpoint: "",
+    model: "",
+  },
+  {
+    id: "Ollama",
+    label: "Ollama · Local open models",
+    kind: "ollama",
+    endpoint: "http://localhost:11434",
+    model: "llama3.2",
+  },
+  {
+    id: "LM Studio",
+    label: "LM Studio · OpenAI compatible",
+    kind: "openai-compatible",
+    endpoint: "http://localhost:1234",
+    model: "local-model",
+  },
+  {
+    id: "vLLM",
+    label: "vLLM · OpenAI compatible",
+    kind: "openai-compatible",
+    endpoint: "http://localhost:8000",
+    model: "local-model",
+  },
+  {
+    id: "llama.cpp",
+    label: "llama.cpp · OpenAI compatible",
+    kind: "openai-compatible",
+    endpoint: "http://localhost:8080",
+    model: "local-model",
+  },
+  {
+    id: "LocalAI",
+    label: "LocalAI · OpenAI compatible",
+    kind: "openai-compatible",
+    endpoint: "http://localhost:8080",
+    model: "local-model",
+  },
+  {
+    id: "OpenAI-compatible",
+    label: "Custom OpenAI-compatible endpoint",
+    kind: "openai-compatible",
+    endpoint: "http://localhost:8000",
+    model: "local-model",
+  },
+] as const;
 const INTERVIEW_PERSONAS: InterviewPersona[] = [
   {
     id: "hr",
@@ -1052,6 +1141,16 @@ export default function Home() {
   );
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
+  const [uploadingDestination, setUploadingDestination] = useState<
+    "jd" | "resume" | null
+  >(null);
+  const [modelEndpoint, setModelEndpoint] = useState("");
+  const [modelName, setModelName] = useState("");
+  const [modelStatus, setModelStatus] = useState(
+    "Built-in evidence matching is ready on this device.",
+  );
+  const [modelInsight, setModelInsight] = useState("");
+  const [modelRunning, setModelRunning] = useState(false);
   const [roleQuery, setRoleQuery] = useState("Product analyst");
   const [region, setRegion] = useState("Worldwide");
   const [country, setCountry] = useState("All countries");
@@ -1080,6 +1179,7 @@ export default function Home() {
   const [role, setRole] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
+  const [copilotRunning, setCopilotRunning] = useState(false);
   const [interviewPersona, setInterviewPersona] =
     useState<InterviewPersonaId>("hiring-manager");
   const [interviewMode, setInterviewMode] =
@@ -1101,6 +1201,8 @@ export default function Home() {
   const copy = copyFor(locale);
   const detail = detailFor(locale);
   const interview = interviewCopyFor(locale);
+  const selectedProvider =
+    PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
   const preferencesLoaded = useRef(false);
   const speechRecognitionRef = useRef<{ stop: () => void } | null>(null);
 
@@ -1122,6 +1224,9 @@ export default function Home() {
       );
       const savedInterview = window.localStorage.getItem(
         "aptograph-interview-session",
+      );
+      const savedModelSettings = window.localStorage.getItem(
+        "aptograph-model-settings",
       );
       if (savedLocale && LANGUAGES.some(([code]) => code === savedLocale))
         setLocale(savedLocale);
@@ -1192,6 +1297,21 @@ export default function Home() {
           window.localStorage.removeItem("aptograph-interview-session");
         }
       }
+      if (savedModelSettings) {
+        try {
+          const settings = JSON.parse(savedModelSettings) as {
+            provider?: string;
+            endpoint?: string;
+            model?: string;
+          };
+          if (PROVIDERS.some((item) => item.id === settings.provider))
+            setProvider(settings.provider || "Evidence engine");
+          if (settings.endpoint) setModelEndpoint(settings.endpoint);
+          if (settings.model) setModelName(settings.model);
+        } catch {
+          window.localStorage.removeItem("aptograph-model-settings");
+        }
+      }
       setNotificationPermission(
         "Notification" in window ? Notification.permission : "unsupported",
       );
@@ -1242,6 +1362,14 @@ export default function Home() {
       }),
     );
   }, [interviewMessages, interviewMode, interviewPersona, interviewScores, interviewTurn]);
+
+  useEffect(() => {
+    if (!preferencesLoaded.current) return;
+    window.localStorage.setItem(
+      "aptograph-model-settings",
+      JSON.stringify({ provider, endpoint: modelEndpoint, model: modelName }),
+    );
+  }, [modelEndpoint, modelName, provider]);
 
   useEffect(
     () => () => {
@@ -1456,44 +1584,187 @@ export default function Home() {
     setSourceMeta(null);
     setSourceError("");
   }
+  function selectProvider(nextProvider: string) {
+    const definition =
+      PROVIDERS.find((item) => item.id === nextProvider) || PROVIDERS[0];
+    setProvider(definition.id);
+    setModelEndpoint(definition.endpoint);
+    setModelName(definition.model);
+    setModelInsight("");
+    setModelStatus(
+      definition.kind === "built-in"
+        ? "Built-in evidence matching is ready on this device."
+        : "Enter the local endpoint and loaded model name, then test the connection.",
+    );
+  }
+
+  function modelUrl(path: string) {
+    const base = modelEndpoint.trim().replace(/\/$/, "");
+    if (selectedProvider.kind === "ollama") return `${base}${path}`;
+    const normalized = base.endsWith("/v1") ? base : `${base}/v1`;
+    return `${normalized}${path}`;
+  }
+
+  async function testModelConnection() {
+    if (selectedProvider.kind === "built-in") {
+      setModelStatus("Built-in evidence matching is ready on this device.");
+      return;
+    }
+    if (!modelEndpoint.trim()) {
+      setModelStatus("Enter a local endpoint first.");
+      return;
+    }
+    setModelRunning(true);
+    setModelStatus("Testing the local connection…");
+    try {
+      const response = await fetch(
+        selectedProvider.kind === "ollama"
+          ? modelUrl("/api/tags")
+          : modelUrl("/models"),
+        { signal: AbortSignal.timeout(7_000) },
+      );
+      if (!response.ok) throw new Error(`The endpoint returned ${response.status}.`);
+      const payload = (await response.json()) as {
+        models?: Array<{ name?: string; id?: string }>;
+        data?: Array<{ id?: string }>;
+      };
+      const models =
+        payload.models?.map((item) => item.name || item.id || "").filter(Boolean) ||
+        payload.data?.map((item) => item.id || "").filter(Boolean) ||
+        [];
+      if (models.length && (!modelName.trim() || modelName === "local-model"))
+        setModelName(models[0]);
+      setModelStatus(
+        `Connected locally. ${models.length ? `${models.length} model${models.length === 1 ? "" : "s"} available.` : "The endpoint responded successfully."}`,
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Connection failed.";
+      setModelStatus(
+        `Could not connect: ${reason} Confirm the server is running and allows this site's origin through CORS.`,
+      );
+    } finally {
+      setModelRunning(false);
+    }
+  }
+
+  async function requestConfiguredModel(prompt: string) {
+    const response = await fetch(
+      selectedProvider.kind === "ollama"
+        ? modelUrl("/api/chat")
+        : modelUrl("/chat/completions"),
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(
+          selectedProvider.kind === "ollama"
+            ? {
+                model: modelName.trim(),
+                messages: [{ role: "user", content: prompt }],
+                stream: false,
+              }
+            : {
+                model: modelName.trim(),
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.1,
+                stream: false,
+              },
+        ),
+        signal: AbortSignal.timeout(60_000),
+      },
+    );
+    const payload = (await response.json()) as {
+      error?: { message?: string } | string;
+      message?: { content?: string };
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    if (!response.ok)
+      throw new Error(
+        typeof payload.error === "string"
+          ? payload.error
+          : payload.error?.message || `The model returned ${response.status}.`,
+      );
+    const content =
+      payload.message?.content || payload.choices?.[0]?.message?.content || "";
+    if (!content.trim()) throw new Error("The model returned an empty response.");
+    return content.trim();
+  }
+
+  async function runModelAnalysis() {
+    const nextMatches = runMatch(jd, resume);
+    setMatches(nextMatches);
+    setModelInsight("");
+    if (selectedProvider.kind === "built-in") {
+      const fit = storyFitFor(nextMatches);
+      const proof = firstEvidence(nextMatches);
+      setModelStatus("Completed on this device with the deterministic evidence engine.");
+      setModelInsight(
+        proof
+          ? `Lead with ${proof.keyword}: ${proof.evidence} Story fit is ${fit.storyFit}/100; unsupported requirements remain visible as gaps.`
+          : "No proof-backed story was found yet. Add a concrete action and measurable result to the resume evidence.",
+      );
+      return;
+    }
+    if (!modelEndpoint.trim() || !modelName.trim()) {
+      setModelStatus(
+        "The evidence matrix ran locally. To add model coaching, enter a local endpoint and the exact loaded model name.",
+      );
+      return;
+    }
+
+    setModelRunning(true);
+    setModelStatus(`Running ${modelName.trim()} on your configured endpoint…`);
+    const prompt = `You are Aptograph, an evidence-grounded career coach. Compare the resume evidence with the job description. Never invent experience. Return concise plain text with exactly three headings: BEST STORY, PROOF TO QUOTE, GAPS TO ADDRESS.\n\nJOB DESCRIPTION\n${jd.slice(0, 10_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 10_000)}`;
+    try {
+      const content = await requestConfiguredModel(prompt);
+      setModelInsight(content.trim());
+      setModelStatus(
+        `${modelName.trim()} completed. Keyword evidence remains deterministic; the model adds story coaching only.`,
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Model request failed.";
+      setModelStatus(
+        `The evidence matrix completed locally, but ${provider} coaching failed: ${reason}`,
+      );
+    } finally {
+      setModelRunning(false);
+    }
+  }
+
   async function loadFile(
     event: ChangeEvent<HTMLInputElement>,
     destination: "jd" | "resume",
   ) {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
-    const file = files[0];
-    const extension = file.name.split(".").pop()?.toLowerCase();
-    if (
-      [
-        "txt",
-        "md",
-        "csv",
-        "json",
-        "html",
-        "htm",
-        "rtf",
-        "xml",
-        "yaml",
-        "yml",
-        "log",
-        "tex",
-      ].includes(extension || "")
-    ) {
-      const text = await file.text();
-      if (destination === "jd") setJd(text);
-      else setResume(text);
+    setUploadingDestination(destination);
+    setUploadMessage(
+      locale === "en" ? `Reading ${files.length} file(s) on this device…` : detail.importAny,
+    );
+    try {
+      const { documents, errors } = await parseDocuments(files);
+      if (documents.length) {
+        const text = documents
+          .map((document) =>
+            documents.length === 1
+              ? document.text
+              : `--- ${document.name} · ${document.kind} ---\n${document.text}`,
+          )
+          .join("\n\n");
+        if (destination === "jd") setJd(text);
+        else setResume(text);
+      }
       setUploadMessage(
-        locale === "en"
-          ? `${file.name} was loaded immediately. ${files.length > 1 ? `${files.length - 1} additional file(s) are queued for the API parser.` : ""}`.trim()
-          : `${file.name} · ${detail.importAny}`,
+        [
+          documents.length
+            ? `${documents.length} file${documents.length === 1 ? "" : "s"} loaded locally: ${documents.map((document) => `${document.name} (${document.kind})`).join(", ")}.`
+            : "No readable document was loaded.",
+          ...errors,
+        ].join(" "),
       );
-    } else
-      setUploadMessage(
-        locale === "en"
-          ? `${files.length} file(s) selected. Every format can be selected. Supported documents are parsed now; images, audio, archives, and legacy binaries require configured OCR, transcription, or quarantine adapters.`
-          : `${files.length} · ${detail.importAny}. ${detail.sourcePolicy}`,
-      );
+    } finally {
+      setUploadingDestination(null);
+      event.target.value = "";
+    }
   }
   function persistTracker(next: TrackerItem[]) {
     setTracker(next);
@@ -1628,9 +1899,10 @@ export default function Home() {
     setCompany("");
     setRole("");
   }
-  function askCopilot(event: FormEvent) {
+  async function askCopilot(event: FormEvent) {
     event.preventDefault();
     if (!question.trim()) return;
+    const userQuestion = question.trim();
     const gaps = matches
       .filter((item) => item.status === "Gap")
       .map((item) => item.keyword)
@@ -1639,13 +1911,44 @@ export default function Home() {
       .filter((item) => item.status === "Strong evidence")
       .map((item) => item.keyword)
       .slice(0, 4);
-    const reply = `${copy.recommendations}: ${strong.join(", ") || copy.analyze}. ${copy.feedback}: ${gaps.join(", ") || copy.tracker}. ${copy.heroBody}`;
-    setMessages([
-      ...messages,
-      { role: "user", content: question.trim() },
-      { role: "assistant", content: reply },
+    const proof = firstEvidence(matches);
+    const fallbackReply =
+      locale === "zh-TW"
+        ? `你可以先說：「我適合這個職位，因為我已經用 ${strong.join("、") || "相關能力"} 解決過相近問題。」接著引用這項證據：${proof?.evidence || "補上一個你親自採取行動並帶來成果的例子。"} 最後主動說明仍需補足的部分：${gaps.join("、") || "目前沒有明顯必要條件缺口"}。`
+        : `Lead with this claim: “I fit this role because I have already used ${strong.join(", ") || "relevant evidence"} to solve a similar problem.” Then quote this proof: ${proof?.evidence || "add one example with your action and outcome."} Address these gaps directly: ${gaps.join(", ") || "no clear must-have gaps"}.`;
+    setMessages((current) => [
+      ...current,
+      { role: "user", content: userQuestion },
     ]);
     setQuestion("");
+    setCopilotRunning(true);
+    try {
+      let reply = fallbackReply;
+      if (
+        selectedProvider.kind !== "built-in" &&
+        modelEndpoint.trim() &&
+        modelName.trim()
+      ) {
+        reply = await requestConfiguredModel(
+          `You are Aptograph, an evidence-grounded career copilot. Answer the user's question in ${LANGUAGES.find(([code]) => code === locale)?.[1] || "English"}. Never invent experience. Ground the answer in the resume and JD, clearly label any gap, and give wording the candidate can truthfully say.\n\nQUESTION\n${userQuestion}\n\nJOB DESCRIPTION\n${jd.slice(0, 8_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 8_000)}`,
+        );
+      }
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: reply },
+      ]);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Model request failed.";
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          content: `${fallbackReply}\n\nLocal model note: ${reason}`,
+        },
+      ]);
+    } finally {
+      setCopilotRunning(false);
+    }
   }
 
   function startInterview() {
@@ -1805,13 +2108,12 @@ export default function Home() {
     { id: "Feedback", label: copy.feedback },
   ];
   const modeMessage =
-    locale !== "en"
-      ? `${copy.mode}: ${applicationMode === "Manual" ? copy.manual : applicationMode === "Hybrid" ? copy.hybrid : copy.automatic}. ${copy.heroBody}`
-      : applicationMode === "Manual"
-        ? "Open-source and free. You review every role, edit every document, and submit every application yourself."
-        : applicationMode === "Hybrid"
-          ? "Pro preview. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
-          : "Pro preview. Personal automation is limited to approved employer APIs with consent, rate limits, an audit log, and an emergency stop. Nothing is submitted in this public preview.";
+    MODE_DISCLOSURES[locale]?.[applicationMode] ||
+    (applicationMode === "Manual"
+      ? "Open-source and free. You review every role, edit every document, and submit every application yourself."
+      : applicationMode === "Hybrid"
+        ? "Pro preview. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
+        : "Pro preview. Nothing is submitted automatically in this public version. A future release will require approved employer APIs, consent, rate limits, an audit log, and an emergency stop.");
   const billingMarket =
     BILLING_MARKETS.find((market) => market.code === billingMarketCode) ||
     BILLING_MARKETS[0];
@@ -2053,38 +2355,56 @@ export default function Home() {
                 </button>
               </div>
               <div className="input-grid">
-                <label>
-                  <span>{detail.jobDescription}</span>
+                <div className="document-field">
+                  <label htmlFor="jd-text">
+                    <span>{detail.jobDescription}</span>
+                  </label>
                   <textarea
+                    id="jd-text"
                     value={jd}
                     onChange={(event) => setJd(event.target.value)}
                   />
-                  <small className="upload-control">
+                  <label className="upload-control" htmlFor="jd-file">
                     <input
+                      id="jd-file"
                       type="file"
                       accept="*/*"
                       multiple
                       onChange={(event) => loadFile(event, "jd")}
-                    />{" "}
-                    {detail.importAny}
-                  </small>
-                </label>
-                <label>
-                  <span>{detail.resumeEvidence}</span>
+                    />
+                    <span>
+                      {uploadingDestination === "jd"
+                        ? "Reading files…"
+                        : detail.importAny}
+                    </span>
+                    <small>PDF · DOCX · PPTX · XLSX · ODF · EPUB · text</small>
+                  </label>
+                </div>
+                <div className="document-field">
+                  <label htmlFor="resume-text">
+                    <span>{detail.resumeEvidence}</span>
+                  </label>
                   <textarea
+                    id="resume-text"
                     value={resume}
                     onChange={(event) => setResume(event.target.value)}
                   />
-                  <small className="upload-control">
+                  <label className="upload-control" htmlFor="resume-file">
                     <input
+                      id="resume-file"
                       type="file"
                       accept="*/*"
                       multiple
                       onChange={(event) => loadFile(event, "resume")}
-                    />{" "}
-                    {detail.importAny}
-                  </small>
-                </label>
+                    />
+                    <span>
+                      {uploadingDestination === "resume"
+                        ? "Reading files…"
+                        : detail.importAny}
+                    </span>
+                    <small>PDF · DOCX · PPTX · XLSX · ODF · EPUB · text</small>
+                  </label>
+                </div>
               </div>
               {uploadMessage && (
                 <p className="notice" role="status">
@@ -2097,24 +2417,69 @@ export default function Home() {
                   <select
                     id="model"
                     value={provider}
-                    onChange={(event) => setProvider(event.target.value)}
+                    onChange={(event) => selectProvider(event.target.value)}
                   >
                     {PROVIDERS.map((item) => (
-                      <option key={item}>{item}</option>
+                      <option key={item.id} value={item.id}>
+                        {item.label}
+                      </option>
                     ))}
                   </select>
                   <small className="model-note">
-                    {locale === "en"
-                      ? "The deterministic engine stays canonical. Self-hosters can connect any supported local or compatible model."
-                      : copy.heroBody}
+                    The evidence matrix always runs locally. Optional models add
+                    story coaching through an endpoint you control.
                   </small>
                 </div>
                 <button
                   className="button primary"
-                  onClick={() => setMatches(runMatch(jd, resume))}
+                  onClick={runModelAnalysis}
+                  disabled={modelRunning}
                 >
-                  {detail.runMatch}
+                  {modelRunning ? "Running…" : detail.runMatch}
                 </button>
+              </div>
+              {selectedProvider.kind !== "built-in" && (
+                <section className="model-connection" aria-label="Local model connection">
+                  <div className="model-connection-fields">
+                    <label>
+                      <span>Local endpoint</span>
+                      <input
+                        value={modelEndpoint}
+                        onChange={(event) => setModelEndpoint(event.target.value)}
+                        placeholder={selectedProvider.endpoint}
+                        inputMode="url"
+                      />
+                    </label>
+                    <label>
+                      <span>Loaded model name</span>
+                      <input
+                        value={modelName}
+                        onChange={(event) => setModelName(event.target.value)}
+                        placeholder={selectedProvider.model}
+                      />
+                    </label>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={testModelConnection}
+                      disabled={modelRunning}
+                    >
+                      Test connection
+                    </button>
+                  </div>
+                  <p>
+                    Direct local connection; no API key is requested or stored.
+                    Ollama may require <code>OLLAMA_ORIGINS</code>. Other servers
+                    must allow this site through CORS.
+                  </p>
+                </section>
+              )}
+              <div className="model-result" role="status">
+                <div>
+                  <span>{selectedProvider.label}</span>
+                  <b>{modelStatus}</b>
+                </div>
+                {modelInsight && <p>{modelInsight}</p>}
               </div>
               <div className="results-card">
                 <div className="results-title">
@@ -3104,7 +3469,9 @@ export default function Home() {
                   <h2>{detail.assistantTitle}</h2>
                 </div>
                 <span className="status-pill light">
-                  {provider} ·{" "}
+                  {selectedProvider.kind === "built-in"
+                    ? "Evidence engine"
+                    : `${provider} · ${modelName || "not configured"}`} ·{" "}
                   {LANGUAGES.find(([code]) => code === locale)?.[1]}
                 </span>
               </div>
@@ -3144,8 +3511,18 @@ export default function Home() {
                     onChange={(event) => setQuestion(event.target.value)}
                     placeholder={detail.compare}
                   />
-                  <button className="button primary">{detail.send}</button>
+                  <button
+                    className="button primary"
+                    disabled={copilotRunning || !question.trim()}
+                  >
+                    {copilotRunning ? "Working…" : detail.send}
+                  </button>
                 </div>
+                <small className="model-note">
+                  {selectedProvider.kind === "built-in"
+                    ? "Evidence-grounded local guidance."
+                    : `${modelStatus} If the local model is unavailable, Aptograph returns an evidence-engine fallback and labels the failure.`}
+                </small>
               </form>
             </>
           )}
@@ -3321,12 +3698,11 @@ export default function Home() {
             </select>
           </label>
           <p>
-            {locale === "en"
-              ? "Transparent regional estimates. Country and currency can be changed; final currency, tax, and total are confirmed in Stripe Checkout. Pricing never uses your resume, job history, or behavior."
-              : copy.worldwide +
-                " · " +
-                billingMarket.currency +
-                " · Stripe Checkout"}
+            {locale === "zh-TW"
+              ? `目前僅為區域價格預估（${billingMarket.currency}）；公開預覽版尚未啟用付款與結帳。價格不會依履歷、求職紀錄或使用行為調整。`
+              : locale === "zh-CN"
+                ? `目前仅为区域价格预估（${billingMarket.currency}）；公开预览版尚未启用付款与结账。价格不会依据简历、求职记录或使用行为调整。`
+                : `Regional price estimate in ${billingMarket.currency}. Billing and checkout are not enabled in this public preview. Pricing never uses your resume, job history, or behavior.`}
           </p>
         </div>
         <div className="plan-grid">
@@ -3428,8 +3804,8 @@ export default function Home() {
               <li>{copy.market} · {detail.workspace}</li>
               <li>{detail.checked}</li>
             </ul>
-            <button className="button secondary">
-              Enterprise · {detail.plans}
+            <button className="button secondary" disabled>
+              Enterprise · {locale === "zh-TW" ? "尚未開放" : "Not yet available"}
             </button>
           </article>
         </div>
