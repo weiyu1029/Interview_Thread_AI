@@ -1,6 +1,6 @@
-# CareerProof Web
+# Aptograph Web
 
-This is the professional guest-first interface for CareerProof. It provides a
+This is the professional guest-first interface for Aptograph. It provides a
 working deterministic evidence match, device-local application tracker,
 evidence-aware copilot, feedback form, and clear model-provider selection.
 

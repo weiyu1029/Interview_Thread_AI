@@ -180,7 +180,7 @@ async function fetchOfficialJson(url: string): Promise<unknown> {
   const response = await fetch(url, {
     headers: {
       Accept: "application/json",
-      "User-Agent": "CareerProof approved-source gateway/1.0",
+      "User-Agent": "Aptograph approved-source gateway/1.0",
     },
     signal: AbortSignal.timeout(10_000),
   });
