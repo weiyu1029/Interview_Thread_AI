@@ -1,8 +1,12 @@
-# CareerProof Agent
+# CareerProof Global
 
 ![CareerProof Agent](assets/careerproof-hero.png)
 
-**CareerProof Agent** is an open-source, evidence-grounded career intelligence tool. It compares a job description with a candidate's real experience, explains which requirements are supported, keeps missing proof visible, and turns the strongest evidence into an interview strategy.
+**CareerProof Global — Evidence that travels.** is an open-source,
+evidence-grounded career intelligence platform. It compares a job description
+with a candidate's real experience, recommends stronger-fit roles worldwide,
+keeps missing proof visible, and turns the strongest evidence into a credible
+application and interview strategy.
 
 > Keywords may be reformulated, never fabricated.
 
@@ -55,9 +59,12 @@ The `platform/` directory is the production-oriented evolution path requested
 for accounts, permanent tracking, collaboration, and paid plans:
 
 - a professional, responsive, emoji-free React / Next-compatible interface;
-- guest analysis, a device-local tracker, evidence-aware copilot, and feedback;
+- guest analysis, 40 locale choices, worldwide recommendation filters, an
+  interactive Market Insights preview, a device-local tracker, evidence-aware
+  copilot, and feedback;
 - FastAPI endpoints for identity, workspaces, persisted analyses, tracker items,
-  analysis-linked chat, feedback, model discovery, usage, and plan definitions;
+  evidence-ranked job recommendations, market snapshots, application-mode
+  policies, analysis-linked chat, feedback, model discovery, usage, and plans;
 - PostgreSQL-ready multi-tenant data models and role-based workspace access;
 - Docker Compose for the web, API, and PostgreSQL services;
 - a billing-ready entitlement boundary without prematurely enabling checkout.
@@ -134,7 +141,11 @@ Candidate-facing claims may come only from the pasted profile or uploaded resume
 
 Job descriptions and uploaded documents are treated as untrusted data. They can influence matching, but they cannot issue instructions to the agent, expose secrets, or override the evidence boundary.
 
-CareerProof never auto-submits an application or sends a message. A human makes the final decision.
+The open-source default never auto-submits an application or sends a message.
+Manual mode remains free. Hybrid mode is designed to require approval for each
+submission. Any future Team or Enterprise automation must use approved employer
+APIs with explicit consent, rate limits, audit logs, and an emergency stop; no
+submission connector is enabled in this repository.
 
 ## Architecture
 

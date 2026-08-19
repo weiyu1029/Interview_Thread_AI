@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 
 from careerproof_api.database import Base, get_db
 from careerproof_api.main import app
+from careerproof_api.models import MarketMetric
 from careerproof_api.providers import public_provider_catalog
 from careerproof_api.story_engine import build_story_pack
 from fastapi.testclient import TestClient
@@ -100,3 +102,79 @@ def test_guest_analysis_stays_unsaved() -> None:
     assert response.status_code == 200
     assert response.json()["saved"] is False
 
+
+def test_recommendations_rank_jobs_against_verified_stories() -> None:
+    response = client.post(
+        "/v1/jobs/recommendations",
+        json={
+            "candidate_profile": "Built SQL dashboards for product leaders and automated a data quality workflow that reduced weekly preparation time by 30%.",
+            "stories": ["Partnered with cross-functional stakeholders to improve weekly product decisions."],
+            "target_role": "Product Analyst",
+            "jobs": [
+                {
+                    "id": "product-1",
+                    "title": "Product Analyst",
+                    "company": "Example Product Company",
+                    "description": "Use SQL, build product dashboards, improve data quality, and communicate with cross-functional stakeholders every week.",
+                },
+                {
+                    "id": "ml-1",
+                    "title": "Machine Learning Researcher",
+                    "company": "Example Research Lab",
+                    "description": "Develop deep learning architectures, publish machine learning research, and deploy computer vision systems to production.",
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source"] == "request"
+    assert payload["recommendations"][0]["id"] == "product-1"
+    assert payload["recommendations"][0]["match_score"] > payload["recommendations"][1]["match_score"]
+    assert payload["method"].startswith("Deterministic")
+
+
+def test_market_insights_calculates_comparable_snapshot_change() -> None:
+    with TestingSession() as db:
+        db.add_all([
+            MarketMetric(
+                snapshot_at=datetime(2026, 7, 1, tzinfo=UTC), source="test", country_code="us",
+                region="North America", industry="Technology", role_family="Data & AI", openings=100,
+            ),
+            MarketMetric(
+                snapshot_at=datetime(2026, 8, 1, tzinfo=UTC), source="test", country_code="us",
+                region="North America", industry="Technology", role_family="Data & AI", openings=120,
+            ),
+        ])
+        db.commit()
+
+    response = client.get("/v1/market/insights?country_code=us&industry=Technology&live=false")
+
+    assert response.status_code == 200
+    segment = response.json()["segments"][0]
+    assert segment["openings"] == 120
+    assert segment["change_percent"] == 20.0
+    assert response.json()["coverage"]["historical_change_requires"]
+
+
+def test_application_modes_enforce_plan_boundaries() -> None:
+    registered = client.post(
+        "/v1/auth/register",
+        json={"email": "modes@example.com", "display_name": "Mode Tester", "password": "correct-horse-modes"},
+    ).json()
+    headers = {"Authorization": f"Bearer {registered['access_token']}"}
+    workspace_id = registered["workspace"]["id"]
+
+    manual = client.post("/v1/application/mode/check", headers=headers, json={"workspace_id": workspace_id, "mode": "manual"})
+    hybrid = client.post("/v1/application/mode/check", headers=headers, json={"workspace_id": workspace_id, "mode": "hybrid"})
+
+    assert manual.json()["enabled"] is True
+    assert manual.json()["submission_enabled"] is False
+    assert hybrid.json()["enabled"] is False
+    denied_update = client.put(
+        "/v1/application/preferences",
+        headers=headers,
+        json={"workspace_id": workspace_id, "application_mode": "hybrid"},
+    )
+    assert denied_update.status_code == 402

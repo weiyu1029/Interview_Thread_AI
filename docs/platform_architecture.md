@@ -19,6 +19,9 @@ FastAPI application
   ├─ canonical keyword and evidence engine
   ├─ model-provider router
   ├─ story and chat orchestration
+  ├─ global job-provider adapters and evidence ranking
+  ├─ market snapshot aggregation and provenance
+  ├─ application-mode entitlements and safety policy
   ├─ feedback and usage events
   └─ plan entitlements
                │
@@ -27,6 +30,7 @@ PostgreSQL
   ├─ users, workspaces, and memberships
   ├─ analyses and evidence-linked stories
   ├─ tracker items and conversations
+  ├─ jobs, market metrics, and application preferences
   ├─ feedback
   └─ subscriptions and usage events
 ```
@@ -34,6 +38,11 @@ PostgreSQL
 The deterministic evidence result is canonical. A language model can improve
 organization and phrasing, but cannot create a supported claim or silently
 change the underlying score.
+
+Live job data is adapter-based and administrator-configured. The current
+implementation includes a fixed-host Adzuna adapter and storage contracts for
+imported job postings and market snapshots. Provider coverage is displayed as
+provider coverage, not as a census of the global labor market.
 
 ## Identity and tenancy
 
@@ -84,4 +93,3 @@ workspace roles. Checkout is not enabled. A billing launch additionally needs:
 
 The free evidence engine, self-hosting path, data export, and core safety rules
 should remain available regardless of commercial plans.
-

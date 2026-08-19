@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 12 * 1024 * 1024
     provider_config_json: str = "{}"
     default_workspace_plan: str = "free"
+    adzuna_app_id: str = ""
+    adzuna_app_key: str = ""
+    market_provider_timeout_seconds: float = 12.0
 
     @model_validator(mode="after")
     def reject_default_production_secret(self) -> Settings:

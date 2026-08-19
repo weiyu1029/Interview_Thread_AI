@@ -6,7 +6,9 @@
 - Broad in-memory document extraction
 - Transparent scoring and evidence-linked story scaffolds
 - Device-local tracker, copilot, and feedback in the public web experience
-- English-first interface and open contribution workflow
+- 40-locale interface foundation and open translation contribution workflow
+- Basic evidence-ranked global job recommendations with transparent sources
+- Manual application mode and an explicitly labeled Market Insights preview
 
 Exit criteria: keyword extraction and evidence linking have repeatable tests;
 unsupported-claim rate is measured; privacy behavior is documented.
@@ -18,6 +20,7 @@ unsupported-claim rate is measured; privacy behavior is documented.
 - Explicit retention, delete-account, and data-export controls
 - Saved master career profile with version history
 - Background document processing and optional OCR
+- Permanent job-search preferences, saved recommendations, and market alerts
 
 Exit criteria: authorization tests cover every workspace resource; backup and
 restore are exercised; deletion is verified end to end.
@@ -38,6 +41,8 @@ are in place.
 - Team plan for shared workspaces, reviewers, governance, and support
 - Metered model usage with bring-your-own-key and platform-credit options
 - Billing portal, invoices, cancellation, refunds, and grace periods
+- Hybrid application preparation with per-application human approval
+- Team and Enterprise automation only through audited, allowlisted provider APIs
 
 No safety boundary, export right, or self-hosting capability should be placed
 behind a paid plan.
@@ -61,4 +66,3 @@ requirements, supporting resume evidence, legitimate synonyms, true gaps, and
 acceptable story fields. Run the same fixture set across the deterministic
 engine and every promoted model. Provider defaults should change only through a
 reviewed evaluation result, not anecdotal preference.
-

@@ -86,3 +86,46 @@ class FeedbackCreate(BaseModel):
     rating: int | None = Field(default=None, ge=1, le=5)
     message: str = Field(min_length=2, max_length=5_000)
     contact_ok: bool = False
+
+
+class JobCandidate(BaseModel):
+    id: str = Field(default="", max_length=180)
+    source: str = Field(default="imported", max_length=60)
+    title: str = Field(min_length=2, max_length=240)
+    company: str = Field(default="", max_length=240)
+    description: str = Field(min_length=40, max_length=100_000)
+    industry: str = Field(default="", max_length=120)
+    country_code: str = Field(default="", max_length=2)
+    region: str = Field(default="", max_length=120)
+    city: str = Field(default="", max_length=160)
+    remote_mode: Literal["remote", "hybrid", "on-site", "unspecified"] = "unspecified"
+    source_url: str = Field(default="", max_length=2048)
+
+
+class RecommendationRequest(BaseModel):
+    candidate_profile: str = Field(min_length=40, max_length=100_000)
+    stories: list[str] = Field(default_factory=list, max_length=30)
+    target_role: str = Field(default="", max_length=240)
+    country_code: str = Field(default="", max_length=2)
+    region: str = Field(default="", max_length=120)
+    radius_km: int | None = Field(default=None, ge=1, le=2_000)
+    remote_modes: list[Literal["remote", "hybrid", "on-site", "unspecified"]] = Field(default_factory=list)
+    industries: list[str] = Field(default_factory=list, max_length=20)
+    limit: int = Field(default=20, ge=1, le=100)
+    jobs: list[JobCandidate] = Field(default_factory=list, max_length=200)
+
+
+class ApplicationPreferenceUpsert(BaseModel):
+    workspace_id: str
+    regions: list[str] = Field(default_factory=list, max_length=20)
+    countries: list[str] = Field(default_factory=list, max_length=50)
+    radius_km: int | None = Field(default=None, ge=1, le=2_000)
+    remote_modes: list[Literal["remote", "hybrid", "on-site", "unspecified"]] = Field(default_factory=list)
+    industries: list[str] = Field(default_factory=list, max_length=30)
+    interface_locale: str = Field(default="en", min_length=2, max_length=20)
+    application_mode: Literal["manual", "hybrid", "automatic"] = "manual"
+
+
+class ApplicationModeCheck(BaseModel):
+    workspace_id: str
+    mode: Literal["manual", "hybrid", "automatic"]

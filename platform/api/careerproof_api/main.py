@@ -26,11 +26,15 @@ from app.tools.resume_parser import extract_resume_text
 
 from .config import get_settings
 from .database import Base, engine, get_db
+from .market_providers import AdzunaClient, normalize_adzuna_job
 from .models import (
     Analysis,
+    ApplicationPreference,
     ChatMessage,
     ChatThread,
     Feedback,
+    JobPosting,
+    MarketMetric,
     Membership,
     TrackerItem,
     UsageEvent,
@@ -45,11 +49,14 @@ from .providers import (
 )
 from .schemas import (
     AnalysisRequest,
+    ApplicationModeCheck,
+    ApplicationPreferenceUpsert,
     AuthResponse,
     ChatRequest,
     ChatThreadCreate,
     FeedbackCreate,
     LoginRequest,
+    RecommendationRequest,
     RegisterRequest,
     TrackerCreate,
     TrackerUpdate,
@@ -81,8 +88,8 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title="CareerProof API",
-    version="1.0.0-alpha",
-    description="Evidence-first career analysis, tracking, collaboration, chat, and feedback API.",
+    version="1.1.0-alpha",
+    description="Evidence-first global career analysis, job recommendation, market insight, tracking, collaboration, chat, and feedback API.",
     lifespan=lifespan,
 )
 app.add_middleware(
@@ -120,6 +127,18 @@ def unique_slug(db: Session, name: str) -> str:
     return slug
 
 
+def application_mode_entitlement(plan: str, mode: str) -> tuple[bool, str]:
+    allowed = {
+        "manual": {"free", "pro", "team", "enterprise"},
+        "hybrid": {"pro", "team", "enterprise"},
+        "automatic": {"team", "enterprise"},
+    }
+    if plan in allowed[mode]:
+        return True, "enabled"
+    required = "Pro" if mode == "hybrid" else "Team or Enterprise"
+    return False, f"{required} is required for {mode} mode"
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "service": "careerproof-api", "version": app.version}
@@ -129,12 +148,125 @@ def health() -> dict:
 def plans() -> dict:
     return {
         "plans": [
-            {"id": "free", "name": "Free", "monthly_analyses": 8, "members": 1, "features": ["Guest analysis", "Local models", "Personal tracker"]},
-            {"id": "pro", "name": "Pro", "monthly_analyses": 100, "members": 1, "features": ["Permanent history", "Advanced story packs", "Priority model routing"]},
-            {"id": "team", "name": "Team", "monthly_analyses": 500, "members": 10, "features": ["Shared workspaces", "Role-based access", "Team feedback"]},
+            {"id": "free", "name": "Community", "monthly_analyses": 8, "members": 1, "application_modes": ["manual"], "features": ["Evidence matching", "40-language UI", "Basic recommendations", "Local models", "Personal tracker"]},
+            {"id": "pro", "name": "Pro", "monthly_analyses": 100, "members": 1, "application_modes": ["manual", "hybrid"], "features": ["Permanent history", "Advanced story packs", "Approval queue", "Saved searches and alerts"]},
+            {"id": "team", "name": "Team", "monthly_analyses": 500, "members": 10, "application_modes": ["manual", "hybrid", "automatic"], "features": ["Shared workspaces", "Role-based access", "Governed connectors", "Audit logs"]},
         ],
         "billing_status": "adapter-ready",
         "note": "Checkout is intentionally not enabled until a billing provider and refund policy are configured.",
+    }
+
+
+@app.post("/v1/jobs/recommendations")
+async def recommend_jobs(payload: RecommendationRequest, db: Session = Depends(get_db)) -> dict:
+    """Rank licensed, imported, or caller-supplied jobs against verified evidence."""
+    clean_profile, redactions = redact_with_counts("\n".join([payload.candidate_profile, *payload.stories]))
+    candidates: list[dict] = [item.model_dump() for item in payload.jobs]
+    source = "request"
+
+    if not candidates and settings.adzuna_app_id and settings.adzuna_app_key and payload.country_code:
+        try:
+            raw = await AdzunaClient(
+                settings.adzuna_app_id,
+                settings.adzuna_app_key,
+                settings.market_provider_timeout_seconds,
+            ).search(payload.country_code, payload.target_role, payload.region, payload.radius_km, payload.limit)
+            candidates = [normalize_adzuna_job(item, payload.country_code) for item in raw.get("results", [])]
+            source = "adzuna"
+        except (httpx.HTTPError, ValueError) as exc:
+            raise HTTPException(status_code=502, detail=f"Live job provider error: {exc}") from exc
+
+    if not candidates:
+        query = select(JobPosting).where(JobPosting.active.is_(True)).order_by(JobPosting.posted_at.desc()).limit(200)
+        rows = db.scalars(query).all()
+        candidates = [as_dict(item, ("id", "source", "title", "company", "description", "industry", "country_code", "region", "city", "remote_mode", "source_url")) for item in rows]
+        source = "database"
+
+    ranked = []
+    for job in candidates:
+        if payload.country_code and job.get("country_code") and job["country_code"].lower() != payload.country_code.lower():
+            continue
+        if payload.region and job.get("region") and job["region"].lower() != payload.region.lower():
+            continue
+        if payload.remote_modes and job.get("remote_mode") not in payload.remote_modes:
+            continue
+        if payload.industries and job.get("industry") not in payload.industries:
+            continue
+        analysis = analyze_keywords(job.get("description", ""), clean_profile).to_dict()
+        matches = analysis.get("matches", [])
+        supported = [item for item in matches if item.get("status") in {"Strong", "Partial"}]
+        gaps = [item for item in matches if item.get("status") == "Gap"]
+        source_evidence = next((item.get("evidence") for item in supported if item.get("evidence")), None)
+        ranked.append({
+            **job,
+            "match_score": analysis.get("overall_score", 0),
+            "match_reasons": [item.get("keyword") for item in supported[:5]],
+            "gaps": [item.get("keyword") for item in gaps[:5]],
+            "best_story": source_evidence or (payload.stories[0] if payload.stories else "Add a verified story to improve this recommendation."),
+        })
+    ranked.sort(key=lambda item: item["match_score"], reverse=True)
+    return {
+        "source": source,
+        "live": source == "adzuna",
+        "recommendations": ranked[: payload.limit],
+        "redactions": redactions,
+        "method": "Deterministic weighted evidence match; no unsupported experience is generated.",
+    }
+
+
+@app.get("/v1/market/insights")
+async def market_insights(
+    country_code: str = Query(default="", max_length=2),
+    region: str = Query(default="", max_length=120),
+    industry: str = Query(default="", max_length=120),
+    role_family: str = Query(default="", max_length=120),
+    where: str = Query(default="", max_length=180),
+    live: bool = True,
+    db: Session = Depends(get_db),
+) -> dict:
+    query = select(MarketMetric).order_by(MarketMetric.snapshot_at.desc()).limit(2_000)
+    if country_code:
+        query = query.where(MarketMetric.country_code == country_code.lower())
+    if region:
+        query = query.where(MarketMetric.region == region)
+    if industry:
+        query = query.where(MarketMetric.industry == industry)
+    if role_family:
+        query = query.where(MarketMetric.role_family == role_family)
+    rows = db.scalars(query).all()
+    grouped: dict[tuple, list[MarketMetric]] = {}
+    for row in rows:
+        key = (row.source, row.country_code, row.region, row.industry, row.role_family, row.remote_mode)
+        grouped.setdefault(key, []).append(row)
+    segments = []
+    for key, points in grouped.items():
+        current = points[0]
+        previous = points[1] if len(points) > 1 else None
+        change = None if not previous or previous.openings == 0 else round((current.openings - previous.openings) / previous.openings * 100, 1)
+        segments.append({
+            "source": key[0], "country_code": key[1], "region": key[2], "industry": key[3],
+            "role_family": key[4], "remote_mode": key[5], "openings": current.openings,
+            "change_percent": change, "snapshot_at": current.snapshot_at,
+        })
+
+    live_snapshot = None
+    if live and country_code and settings.adzuna_app_id and settings.adzuna_app_key:
+        try:
+            raw = await AdzunaClient(settings.adzuna_app_id, settings.adzuna_app_key, settings.market_provider_timeout_seconds).search(
+                country_code, role_family, where or region, None, 1
+            )
+            live_snapshot = {"source": "adzuna", "openings": int(raw.get("count", 0)), "country_code": country_code.lower(), "where": where or region}
+        except (httpx.HTTPError, ValueError) as exc:
+            raise HTTPException(status_code=502, detail=f"Live market provider error: {exc}") from exc
+    return {
+        "status": "ready" if segments or live_snapshot else "no_data",
+        "live_snapshot": live_snapshot,
+        "segments": segments,
+        "coverage": {
+            "live_provider_configured": bool(settings.adzuna_app_id and settings.adzuna_app_key),
+            "historical_change_requires": "At least two comparable stored snapshots",
+            "note": "Counts describe provider coverage, not the entire labor market.",
+        },
     }
 
 
@@ -378,6 +510,77 @@ def delete_tracker_item(item_id: str, user: User = Depends(current_user), db: Se
     workspace_for_user(db, user.id, item.workspace_id)
     db.delete(item)
     db.commit()
+
+
+@app.get("/v1/application/preferences")
+def get_application_preferences(
+    workspace_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    workspace = workspace_for_user(db, user.id, workspace_id)
+    preference = db.scalar(
+        select(ApplicationPreference).where(
+            ApplicationPreference.workspace_id == workspace_id,
+            ApplicationPreference.user_id == user.id,
+        )
+    )
+    if not preference:
+        return {
+            "workspace_id": workspace_id, "regions": [], "countries": [], "radius_km": None,
+            "remote_modes": [], "industries": [], "interface_locale": "en", "application_mode": "manual",
+            "plan": workspace.plan,
+        }
+    return {**as_dict(preference, ("workspace_id", "regions", "countries", "radius_km", "remote_modes", "industries", "interface_locale", "application_mode", "updated_at")), "plan": workspace.plan}
+
+
+@app.put("/v1/application/preferences")
+def update_application_preferences(
+    payload: ApplicationPreferenceUpsert,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    workspace = workspace_for_user(db, user.id, payload.workspace_id)
+    entitled, reason = application_mode_entitlement(workspace.plan, payload.application_mode)
+    if not entitled:
+        raise HTTPException(status_code=402, detail=reason)
+    preference = db.scalar(
+        select(ApplicationPreference).where(
+            ApplicationPreference.workspace_id == payload.workspace_id,
+            ApplicationPreference.user_id == user.id,
+        )
+    )
+    values = payload.model_dump(exclude={"workspace_id"})
+    if preference:
+        for field, value in values.items():
+            setattr(preference, field, value)
+    else:
+        preference = ApplicationPreference(workspace_id=payload.workspace_id, user_id=user.id, **values)
+        db.add(preference)
+    db.commit()
+    return {
+        **as_dict(preference, ("workspace_id", "regions", "countries", "radius_km", "remote_modes", "industries", "interface_locale", "application_mode", "updated_at")),
+        "plan": workspace.plan,
+        "automation_safety": "Automatic mode configures intent only. Submission connectors require separate approval, allowlisting, rate limits, consent, and audit logging.",
+    }
+
+
+@app.post("/v1/application/mode/check")
+def check_application_mode(
+    payload: ApplicationModeCheck,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    workspace = workspace_for_user(db, user.id, payload.workspace_id)
+    entitled, reason = application_mode_entitlement(workspace.plan, payload.mode)
+    return {
+        "mode": payload.mode,
+        "plan": workspace.plan,
+        "enabled": entitled,
+        "reason": reason,
+        "submission_enabled": False,
+        "controls": ["explicit consent", "human-visible queue", "provider allowlist", "rate limit", "audit log", "emergency stop"] if payload.mode != "manual" else ["human review and submission"],
+    }
 
 
 @app.post("/v1/chat/threads", status_code=201)
