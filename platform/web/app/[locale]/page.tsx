@@ -15,7 +15,10 @@ import {
   localizedPath,
 } from "../intl-routing";
 
-type LocalizedHomeProps = { params: Promise<{ locale: string }> };
+type LocalizedHomeProps = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ guest?: string }>;
+};
 
 export const dynamic = "force-dynamic";
 
@@ -74,9 +77,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function LocalizedHome({ params }: LocalizedHomeProps) {
-  const [{ locale: pathLocale }, user] = await Promise.all([
+export default async function LocalizedHome({ params, searchParams }: LocalizedHomeProps) {
+  const [{ locale: pathLocale }, query, user] = await Promise.all([
     params,
+    searchParams,
     getAppUser(),
   ]);
   const locale = localeFromPath(pathLocale);
@@ -113,6 +117,7 @@ export default async function LocalizedHome({ params }: LocalizedHomeProps) {
       <Home
         initialLocale={locale}
         authenticated={Boolean(user)}
+        guestMode={!user && query.guest === "1"}
         signInPath={accountSignInPath(locale, `${localizedPath(locale)}#workspace`)}
       />
     </div>

@@ -22,6 +22,7 @@ import {
   RTL_LOCALES,
 } from "../../i18n";
 import { localizedPath } from "../../intl-routing";
+import { guestAccessCopyFor } from "../../guest-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -65,10 +66,12 @@ export default async function AccountPage({
   const detail = detailFor(locale);
   const labels = accountCopyFor(locale);
   const intro = accountIntroCopyFor(locale);
+  const guestAccess = guestAccessCopyFor(locale);
   const authCopy = authCopyFor(locale);
   const openSourceLabel = openSourceLabelFor(locale);
   const accountPath = localizedPath(locale, "account");
   const workspacePath = `${localizedPath(locale)}#workspace`;
+  const guestWorkspacePath = `${localizedPath(locale)}?guest=1#workspace`;
   const returnTo = safeReturnPath(query.return_to || workspacePath);
   const savedWork = [detail.matrix, core.interview, core.tracker];
   const signOutHref =
@@ -188,20 +191,28 @@ export default async function AccountPage({
               </a>
             </div>
           ) : (
-            <div className="oauth-provider-list" aria-label={labels.signIn}>
-              {(["google", "github", "linkedin"] as const).map((provider) => (
-                <a
-                  className="oauth-provider-button"
-                  data-provider={provider}
-                  href={oauthStartPath(provider, returnTo, locale)}
-                  key={provider}
-                >
-                  <span className="oauth-provider-mark" aria-hidden="true">
-                    {providerMark(provider)}
-                  </span>
-                  <strong>{labels.signIn} · {providerName(provider)}</strong>
+            <div className="account-access-options">
+              <div className="oauth-provider-list" aria-label={labels.signIn}>
+                {(["google", "github", "linkedin"] as const).map((provider) => (
+                  <a
+                    className="oauth-provider-button"
+                    data-provider={provider}
+                    href={oauthStartPath(provider, returnTo, locale)}
+                    key={provider}
+                  >
+                    <span className="oauth-provider-mark" aria-hidden="true">
+                      {providerMark(provider)}
+                    </span>
+                    <strong>{labels.signIn} · {providerName(provider)}</strong>
+                  </a>
+                ))}
+              </div>
+              <div className="guest-access-option">
+                <p>{guestAccess.notice}</p>
+                <a className="button secondary" href={guestWorkspacePath}>
+                  {guestAccess.cta}
                 </a>
-              ))}
+              </div>
             </div>
           )}
 

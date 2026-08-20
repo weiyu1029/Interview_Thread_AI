@@ -25,6 +25,7 @@ import {
   accountIntroCopyFor,
   openSourceLabelFor,
 } from "./account-copy";
+import { guestAccessCopyFor } from "./guest-copy";
 import { BrandMark } from "./BrandMark";
 import { faqCopyFor, optionalCareerSourceCopyFor } from "./faq-copy";
 import { MobileNav } from "./MobileNav";
@@ -2481,10 +2482,12 @@ function localizedInterviewStageLabel(
 export default function Home({
   initialLocale,
   authenticated = false,
+  guestMode = false,
   signInPath,
 }: {
   initialLocale?: LocaleCode;
   authenticated?: boolean;
+  guestMode?: boolean;
   signInPath?: string;
 } = {}) {
   const [active, setActive] = useState<WorkspaceView>("Analyze");
@@ -2600,6 +2603,7 @@ export default function Home({
   const detail = detailFor(locale);
   const accountLabels = accountCopyFor(locale);
   const accountIntro = accountIntroCopyFor(locale);
+  const guestAccess = guestAccessCopyFor(locale);
   const openSourceLabel = openSourceLabelFor(locale);
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
@@ -2692,14 +2696,14 @@ export default function Home({
         const detectedLocale = preferredLocale(navigator.languages);
         if (detectedLocale !== "en") setSuggestedLocale(detectedLocale);
       }
-      if (savedTracker) {
+      if (savedTracker && !guestMode) {
         try {
           setTracker(JSON.parse(savedTracker));
         } catch {
           setTracker([]);
         }
       }
-      if (savedRadarSettings) {
+      if (savedRadarSettings && !guestMode) {
         try {
           const settings = JSON.parse(savedRadarSettings) as {
             threshold?: number;
@@ -2720,14 +2724,14 @@ export default function Home({
           window.localStorage.removeItem("aptograph-story-radar-settings");
         }
       }
-      if (savedRadarAlerts) {
+      if (savedRadarAlerts && !guestMode) {
         try {
           setRadarAlerts(JSON.parse(savedRadarAlerts));
         } catch {
           window.localStorage.removeItem("aptograph-story-radar-alerts");
         }
       }
-      if (savedInterview) {
+      if (savedInterview && !guestMode) {
         try {
           const session = JSON.parse(savedInterview) as {
             version?: number;
@@ -2814,7 +2818,7 @@ export default function Home({
           window.localStorage.removeItem("aptograph-interview-session");
         }
       }
-      if (savedModelSettings) {
+      if (savedModelSettings && !guestMode) {
         try {
           const settings = JSON.parse(savedModelSettings) as {
             provider?: string;
@@ -2835,7 +2839,7 @@ export default function Home({
       preferencesLoaded.current = true;
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [initialLocale]);
+  }, [guestMode, initialLocale]);
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
@@ -2863,7 +2867,7 @@ export default function Home({
   }, [locale]);
 
   useEffect(() => {
-    if (!preferencesLoaded.current) return;
+    if (!preferencesLoaded.current || guestMode) return;
     window.localStorage.setItem(
       "aptograph-story-radar-settings",
       JSON.stringify({
@@ -2872,10 +2876,10 @@ export default function Home({
         browserAlerts,
       }),
     );
-  }, [autoTrackRadar, browserAlerts, radarThreshold]);
+  }, [autoTrackRadar, browserAlerts, guestMode, radarThreshold]);
 
   useEffect(() => {
-    if (!preferencesLoaded.current) return;
+    if (!preferencesLoaded.current || guestMode) return;
     window.localStorage.setItem(
       "aptograph-interview-session",
       JSON.stringify({
@@ -2909,6 +2913,7 @@ export default function Home({
     interviewScoreHistory,
     interviewTopicIndex,
     interviewTurn,
+    guestMode,
     locale,
     realisticReviewOpen,
     activeOpenQuestionId,
@@ -2916,12 +2921,12 @@ export default function Home({
   ]);
 
   useEffect(() => {
-    if (!preferencesLoaded.current) return;
+    if (!preferencesLoaded.current || guestMode) return;
     window.localStorage.setItem(
       "aptograph-model-settings",
       JSON.stringify({ provider, endpoint: modelEndpoint, model: modelName }),
     );
-  }, [modelEndpoint, modelName, provider]);
+  }, [guestMode, modelEndpoint, modelName, provider]);
 
   useEffect(
     () => () => {
@@ -2981,7 +2986,7 @@ export default function Home({
     nextView: WorkspaceView,
     nextMode?: ApplicationMode,
   ) {
-    if (!authenticated) {
+    if (!authenticated && !guestMode) {
       window.location.assign(
         signInPath || localizedPath(locale, "account"),
       );
@@ -3468,15 +3473,17 @@ export default function Home({
   }
   function persistTracker(next: TrackerItem[]) {
     setTracker(next);
-    window.localStorage.setItem("aptograph-tracker", JSON.stringify(next));
+    if (!guestMode)
+      window.localStorage.setItem("aptograph-tracker", JSON.stringify(next));
     recordActivity("tracker_updated");
   }
   function persistRadarAlerts(next: RadarAlert[]) {
     setRadarAlerts(next);
-    window.localStorage.setItem(
-      "aptograph-story-radar-alerts",
-      JSON.stringify(next),
-    );
+    if (!guestMode)
+      window.localStorage.setItem(
+        "aptograph-story-radar-alerts",
+        JSON.stringify(next),
+      );
   }
   function saveJob(job: RankedJob, source: TrackerItem["source"] = "Saved") {
     if (!tracker.some((item) => item.id === job.id))
@@ -4772,7 +4779,15 @@ export default function Home({
         </div>
       )}
 
-      {authenticated ? (
+      {authenticated || guestMode ? (
+      <>
+      {guestMode && (
+        <aside className="guest-mode-notice" role="status">
+          <strong>{guestAccess.cta}</strong>
+          <span>{guestAccess.notice}</span>
+          <a href={localizedPath(locale, "account")}>{accountLabels.signIn}</a>
+        </aside>
+      )}
       <section className="workspace" id="workspace">
         <aside className="workspace-nav">
           <p className="workspace-label">{detail.workspace}</p>
@@ -7352,6 +7367,7 @@ export default function Home({
           </footer>
         </div>
       </section>
+      </>
       ) : (
         <section className="workspace-login-gate" id="workspace">
           <div>

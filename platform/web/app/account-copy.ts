@@ -1,4 +1,5 @@
 import type { LocaleCode } from "./i18n";
+import { guestAccessCopyFor } from "./guest-copy.ts";
 
 export type AccountCopy = {
   account: string;
@@ -99,49 +100,6 @@ const accountIntroTitle = {
   sl: "Pripravo na razgovor imejte na enem mestu.",
   sw: "Weka maandalizi yako ya usaili mahali pamoja.",
   fa: "آمادگی مصاحبه را در یک جا نگه دارید.",
-} satisfies Record<LocaleCode, string>;
-
-const requiredLoginNotice = {
-  en: "Sign in is required to use personal tools and save your evidence map, interview stories, practice progress, tracker, and feedback.",
-  ja: "個人向け機能を利用し、証拠マップ、面接ストーリー、練習の進捗、トラッカー、フィードバックを保存するには、サインインが必要です。",
-  ko: "개인 기능을 사용하고 증거 맵, 면접 스토리, 연습 진행 상황, 트래커, 피드백을 저장하려면 로그인이 필요합니다.",
-  "zh-CN": "使用个人功能以及保存证据地图、面试故事、练习进度、追踪记录和反馈前，必须先登录。",
-  "zh-TW": "使用個人功能，以及保存證據地圖、面試故事、練習進度、追蹤紀錄與意見回饋前，必須先登入。",
-  es: "Debes iniciar sesión para usar las herramientas personales y guardar tu mapa de evidencias, historias, progreso, seguimiento y comentarios.",
-  fr: "La connexion est obligatoire pour utiliser les outils personnels et enregistrer votre carte de preuves, vos récits, vos progrès, votre suivi et vos avis.",
-  de: "Du musst dich anmelden, um persönliche Werkzeuge zu nutzen und Evidenzkarte, Interviewgeschichten, Übungsfortschritt, Tracker und Feedback zu speichern.",
-  "pt-BR": "É necessário entrar para usar as ferramentas pessoais e salvar seu mapa de evidências, histórias, progresso, rastreador e feedback.",
-  it: "Devi accedere per usare gli strumenti personali e salvare la mappa delle prove, le storie, i progressi, il tracker e il feedback.",
-  nl: "Je moet inloggen om persoonlijke hulpmiddelen te gebruiken en je bewijskaart, verhalen, oefenvoortgang, tracker en feedback op te slaan.",
-  pl: "Logowanie jest wymagane, aby korzystać z narzędzi osobistych i zapisywać mapę dowodów, historie, postępy, tracker oraz opinie.",
-  tr: "Kişisel araçları kullanmak ve kanıt haritanı, hikâyelerini, ilerlemeni, takip kayıtlarını ve geri bildirimini kaydetmek için giriş yapmalısın.",
-  ru: "Вход обязателен для личных инструментов и сохранения карты доказательств, историй, прогресса, трекера и отзывов.",
-  uk: "Вхід обов’язковий для особистих інструментів і збереження карти доказів, історій, прогресу, трекера та відгуків.",
-  ar: "يلزم تسجيل الدخول لاستخدام الأدوات الشخصية وحفظ خريطة الأدلة وقصص المقابلة وتقدم التدريب والمتابعة والملاحظات.",
-  he: "יש להתחבר כדי להשתמש בכלים האישיים ולשמור את מפת הראיות, סיפורי הראיון, ההתקדמות, המעקב והמשוב.",
-  hi: "व्यक्तिगत टूल इस्तेमाल करने और अपना एविडेंस मैप, इंटरव्यू कहानियाँ, अभ्यास प्रगति, ट्रैकर और प्रतिक्रिया सेव करने के लिए साइन इन करना आवश्यक है।",
-  bn: "ব্যক্তিগত টুল ব্যবহার এবং প্রমাণের মানচিত্র, সাক্ষাৎকারের গল্প, অনুশীলনের অগ্রগতি, ট্র্যাকার ও মতামত সংরক্ষণ করতে সাইন ইন করা আবশ্যক।",
-  ur: "ذاتی ٹولز استعمال کرنے اور ثبوتی نقشہ، انٹرویو کہانیاں، مشق کی پیش رفت، ٹریکر اور رائے محفوظ کرنے کے لیے سائن ان ضروری ہے۔",
-  id: "Anda harus masuk untuk menggunakan alat pribadi dan menyimpan peta bukti, cerita wawancara, progres latihan, pelacak, serta umpan balik.",
-  ms: "Anda mesti log masuk untuk menggunakan alat peribadi dan menyimpan peta bukti, cerita temu duga, kemajuan latihan, penjejak serta maklum balas.",
-  th: "ต้องลงชื่อเข้าใช้เพื่อใช้เครื่องมือส่วนบุคคลและบันทึกแผนที่หลักฐาน เรื่องราวสัมภาษณ์ ความคืบหน้า ตัวติดตาม และข้อเสนอแนะ",
-  vi: "Bạn phải đăng nhập để dùng các công cụ cá nhân và lưu bản đồ bằng chứng, câu chuyện phỏng vấn, tiến độ luyện tập, theo dõi và phản hồi.",
-  fil: "Kailangang mag-sign in para magamit ang mga personal na tool at ma-save ang evidence map, mga kuwento, progreso, tracker, at feedback.",
-  sv: "Du måste logga in för att använda personliga verktyg och spara din beviskarta, dina berättelser, framsteg, spårning och feedback.",
-  no: "Du må logge inn for å bruke personlige verktøy og lagre beviskartet, historiene, fremdriften, sporingen og tilbakemeldingene.",
-  da: "Du skal logge ind for at bruge personlige værktøjer og gemme dit evidenskort, historier, fremskridt, tracker og feedback.",
-  fi: "Sinun on kirjauduttava käyttääksesi henkilökohtaisia työkaluja ja tallentaaksesi näyttökartan, tarinat, edistymisen, seurannan ja palautteen.",
-  cs: "Pro používání osobních nástrojů a ukládání mapy důkazů, příběhů, pokroku, sledování a zpětné vazby je nutné se přihlásit.",
-  sk: "Na používanie osobných nástrojov a uloženie mapy dôkazov, príbehov, pokroku, sledovania a spätnej väzby sa musíte prihlásiť.",
-  hu: "A személyes eszközök használatához, valamint a bizonyítéktérkép, történetek, haladás, követés és visszajelzés mentéséhez be kell jelentkezned.",
-  ro: "Trebuie să te conectezi pentru a folosi instrumentele personale și a salva harta dovezilor, poveștile, progresul, urmărirea și feedbackul.",
-  el: "Απαιτείται σύνδεση για τη χρήση προσωπικών εργαλείων και την αποθήκευση του χάρτη τεκμηρίων, των ιστοριών, της προόδου, της παρακολούθησης και των σχολίων.",
-  bg: "Трябва да влезете, за да използвате личните инструменти и да запазвате картата на доказателствата, историите, напредъка, проследяването и обратната връзка.",
-  hr: "Morate se prijaviti za korištenje osobnih alata i spremanje karte dokaza, priča, napretka, praćenja i povratnih informacija.",
-  sr: "Морате се пријавити да бисте користили личне алате и сачували мапу доказа, приче, напредак, праћење и повратне информације.",
-  sl: "Za uporabo osebnih orodij ter shranjevanje zemljevida dokazov, zgodb, napredka, sledenja in povratnih informacij se morate prijaviti.",
-  sw: "Lazima uingie ili kutumia zana binafsi na kuhifadhi ramani ya ushahidi, hadithi, maendeleo, ufuatiliaji na maoni.",
-  fa: "برای استفاده از ابزارهای شخصی و ذخیره نقشه شواهد، داستان‌ها، پیشرفت تمرین، پیگیری و بازخورد باید وارد شوید.",
 } satisfies Record<LocaleCode, string>;
 
 const privateActivityNotice = {
@@ -257,7 +215,7 @@ export function accountCopyFor(locale: LocaleCode): AccountCopy {
 export function accountIntroCopyFor(locale: LocaleCode): AccountIntroCopy {
   return {
     title: accountIntroTitle[locale],
-    description: requiredLoginNotice[locale],
+    description: guestAccessCopyFor(locale).notice,
     accessCta: accountCopy[locale].signIn,
   };
 }

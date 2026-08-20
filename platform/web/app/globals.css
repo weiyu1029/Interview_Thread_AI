@@ -1422,6 +1422,36 @@ h1 {
 .workspace-login-gate aside span {
   display: block;
 }
+.guest-mode-notice {
+  max-width: 1240px;
+  margin: 0 auto 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #c7d3db;
+  border-radius: 12px;
+  background: #eef3f5;
+  color: var(--accent-deep);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.guest-mode-notice strong {
+  flex: 0 0 auto;
+}
+.guest-mode-notice span {
+  color: var(--muted);
+}
+.guest-mode-notice a {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--accent-deep);
+  font-weight: 760;
+}
+[dir="rtl"] .guest-mode-notice a {
+  margin-right: auto;
+  margin-left: 0;
+}
 .workspace-login-gate aside strong {
   font-size: 20px;
 }
@@ -5136,6 +5166,26 @@ input:focus {
   display: grid;
   gap: 10px;
 }
+.account-access-options {
+  display: grid;
+  gap: 16px;
+}
+.guest-access-option {
+  padding-top: 16px;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+}
+.guest-access-option p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.guest-access-option .button {
+  width: 100%;
+  min-height: 48px;
+}
 .oauth-provider-button {
   min-height: 52px;
   padding: 9px 14px;
@@ -5489,6 +5539,17 @@ input:focus {
   }
   .workspace-login-gate h2 {
     font-size: 34px;
+  }
+  .guest-mode-notice {
+    margin: 0 12px 12px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .guest-mode-notice span {
+    width: 100%;
+  }
+  .guest-mode-notice a {
+    margin-left: 0;
   }
   .account-saved-work > div {
     align-items: flex-start;

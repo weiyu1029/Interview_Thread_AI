@@ -17,6 +17,7 @@ import {
   openSourceLabelFor,
 } from "../app/account-copy.ts";
 import { authCopyFor } from "../app/auth-copy.ts";
+import { guestAccessCopyFor } from "../app/guest-copy.ts";
 import {
   INFORMATION_PAGE_KEYS,
   informationLabelsFor,
@@ -191,15 +192,23 @@ test("localizes information navigation for all supported languages", () => {
   }
 });
 
-test("keeps marketing public while requiring sign-in for every personal workflow", async () => {
+test("keeps marketing public while supporting signed-in and explicit guest workflows", async () => {
   const publicResponse = await render("/en");
   assert.equal(publicResponse.status, 200);
   const publicHtml = await publicResponse.text();
   assert.match(publicHtml, /workspace-login-gate/);
-  assert.match(publicHtml, /Sign in is required to use personal tools/i);
+  assert.match(publicHtml, /Guest mode: your interview history and practice progress will not be saved/i);
   assert.match(publicHtml, /\/en\/account\?return_to=/);
   assert.doesNotMatch(publicHtml, /\/signin-with-chatgpt\?return_to=/);
   assert.doesNotMatch(publicHtml, /class="workspace"/);
+
+  const guestResponse = await render("/en?guest=1");
+  assert.equal(guestResponse.status, 200);
+  const guestHtml = await guestResponse.text();
+  assert.match(guestHtml, /class="guest-mode-notice"/);
+  assert.match(guestHtml, /class="workspace"/);
+  assert.match(guestHtml, /Continue without signing in/);
+  assert.doesNotMatch(guestHtml, /workspace-login-gate/);
 
   const privateResponse = await render("/en", true);
   assert.equal(privateResponse.status, 200);
@@ -666,7 +675,7 @@ test("renders a localized registration page for free open-source access", async 
     assert.match(html, /\/api\/auth\/start\/github\?return_to=/, path);
     assert.match(html, /\/api\/auth\/start\/linkedin\?return_to=/, path);
     assert.doesNotMatch(html, /\/signin-with-chatgpt\?return_to=/, path);
-    assert.doesNotMatch(html, /Try it without signing in|不登入，直接試用|サインインせずに試す/, path);
+    assert.match(html, /Continue without signing in|不登入，直接使用|サインインせずに続ける/, path);
     assert.match(html, /name="robots" content="noindex, nofollow"/, path);
     assert.doesNotMatch(html, /account-steps|account-plan-grid|account-plans/, path);
     assert.doesNotMatch(html, /type="password"|card number|A-number|US\$|>Pro<|>Team</i, path);
@@ -694,11 +703,13 @@ test("provides complete account safety copy in every supported language", () => 
     assert.ok(accountIntroCopyFor(locale).title, locale);
     assert.ok(accountIntroCopyFor(locale).description, locale);
     assert.ok(accountIntroCopyFor(locale).accessCta, locale);
+    assert.ok(guestAccessCopyFor(locale).cta, locale);
+    assert.ok(guestAccessCopyFor(locale).notice, locale);
     assert.ok(openSourceLabelFor(locale), locale);
   }
-  assert.match(accountIntroCopyFor("en").description, /Sign in is required/i);
-  assert.match(accountIntroCopyFor("zh-TW").description, /必須先登入/);
-  assert.match(accountIntroCopyFor("ja").description, /サインインが必要/);
+  assert.match(accountIntroCopyFor("en").description, /will not be saved/i);
+  assert.match(accountIntroCopyFor("zh-TW").description, /不會儲存/);
+  assert.match(accountIntroCopyFor("ja").description, /保存されません/);
 });
 
 test("provides a complete, product-specific FAQ in every supported language", () => {
