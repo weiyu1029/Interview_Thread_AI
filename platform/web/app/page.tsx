@@ -26,6 +26,7 @@ import {
   openSourceLabelFor,
 } from "./account-copy";
 import { guestAccessCopyFor } from "./guest-copy";
+import { homepageCopyFor } from "./homepage-copy";
 import { BrandMark } from "./BrandMark";
 import { faqCopyFor, optionalCareerSourceCopyFor } from "./faq-copy";
 import { MobileNav } from "./MobileNav";
@@ -2479,6 +2480,19 @@ function localizedInterviewStageLabel(
   return roleLabels.join(" · ");
 }
 
+function preventOrphanedFinalWord(text: string) {
+  const words = text.trim().split(/\s+/u);
+  if (words.length < 3) return text;
+  return `${words.slice(0, -2).join(" ")} ${words.slice(-2).join("\u00a0")}`;
+}
+
+function headlineDensity(text: string) {
+  const length = Array.from(text).length;
+  if (length > 64) return "long";
+  if (length > 42) return "medium";
+  return "short";
+}
+
 export default function Home({
   initialLocale,
   authenticated = false,
@@ -2600,6 +2614,7 @@ export default function Home({
   const [suggestedLocale, setSuggestedLocale] =
     useState<LocaleCode | null>(null);
   const copy = copyFor(locale);
+  const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
   const accountLabels = accountCopyFor(locale);
   const accountIntro = accountIntroCopyFor(locale);
@@ -4267,12 +4282,8 @@ export default function Home({
     locale === "en"
       ? "End interview and review"
       : `${interviewFlow.stages[4]} · ${interview.scoreTitle}`;
-  const landingTitle =
-    locale === "en"
-      ? "Ace the interview for the job you want."
-      : copy.heroTitle;
-  const landingPrimaryCta =
-    locale === "en" ? "Start my mock interview" : detail.runMatch;
+  const landingTitle = homepage.heroTitle;
+  const landingPrimaryCta = homepage.primaryCta;
   const landingSecondaryCta = walkthroughLabelFor(locale);
   const walkthroughCues = useMemo(
     () => walkthroughCuesFor(walkthroughLanguage),
@@ -4323,20 +4334,7 @@ export default function Home({
         ? "Show this example"
         : "Create my interview plan"
       : landingPrimaryCta;
-  const proofPackFlow =
-    locale === "en"
-      ? [
-          "Upload your resume",
-          "Add the job post",
-          "Get your interview plan",
-          "Practice with AI",
-        ]
-      : [
-          `${detail.resumeEvidence} + ${detail.jobDescription}`,
-          detail.matrix,
-          `3 · ${detail.bestStory}`,
-          copy.interview,
-        ];
+  const proofPackFlow = homepage.steps;
   const strongestProofs = matches
     .filter(
       (item) =>
@@ -4450,7 +4448,7 @@ export default function Home({
   }).replace(/</g, "\\u003c");
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-locale={locale}>
       <header className="topbar">
         <a className="brand" href="#top" aria-label={`InterviewThread · ${detail.product}`}>
           <BrandMark />
@@ -4535,7 +4533,7 @@ export default function Home({
             <b>
               {copyFor(suggestedLocale).language}: {suggestedLanguageName}?
             </b>
-            <p>{copyFor(suggestedLocale).heroTitle}</p>
+            <p>{homepageCopyFor(suggestedLocale).heroTitle}</p>
           </div>
           <button
             className="button primary"
@@ -4565,9 +4563,14 @@ export default function Home({
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">
-            {locale === "en" ? "AI mock interview practice" : detail.evidenceWorkspace}
+            {homepage.eyebrow}
           </p>
-          <h1>{landingTitle}</h1>
+          <h1
+            className={`hero-title hero-title--${headlineDensity(landingTitle)}`}
+            aria-label={landingTitle}
+          >
+            {preventOrphanedFinalWord(landingTitle)}
+          </h1>
           <div className="hero-actions">
             <a
               className="button primary hero-primary-action"
@@ -4577,7 +4580,7 @@ export default function Home({
                 openWorkspace("Analyze");
               }}
             >
-              {landingPrimaryCta}
+              {preventOrphanedFinalWord(landingPrimaryCta)}
             </a>
             <button
               className="button secondary"
@@ -4596,20 +4599,14 @@ export default function Home({
             {proofPackFlow.map((item, index) => (
               <li key={item}>
                 <span>{index + 1}</span>
-                <b>{item}</b>
+                <b>{preventOrphanedFinalWord(item)}</b>
               </li>
             ))}
           </ol>
           <div className="trust-row">
-            <span>
-              {locale === "en"
-                ? "Every suggestion links back to your evidence"
-                : detail.evidenceLinked}
-            </span>
-            <span>{detail.privateTitle}</span>
-            <span>
-              {locale === "en" ? "No invented achievements" : detail.matchedEvidence}
-            </span>
+            {homepage.trust.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
           </div>
         </div>
       </section>

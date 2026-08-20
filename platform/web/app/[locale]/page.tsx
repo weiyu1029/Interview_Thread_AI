@@ -4,11 +4,11 @@ import Home from "../page";
 import { getAppUser } from "../auth";
 import { accountSignInPath } from "../auth-paths";
 import {
-  copyFor,
   LANGUAGES,
   localeFromPath,
   RTL_LOCALES,
 } from "../i18n";
+import { homepageCopyFor } from "../homepage-copy";
 import {
   languageAlternates,
   localeOpenGraph,
@@ -32,15 +32,12 @@ export async function generateMetadata({
   const { locale: pathLocale } = await params;
   const locale = localeFromPath(pathLocale);
   if (!locale) return {};
-  const copy = copyFor(locale);
+  const homepage = homepageCopyFor(locale);
   const title =
     locale === "en"
       ? "InterviewThread — AI mock interview preparation"
-      : `InterviewThread — ${copy.heroTitle}`;
-  const description =
-    locale === "en"
-      ? "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence."
-      : copy.heroBody;
+      : `InterviewThread — ${homepage.heroTitle}`;
+  const description = homepage.description;
   const path = localizedPath(locale);
   return {
     title: { absolute: title },
@@ -85,15 +82,12 @@ export default async function LocalizedHome({ params, searchParams }: LocalizedH
   ]);
   const locale = localeFromPath(pathLocale);
   if (!locale) notFound();
-  const copy = copyFor(locale);
+  const homepage = homepageCopyFor(locale);
   const pageTitle =
     locale === "en"
       ? "InterviewThread — AI mock interview preparation"
-      : `InterviewThread — ${copy.heroTitle}`;
-  const pageDescription =
-    locale === "en"
-      ? "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence."
-      : copy.heroBody;
+      : `InterviewThread — ${homepage.heroTitle}`;
+  const pageDescription = homepage.description;
   const pageUrl = localizedPath(locale);
   const structuredData = {
     "@context": "https://schema.org",

@@ -1,3 +1,5 @@
+import { homepageCopyFor } from "./homepage-copy.ts";
+
 export const LANGUAGES = [
   ["en", "English"],
   ["ja", "日本語"],
@@ -962,7 +964,13 @@ const translations: Record<LocaleCode, Partial<CoreCopy>> = {
 export const RTL_LOCALES = new Set<LocaleCode>(["ar", "he", "ur", "fa"]);
 
 export function copyFor(locale: LocaleCode): CoreCopy {
-  return { ...en, ...translations[locale] };
+  const homepage = homepageCopyFor(locale);
+  return {
+    ...en,
+    ...translations[locale],
+    heroTitle: homepage.heroTitle,
+    heroBody: homepage.description,
+  };
 }
 
 export type DetailCopy = {

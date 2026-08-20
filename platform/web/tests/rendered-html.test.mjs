@@ -18,6 +18,7 @@ import {
 } from "../app/account-copy.ts";
 import { authCopyFor } from "../app/auth-copy.ts";
 import { guestAccessCopyFor } from "../app/guest-copy.ts";
+import { homepageCopyFor } from "../app/homepage-copy.ts";
 import {
   INFORMATION_PAGE_KEYS,
   informationLabelsFor,
@@ -70,7 +71,7 @@ test("server-renders the InterviewThread product experience", async () => {
   assert.match(html, /InterviewThread/);
   assert.match(
     html,
-    /Ace the interview for the job you want\./i,
+    /Ace the interview for the job(?: |&nbsp;|\u00a0)you want\./i,
   );
   assert.match(html, /Start my mock interview/i);
   assert.doesNotMatch(html, /Free AI mock interview practice/i);
@@ -396,7 +397,13 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(progressLabelCss, /overflow-wrap:\s*anywhere/);
   assert.doesNotMatch(progressLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(journeyLabelCss, /white-space:\s*normal/);
+  assert.match(journeyLabelCss, /overflow-wrap:\s*normal/);
+  assert.match(journeyLabelCss, /text-wrap:\s*balance/);
   assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
+  assert.match(globals, /\.hero-title--long/);
+  assert.match(globals, /\[lang="ko"\] \.hero-title/);
+  assert.match(globals, /\.journey-strip\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
+  assert.doesNotMatch(globals, /h1,\s*\n\s*h2,\s*\n\s*h3\s*\{\s*overflow-wrap:\s*anywhere/);
   assert.match(page, /What you can prove/);
   assert.match(page, /What is missing/);
   assert.match(page, /Stories to practice/);
@@ -775,17 +782,25 @@ test("search pages emit route-specific metadata without the homepage social card
 test("server-renders all 40 indexable language home pages", async () => {
   assert.equal(LANGUAGES.length, 40);
   for (const [locale] of LANGUAGES) {
+    const homepage = homepageCopyFor(locale);
+    assert.equal(homepage.steps.length, 4, `${locale}: journey length`);
+    for (const [field, value] of Object.entries(homepage)) {
+      if (Array.isArray(value)) {
+        assert.ok(value.every((item) => item.trim().length > 2), `${locale}: ${field}`);
+      } else {
+        assert.ok(value.trim().length > 2, `${locale}: ${field}`);
+      }
+    }
     const response = await render(`/${localeToPath(locale)}`, true);
     assert.equal(response.status, 200, locale);
     const html = await response.text();
-    assert.ok(
-      html.includes(
-        locale === "en"
-          ? "Ace the interview for the job you want."
-          : copyFor(locale).heroTitle,
-      ),
-      locale,
-    );
+    assert.ok(html.includes(homepage.heroTitle), `${locale}: localized title`);
+    assert.ok(html.includes(homepage.description), `${locale}: metadata description`);
+    assert.ok(html.includes(homepage.eyebrow), `${locale}: localized eyebrow`);
+    for (const step of homepage.steps) {
+      const firstWord = step.trim().split(/\s+/u)[0];
+      assert.ok(html.includes(firstWord), `${locale}: ${step}`);
+    }
     assert.ok(html.includes(`lang="${locale}"`), locale);
     assert.ok(html.includes(copyFor(locale).interview), `${locale}: interview label`);
   }
