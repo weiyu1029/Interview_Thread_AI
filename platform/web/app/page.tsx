@@ -19,6 +19,7 @@ import {
 } from "./i18n";
 import { accountCopyFor, openSourceLabelFor } from "./account-copy";
 import { BrandMark } from "./BrandMark";
+import { faqCopyFor } from "./faq-copy";
 import { MobileNav } from "./MobileNav";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
@@ -1159,6 +1160,7 @@ export default function Home({
   const accountLabels = accountCopyFor(locale);
   const openSourceLabel = openSourceLabelFor(locale);
   const interview = interviewCopyFor(locale);
+  const faq = faqCopyFor(locale);
   const selectedProvider =
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
   const preferencesLoaded = useRef(false);
@@ -2373,6 +2375,18 @@ export default function Home({
       label: locale === "en" ? "Gap review and final notes" : detail.evidenceCoverage,
     },
   ];
+  const faqSchema = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  }).replace(/</g, "\\u003c");
 
   return (
     <main className="app-shell">
@@ -2396,6 +2410,7 @@ export default function Home({
           >
             {locale === "en" ? "Interview Proof Pack" : detail.workspace}
           </a>
+          <a href="#questions">{faq.eyebrow}</a>
           <a href="#plans">{openSourceLabel}</a>
         </nav>
         <label className="locale-control">
@@ -2431,6 +2446,7 @@ export default function Home({
                 locale === "en" ? "Interview Proof Pack" : detail.workspace,
               href: `${localizedPath(locale)}?view=Analyze#workspace`,
             },
+            { label: faq.eyebrow, href: "#questions" },
             { label: openSourceLabel, href: "#plans" },
             {
               label: accountLabels.account,
@@ -4323,6 +4339,33 @@ export default function Home({
             </p>
           </article>
         </div>
+      </section>
+      <section className="home-faq" id="questions" aria-labelledby="faq-title">
+        <div className="home-faq-grid">
+          <div className="home-faq-heading">
+            <p className="eyebrow">{faq.eyebrow}</p>
+            <h2 id="faq-title">{faq.title}</h2>
+            <p>{faq.intro}</p>
+          </div>
+          <div className="home-faq-list">
+            {faq.items.map((item, index) => (
+              <details key={item.question} open={index === 0}>
+                <summary>
+                  <span className="home-faq-index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span>{item.question}</span>
+                  <span className="home-faq-toggle" aria-hidden="true" />
+                </summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: faqSchema }}
+        />
       </section>
       <section className="plans" id="plans">
         <div className="plans-heading">

@@ -6,6 +6,7 @@ import {
   LANGUAGES,
   localeToPath,
 } from "../app/i18n.ts";
+import { faqCopyFor } from "../app/faq-copy.ts";
 import {
   accountCopyFor,
   accountIntroCopyFor,
@@ -50,6 +51,11 @@ test("server-renders the CareerStoryMap product experience", async () => {
   assert.match(html, /Interview Proof Pack/i);
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
+  assert.match(html, /Clear answers before you build your proof pack/i);
+  assert.match(html, /Will CareerStoryMap invent achievements for me/i);
+  assert.match(html, /FAQPage/);
+  assert.match(html, /home-faq-list/);
+  assert.match(html, /href="#questions"/);
   assert.match(html, /Market Insights/i);
   assert.match(html, /All features are free and open source/i);
   assert.doesNotMatch(html, /US\$|>Pro<|>Team<|>Enterprise</i);
@@ -232,6 +238,22 @@ test("provides complete account safety copy in every supported language", () => 
     assert.ok(accountIntroCopyFor(locale).description, locale);
     assert.ok(accountIntroCopyFor(locale).skipSignIn, locale);
     assert.ok(openSourceLabelFor(locale), locale);
+  }
+});
+
+test("provides a complete, product-specific FAQ in every supported language", () => {
+  for (const [locale] of LANGUAGES) {
+    const faq = faqCopyFor(locale);
+    assert.ok(faq.eyebrow, locale);
+    assert.ok(faq.title, locale);
+    assert.ok(faq.intro, locale);
+    assert.equal(faq.items.length, 7, locale);
+    for (const item of faq.items) {
+      assert.ok(item.question, locale);
+      assert.ok(item.answer, locale);
+      assert.doesNotMatch(item.question, /JobOps/i, locale);
+      assert.doesNotMatch(item.answer, /JobOps/i, locale);
+    }
   }
 });
 
