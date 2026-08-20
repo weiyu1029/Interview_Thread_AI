@@ -476,6 +476,10 @@
   .seo-workflow-nav a {
     min-width: 0;
     padding: 7px 9px;
+    gap: 7px;
+    font-size: 13px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
   }
   .seo-hero {
     padding-top: 58px;
@@ -984,6 +988,9 @@ h1 {
   align-items: center;
   gap: 10px;
   justify-content: center;
+}
+.hero .hero-actions {
+  margin-top: clamp(30px, 3.2vw, 38px);
 }
 .hero-primary-action {
   min-width: 180px;
@@ -5709,6 +5716,9 @@ input:focus {
   .hero-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+  .hero .hero-actions {
+    margin-top: 28px;
   }
   .hero-actions .button {
     width: 100%;

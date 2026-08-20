@@ -402,6 +402,14 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(globals, /\.hero-title--long/);
   assert.match(globals, /\[lang="ko"\] \.hero-title/);
+  assert.match(
+    globals,
+    /\.hero \.hero-actions\s*\{[^}]*margin-top:\s*clamp\(30px,\s*3\.2vw,\s*38px\)/s,
+  );
+  assert.match(
+    globals,
+    /\.seo-workflow-nav a\s*\{[^}]*font-size:\s*13px;[^}]*overflow-wrap:\s*anywhere/s,
+  );
   assert.match(globals, /\.journey-strip\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
   assert.doesNotMatch(globals, /h1,\s*\n\s*h2,\s*\n\s*h3\s*\{\s*overflow-wrap:\s*anywhere/);
   assert.match(page, /What you can prove/);
