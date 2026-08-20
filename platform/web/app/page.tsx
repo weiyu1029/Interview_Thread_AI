@@ -31,9 +31,13 @@ import {
 } from "./market-localization";
 import {
   bestSpeechVoice,
+  INTERVIEW_DEPTH_COUNT,
   InterviewPersonaId,
+  interviewFlowCopyFor,
   localizedInterviewQuestion,
   localizedPersonaLabel,
+  pronunciationTextFor,
+  questionOnly,
   speechLocaleFor,
   speechRateFor,
 } from "./interview-speech";
@@ -933,9 +937,15 @@ function questionForInterview(
   turn: number,
   matches: Match[],
   locale: LocaleCode,
+  topicIndex = 0,
 ) {
-  const proof = firstEvidence(matches);
-  const gap = matches.find((item) => item.status === "Gap");
+  const proofs = matches.filter(
+    (item) =>
+      item.status !== "Gap" && item.evidence !== "No source evidence found.",
+  );
+  const gaps = matches.filter((item) => item.status === "Gap");
+  const proof = proofs[topicIndex % Math.max(1, proofs.length)] || firstEvidence(matches);
+  const gap = gaps[topicIndex % Math.max(1, gaps.length)];
   const proofLabel = proof?.keyword || "the most relevant achievement on your resume";
   const gapLabel = gap?.keyword || "an unfamiliar part of this role";
   if (locale !== "en")
@@ -943,40 +953,50 @@ function questionForInterview(
   const questions: Record<InterviewPersonaId, string[]> = {
     hr: [
       `Give me the two-minute version of your career story, and connect it directly to this role—not just your job titles.`,
+      `Which part of your ${proofLabel} example was directly yours, and where did your responsibility begin and end?`,
       `Why is this role the right next step for you, and what does your ${proofLabel} experience let you contribute immediately?`,
+      `Which outcome from that experience can a former colleague verify, and how did you measure it?`,
       `What should I understand about ${gapLabel}, and how would you address it without overstating your experience?`,
     ],
     "hiring-manager": [
       `Walk me through your strongest ${proofLabel} example. What problem did you own, what did you decide, and what changed?`,
+      `Which part of that result was directly yours, who else contributed, and where did your ownership end?`,
       `Which trade-off in that example was genuinely yours to make, and what evidence told you it was the right call?`,
+      `How did you measure the outcome, and which claim could a former colleague verify?`,
       `If you joined this team, how would you apply that proof to the priorities in this job description during your first 90 days?`,
     ],
     coo: [
       `Choose one example where your work improved an operating process. What was unreliable before, and how did the operating rhythm change?`,
+      `What did you personally own in that operating change, and which dependencies were controlled by other people?`,
       `What did the process depend on besides you, and how did you make the result repeatable across people or teams?`,
+      `Which operating metric moved, how was it measured, and what evidence would survive an audit?`,
       `Where could your approach fail at ten times the scale, and what control would you put in place first?`,
     ],
     ceo: [
       `In ninety seconds, tell me why your evidence makes you unusually useful for this role and this business.`,
+      `Which part of that value did you create personally, and which part came from the team or the market?`,
       `What business outcome did your strongest example influence, and why did that outcome matter beyond your immediate team?`,
+      `What is the most defensible number behind that outcome, and who could verify it?`,
       `What point of view would you bring here that is supported by experience rather than aspiration?`,
     ],
     peer: [
       `Tell me about a time you and a partner disagreed on how to solve a problem. What did you do, and what changed in the working relationship?`,
+      `What did you own in that collaboration, and what did your partner own?`,
       `Which part of that result belonged to someone else, and how did you make their contribution more effective?`,
+      `What observable result showed that the partnership improved rather than simply becoming more agreeable?`,
       `What feedback would that teammate give you about how you operate under pressure?`,
     ],
     case: [
       `Case: a key product metric fell 12% in two weeks after a release. Structure how you would diagnose the problem before proposing a fix.`,
+      `Which part of the diagnosis would you own directly, and what would you delegate to product, engineering, or analytics partners?`,
       `Assume the decline is concentrated among new users on mobile. Which hypotheses move to the top, and what evidence would separate them?`,
+      `Define the decision metric, the comparison you would trust, and the threshold that would change your recommendation.`,
       `You have one analyst and five working days. Prioritize the plan, name the trade-offs, and give me your executive recommendation.`,
     ],
   };
-  return questions[persona][Math.min(turn, questions[persona].length - 1)];
-}
-
-function questionOnly(content: string) {
-  return content.split(/\n\s*\n/).filter(Boolean).at(-1)?.trim() || content;
+  return questions[persona][
+    Math.min(Math.max(turn, 0), INTERVIEW_DEPTH_COUNT - 1)
+  ];
 }
 
 function appendTranscript(current: string, next: string, locale: LocaleCode) {
@@ -1141,6 +1161,9 @@ export default function Home({
   const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([]);
   const [interviewAnswer, setInterviewAnswer] = useState("");
   const [interviewTurn, setInterviewTurn] = useState(0);
+  const [interviewTopicIndex, setInterviewTopicIndex] = useState(0);
+  const [autoReadInterviewQuestions, setAutoReadInterviewQuestions] =
+    useState(false);
   const [interviewScores, setInterviewScores] =
     useState<InterviewScore | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -1160,6 +1183,7 @@ export default function Home({
   const accountLabels = accountCopyFor(locale);
   const openSourceLabel = openSourceLabelFor(locale);
   const interview = interviewCopyFor(locale);
+  const interviewFlow = interviewFlowCopyFor(locale);
   const faq = faqCopyFor(locale);
   const selectedProvider =
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
@@ -1169,6 +1193,7 @@ export default function Home({
     stop: () => void;
   } | null>(null);
   const keepListeningRef = useRef(false);
+  const interviewLocaleRef = useRef(locale);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -1257,10 +1282,13 @@ export default function Home({
       if (savedInterview) {
         try {
           const session = JSON.parse(savedInterview) as {
+            version?: number;
             persona?: InterviewPersonaId;
             mode?: InterviewMode;
             messages?: ChatMessage[];
             turn?: number;
+            topicIndex?: number;
+            autoRead?: boolean;
             scores?: InterviewScore | null;
             locale?: LocaleCode;
           };
@@ -1269,6 +1297,7 @@ export default function Home({
           if (session.mode === "Coaching" || session.mode === "Realistic")
             setInterviewMode(session.mode);
           if (
+            session.version === 2 &&
             session.locale ===
               (initialLocale ||
                 (savedLocale &&
@@ -1280,7 +1309,13 @@ export default function Home({
             setInterviewMessages(session.messages);
             if (Number.isInteger(session.turn))
               setInterviewTurn(session.turn || 0);
+            if (Number.isInteger(session.topicIndex))
+              setInterviewTopicIndex(Math.max(0, session.topicIndex || 0));
+            if (typeof session.autoRead === "boolean")
+              setAutoReadInterviewQuestions(session.autoRead);
             if (session.scores) setInterviewScores(session.scores);
+          } else {
+            window.localStorage.removeItem("aptograph-interview-session");
           }
         } catch {
           window.localStorage.removeItem("aptograph-interview-session");
@@ -1314,6 +1349,19 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (interviewLocaleRef.current !== locale) {
+      setInterviewMessages([]);
+      setInterviewAnswer("");
+      setInterviewTurn(0);
+      setInterviewTopicIndex(0);
+      setInterviewScores(null);
+      setVoiceInterim("");
+      setRecognitionConfidence(null);
+      setIsListening(false);
+      setIsSpeaking(false);
+      setVoiceMessage(interviewFlowCopyFor(locale).languageLocked);
+    }
+    interviewLocaleRef.current = locale;
     if (preferencesLoaded.current)
       window.localStorage.setItem("aptograph-locale", locale);
   }, [locale]);
@@ -1335,19 +1383,24 @@ export default function Home({
     window.localStorage.setItem(
       "aptograph-interview-session",
       JSON.stringify({
+        version: 2,
         persona: interviewPersona,
         mode: interviewMode,
         messages: interviewMessages.slice(-12),
         turn: interviewTurn,
+        topicIndex: interviewTopicIndex,
+        autoRead: autoReadInterviewQuestions,
         scores: interviewScores,
         locale,
       }),
     );
   }, [
+    autoReadInterviewQuestions,
     interviewMessages,
     interviewMode,
     interviewPersona,
     interviewScores,
+    interviewTopicIndex,
     interviewTurn,
     locale,
   ]);
@@ -1963,16 +2016,52 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    const opening = questionForInterview(interviewPersona, 0, matches, locale);
+    const opening = questionForInterview(interviewPersona, 0, matches, locale, 0);
     setInterviewMessages([{ role: "assistant", content: opening }]);
     setInterviewTurn(0);
+    setInterviewTopicIndex(0);
     setInterviewScores(null);
     setInterviewAnswer("");
-    setVoiceMessage("");
+    setVoiceMessage(interviewFlow.languageLocked);
     setVoiceInterim("");
     setRecognitionConfidence(null);
     setIsListening(false);
     setIsSpeaking(false);
+  }
+
+  function nextInterviewCoordinates(forceNewTopic = false) {
+    if (forceNewTopic || interviewTurn >= INTERVIEW_DEPTH_COUNT - 1)
+      return { turn: 0, topicIndex: interviewTopicIndex + 1 };
+    return { turn: interviewTurn + 1, topicIndex: interviewTopicIndex };
+  }
+
+  function addNextInterviewQuestion(forceNewTopic = false) {
+    if (!interviewMessages.length) {
+      startInterview();
+      return;
+    }
+    keepListeningRef.current = false;
+    speechRecognitionRef.current?.stop();
+    const next = nextInterviewCoordinates(forceNewTopic);
+    const nextQuestion = questionForInterview(
+      interviewPersona,
+      next.turn,
+      matches,
+      locale,
+      next.topicIndex,
+    );
+    setInterviewMessages((current) => [
+      ...current,
+      { role: "assistant", content: nextQuestion },
+    ]);
+    setInterviewTurn(next.turn);
+    setInterviewTopicIndex(next.topicIndex);
+    setInterviewAnswer("");
+    setVoiceInterim("");
+    setRecognitionConfidence(null);
+    setIsListening(false);
+    if (autoReadInterviewQuestions)
+      window.setTimeout(() => void speakInterviewQuestion(nextQuestion), 0);
   }
 
   function submitInterviewAnswer(event: FormEvent) {
@@ -1982,12 +2071,13 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     const scores = scoreInterviewAnswer(answer, matches);
-    const nextTurn = interviewTurn + 1;
+    const next = nextInterviewCoordinates();
     const nextQuestion = questionForInterview(
       interviewPersona,
-      nextTurn,
+      next.turn,
       matches,
       locale,
+      next.topicIndex,
     );
     const feedback = interviewFeedback(scores, interview, interviewMode);
     setInterviewMessages((current) => [
@@ -2002,31 +2092,25 @@ export default function Home({
       },
     ]);
     setInterviewScores(scores);
-    setInterviewTurn(nextTurn);
+    setInterviewTurn(next.turn);
+    setInterviewTopicIndex(next.topicIndex);
     setInterviewAnswer("");
     setVoiceMessage("");
     setVoiceInterim("");
     setRecognitionConfidence(null);
     setIsListening(false);
+    if (autoReadInterviewQuestions)
+      window.setTimeout(() => void speakInterviewQuestion(nextQuestion), 0);
   }
 
-  async function speakLatestInterviewQuestion() {
-    if (!("speechSynthesis" in window) || !interviewMessages.length) {
+  async function speakInterviewQuestion(content: string) {
+    if (!("speechSynthesis" in window)) {
       setVoiceMessage(interview.unavailable);
       return;
     }
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-    const latest = [...interviewMessages]
-      .reverse()
-      .find((message) => message.role === "assistant");
-    if (!latest) return;
     const speechLocale = speechLocaleFor(locale);
     const utterance = new SpeechSynthesisUtterance(
-      questionOnly(latest.content),
+      pronunciationTextFor(content, locale),
     );
     utterance.lang = speechLocale;
     utterance.rate = speechRateFor(
@@ -2046,8 +2130,24 @@ export default function Home({
     window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
     setVoiceMessage(
-      `${interview.speechLanguage}: ${speechLocale}${voice ? ` · ${voice.name}` : ""}`,
+      `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocale}${voice ? ` · ${voice.name}` : " · system voice"}`,
     );
+  }
+
+  async function speakLatestInterviewQuestion() {
+    if (!interviewMessages.length) {
+      setVoiceMessage(interview.unavailable);
+      return;
+    }
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    const latest = [...interviewMessages]
+      .reverse()
+      .find((message) => message.role === "assistant");
+    if (latest) await speakInterviewQuestion(questionOnly(latest.content));
   }
 
   function toggleInterviewListening() {
@@ -2288,8 +2388,19 @@ export default function Home({
       selectedInterviewPersonaBase.label,
     ),
   };
-  const interviewProof = firstEvidence(matches);
-  const interviewGap = matches.find((item) => item.status === "Gap");
+  const interviewProofs = matches.filter(
+    (item) =>
+      item.status !== "Gap" && item.evidence !== "No source evidence found.",
+  );
+  const interviewGaps = matches.filter((item) => item.status === "Gap");
+  const interviewProof =
+    interviewProofs[
+      interviewTopicIndex % Math.max(1, interviewProofs.length)
+    ] || firstEvidence(matches);
+  const interviewGap =
+    interviewGaps[
+      interviewTopicIndex % Math.max(1, interviewGaps.length)
+    ];
   const interviewAverage = interviewScores
     ? Math.round(
         (interviewScores.relevance +
@@ -3100,6 +3211,8 @@ export default function Home({
                         event.target.value as InterviewPersonaId,
                       );
                       setInterviewMessages([]);
+                      setInterviewTurn(0);
+                      setInterviewTopicIndex(0);
                       setInterviewScores(null);
                     }}
                   >
@@ -3195,6 +3308,53 @@ export default function Home({
                       {isSpeaking ? interview.mute : interview.speak}
                     </button>
                   </div>
+                  <div className="interview-progress-wrap">
+                    <div className="interview-progress-heading">
+                      <b>
+                        {interviewFlow.topic} {interviewTopicIndex + 1}
+                      </b>
+                      <span>
+                        {interviewFlow.step} {interviewTurn + 1} /{" "}
+                        {INTERVIEW_DEPTH_COUNT}
+                      </span>
+                    </div>
+                    <ol className="interview-progress" aria-label={interview.storySpine}>
+                      {interviewFlow.stages.map((stage, index) => (
+                        <li
+                          className={
+                            index === interviewTurn
+                              ? "current"
+                              : index < interviewTurn
+                                ? "complete"
+                                : ""
+                          }
+                          aria-current={index === interviewTurn ? "step" : undefined}
+                          key={stage}
+                        >
+                          <i>{index + 1}</i>
+                          <span>{stage}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="interview-question-controls">
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => addNextInterviewQuestion(false)}
+                        disabled={!interviewMessages.length}
+                      >
+                        {interviewFlow.nextQuestion}
+                      </button>
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => addNextInterviewQuestion(true)}
+                        disabled={!interviewMessages.length}
+                      >
+                        {interviewFlow.newTopic}
+                      </button>
+                    </div>
+                  </div>
                   <div className="interview-transcript" aria-live="polite">
                     {interviewMessages.length ? (
                       interviewMessages.map((message, index) => (
@@ -3205,7 +3365,7 @@ export default function Home({
                           <b>
                             {message.role === "assistant"
                               ? selectedInterviewPersona.label
-                              : "You"}
+                              : interviewFlow.you}
                           </b>
                           <p>{message.content}</p>
                         </div>
@@ -3270,8 +3430,18 @@ export default function Home({
                     </div>
                     <small className="voice-disclosure">
                       {voiceMessage ||
-                        `${interview.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
+                        `${interviewFlow.languageLocked} ${interview.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
                     </small>
+                    <label className="auto-read-toggle">
+                      <input
+                        type="checkbox"
+                        checked={autoReadInterviewQuestions}
+                        onChange={(event) =>
+                          setAutoReadInterviewQuestions(event.target.checked)
+                        }
+                      />
+                      <span>{interviewFlow.autoRead}</span>
+                    </label>
                   </form>
                 </section>
 

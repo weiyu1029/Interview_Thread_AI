@@ -18,6 +18,14 @@ import {
   regionLabelFor,
   timeRangeLabelFor,
 } from "../app/market-localization.ts";
+import {
+  INTERVIEW_DEPTH_COUNT,
+  interviewFlowCopyFor,
+  localizedInterviewQuestion,
+  pronunciationTextFor,
+  questionOnly,
+  speechLocaleFor,
+} from "../app/interview-speech.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -136,6 +144,11 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /event\.resultIndex/);
   assert.match(page, /bestSpeechVoice/);
   assert.match(page, /questionOnly/);
+  assert.match(page, /version: 2/);
+  assert.match(page, /interviewTopicIndex/);
+  assert.match(page, /addNextInterviewQuestion/);
+  assert.match(page, /autoReadInterviewQuestions/);
+  assert.match(page, /interview-progress/);
   assert.match(page, /keepListeningRef/);
   assert.match(page, /voice-live-transcript/);
   assert.match(page, /function openWorkspace/);
@@ -192,6 +205,46 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(mobileNav, /Escape/);
   for (const publicSurface of [layout, page, readme, strategy, brandGuide]) {
     assert.doesNotMatch(publicSurface, /CareerProof/);
+  }
+});
+
+test("keeps interview questions, speech, and progression locked to all 40 locales", () => {
+  assert.equal(INTERVIEW_DEPTH_COUNT, 5);
+  assert.match(
+    localizedInterviewQuestion("en", 0, "SQL", "experimentation"),
+    /Walk me through your strongest SQL example/i,
+  );
+  assert.match(
+    localizedInterviewQuestion("zh-TW", 0, "SQL", "實驗設計"),
+    /請用你最有力的「SQL」經驗/,
+  );
+  assert.match(
+    localizedInterviewQuestion("zh-TW", 4, "SQL", "實驗設計"),
+    /前九十天/,
+  );
+
+  const chineseQuestion =
+    "目前最強：證據 80/100。\n\n請用你最有力的「SQL」經驗帶我走過一次：你負責什麼問題、做了什麼關鍵判斷，最後帶來什麼改變？";
+  assert.match(questionOnly(chineseQuestion), /^請用你最有力/);
+  const spokenChinese = pronunciationTextFor(chineseQuestion, "zh-TW");
+  assert.match(spokenChinese, /^請用你最有力/);
+  assert.match(spokenChinese, /S Q L/);
+  assert.doesNotMatch(spokenChinese, /^S Q L$/);
+
+  for (const [locale] of LANGUAGES) {
+    assert.ok(speechLocaleFor(locale), locale);
+    const flow = interviewFlowCopyFor(locale);
+    assert.equal(flow.stages.length, INTERVIEW_DEPTH_COUNT, locale);
+    assert.ok(flow.nextQuestion, locale);
+    assert.ok(flow.newTopic, locale);
+    assert.ok(flow.autoRead, locale);
+    assert.ok(flow.languageLocked, locale);
+    for (let turn = 0; turn < INTERVIEW_DEPTH_COUNT; turn += 1) {
+      assert.ok(
+        localizedInterviewQuestion(locale, turn, "SQL", "experimentation"),
+        `${locale}:${turn}`,
+      );
+    }
   }
 });
 

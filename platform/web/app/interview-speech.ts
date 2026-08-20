@@ -1,4 +1,4 @@
-import { LocaleCode } from "./i18n";
+import type { LocaleCode } from "./i18n";
 
 export type InterviewPersonaId =
   | "hr"
@@ -7,6 +7,19 @@ export type InterviewPersonaId =
   | "ceo"
   | "peer"
   | "case";
+
+export const INTERVIEW_DEPTH_COUNT = 5;
+
+export type InterviewFlowCopy = {
+  stages: readonly [string, string, string, string, string];
+  nextQuestion: string;
+  newTopic: string;
+  topic: string;
+  step: string;
+  you: string;
+  autoRead: string;
+  languageLocked: string;
+};
 
 export const SPEECH_LOCALES: Record<LocaleCode, string> = {
   en: "en-US",
@@ -315,6 +328,135 @@ const GENERIC_QUESTIONS: Record<LocaleCode, [string, string, string]> = {
   ],
 };
 
+const OWNERSHIP_QUESTIONS: Record<LocaleCode, string> = {
+  en: "Which part of that result was directly yours, who else contributed, and where did your responsibility begin and end?",
+  ja: "その成果のうち、あなたが直接担った部分はどこですか。ほかに誰が貢献し、あなたの責任範囲はどこまででしたか？",
+  ko: "그 성과 중 직접 맡은 부분은 무엇이었고, 누가 함께 기여했으며, 본인의 책임 범위는 어디까지였나요?",
+  "zh-CN": "这项成果中，哪些部分由你直接负责？还有谁参与，你的责任边界在哪里？",
+  "zh-TW": "這項成果中，哪些部分由你直接負責？還有誰參與，你的責任邊界在哪裡？",
+  es: "¿Qué parte del resultado fue directamente tuya, quién más contribuyó y dónde empezaba y terminaba tu responsabilidad?",
+  fr: "Quelle part du résultat relevait directement de vous, qui d’autre a contribué et où commençait et finissait votre responsabilité ?",
+  de: "Welcher Teil des Ergebnisses lag direkt bei Ihnen, wer trug noch dazu bei und wo begann und endete Ihre Verantwortung?",
+  "pt-BR": "Qual parte do resultado foi diretamente sua, quem mais contribuiu e onde começava e terminava sua responsabilidade?",
+  it: "Quale parte del risultato dipendeva direttamente da te, chi altro ha contribuito e dove iniziava e finiva la tua responsabilità?",
+  nl: "Welk deel van het resultaat was rechtstreeks van jou, wie droeg nog meer bij en waar begon en eindigde jouw verantwoordelijkheid?",
+  pl: "Która część wyniku należała bezpośrednio do Ciebie, kto jeszcze miał wkład i gdzie zaczynała się oraz kończyła Twoja odpowiedzialność?",
+  tr: "Sonucun hangi kısmı doğrudan size aitti, başka kim katkıda bulundu ve sorumluluğunuz nerede başlayıp bitiyordu?",
+  ru: "Какая часть результата зависела непосредственно от вас, кто ещё участвовал и где проходили границы вашей ответственности?",
+  uk: "Яка частина результату залежала безпосередньо від вас, хто ще долучався і де проходили межі вашої відповідальності?",
+  ar: "أي جزء من النتيجة كان من مسؤوليتك المباشرة، ومن ساهم أيضًا، وأين بدأت مسؤوليتك وانتهت؟",
+  he: "איזה חלק מהתוצאה היה באחריותכם הישירה, מי עוד תרם והיכן התחילה והסתיימה האחריות שלכם?",
+  hi: "उस परिणाम का कौन-सा हिस्सा सीधे आपकी ज़िम्मेदारी था, और किसने योगदान दिया, तथा आपकी ज़िम्मेदारी की सीमा कहाँ थी?",
+  bn: "ফলাফলের কোন অংশটি সরাসরি আপনার ছিল, আর কে অবদান রেখেছিলেন এবং আপনার দায়িত্বের সীমা কোথায় ছিল?",
+  ur: "نتیجے کا کون سا حصہ براہ راست آپ کی ذمہ داری تھا، اور کس نے تعاون کیا، اور آپ کی ذمہ داری کی حد کہاں تھی؟",
+  id: "Bagian mana dari hasil itu yang langsung menjadi tanggung jawab Anda, siapa lagi yang berkontribusi, dan di mana batas tanggung jawab Anda?",
+  ms: "Bahagian manakah daripada hasil itu yang menjadi tanggungjawab langsung anda, siapa lagi yang menyumbang, dan di manakah batas tanggungjawab anda?",
+  th: "ผลลัพธ์ส่วนใดเป็นความรับผิดชอบโดยตรงของคุณ ใครมีส่วนร่วมอีก และขอบเขตความรับผิดชอบของคุณอยู่ตรงไหน?",
+  vi: "Phần nào của kết quả do bạn trực tiếp chịu trách nhiệm, ai khác đã đóng góp và phạm vi trách nhiệm của bạn bắt đầu và kết thúc ở đâu?",
+  fil: "Aling bahagi ng resulta ang direktang pananagutan mo, sino pa ang tumulong, at saan nagsimula at nagtapos ang responsibilidad mo?",
+  sv: "Vilken del av resultatet var direkt ditt ansvar, vilka andra bidrog och var började och slutade ditt ansvar?",
+  no: "Hvilken del av resultatet var direkte ditt ansvar, hvem andre bidro, og hvor begynte og sluttet ansvaret ditt?",
+  da: "Hvilken del af resultatet var direkte dit ansvar, hvem bidrog ellers, og hvor begyndte og sluttede dit ansvar?",
+  fi: "Mikä osa tuloksesta oli suoraan sinun vastuullasi, ketkä muut osallistuivat ja mihin vastuusi rajautui?",
+  cs: "Která část výsledku byla přímo vaše, kdo další přispěl a kde začínala a končila vaše odpovědnost?",
+  sk: "Ktorá časť výsledku bola priamo vaša, kto ďalší prispel a kde sa začínala a končila vaša zodpovednosť?",
+  hu: "Az eredmény mely része volt közvetlenül az Ön felelőssége, kik járultak még hozzá, és hol húzódtak a felelőssége határai?",
+  ro: "Ce parte a rezultatului v-a aparținut direct, cine a mai contribuit și unde începea și se termina responsabilitatea dumneavoastră?",
+  el: "Ποιο μέρος του αποτελέσματος ήταν άμεσα δικό σας, ποιοι άλλοι συνέβαλαν και πού άρχιζε και τελείωνε η ευθύνη σας;",
+  bg: "Коя част от резултата беше пряко ваша, кой друг допринесе и къде започваше и свършваше отговорността ви?",
+  hr: "Koji je dio rezultata bio izravno vaš, tko je još pridonio i gdje je počinjala i završavala vaša odgovornost?",
+  sr: "Који део резултата је био директно ваш, ко је још допринео и где је почињала и завршавала ваша одговорност?",
+  sl: "Kateri del rezultata je bil neposredno vaš, kdo je še prispeval in kje se je začela ter končala vaša odgovornost?",
+  sw: "Ni sehemu gani ya matokeo iliyokuwa jukumu lako moja kwa moja, nani mwingine alichangia, na mipaka ya jukumu lako ilikuwa wapi?",
+  fa: "کدام بخش از نتیجه مستقیماً بر عهده شما بود، چه کسانی دیگر مشارکت داشتند و مرز مسئولیت شما کجا بود؟",
+};
+
+const OUTCOME_QUESTIONS: Record<LocaleCode, string> = {
+  en: "How did you measure the outcome, what changed because of your work, and which claim could a former colleague verify?",
+  ja: "成果をどのように測定し、あなたの仕事によって何が変わりましたか。また、元同僚が確認できる主張はどれですか？",
+  ko: "성과를 어떻게 측정했고, 본인의 업무로 무엇이 달라졌으며, 이전 동료가 확인해 줄 수 있는 주장은 무엇인가요?",
+  "zh-CN": "你如何衡量结果？你的工作带来了什么变化？其中哪项说法可以由前同事验证？",
+  "zh-TW": "你如何衡量結果？你的工作帶來了什麼改變？其中哪項說法可以由前同事驗證？",
+  es: "¿Cómo mediste el resultado, qué cambió gracias a tu trabajo y qué afirmación podría verificar un antiguo compañero?",
+  fr: "Comment avez-vous mesuré le résultat, qu’est-ce qui a changé grâce à votre travail et quelle affirmation un ancien collègue pourrait-il confirmer ?",
+  de: "Wie haben Sie das Ergebnis gemessen, was hat sich durch Ihre Arbeit verändert und welche Aussage könnte eine frühere Kollegin oder ein früherer Kollege bestätigen?",
+  "pt-BR": "Como você mediu o resultado, o que mudou por causa do seu trabalho e qual afirmação um ex-colega poderia confirmar?",
+  it: "Come hai misurato il risultato, cosa è cambiato grazie al tuo lavoro e quale affermazione potrebbe verificare un ex collega?",
+  nl: "Hoe heb je het resultaat gemeten, wat veranderde door jouw werk en welke bewering zou een voormalige collega kunnen bevestigen?",
+  pl: "Jak zmierzyłeś wynik, co zmieniło się dzięki Twojej pracy i które stwierdzenie mógłby potwierdzić były współpracownik?",
+  tr: "Sonucu nasıl ölçtünüz, çalışmanız sayesinde ne değişti ve eski bir çalışma arkadaşınız hangi iddiayı doğrulayabilir?",
+  ru: "Как вы измерили результат, что изменилось благодаря вашей работе и какое утверждение мог бы подтвердить бывший коллега?",
+  uk: "Як ви виміряли результат, що змінилося завдяки вашій роботі та яке твердження міг би підтвердити колишній колега?",
+  ar: "كيف قست النتيجة، وما الذي تغيّر بسبب عملك، وما الادعاء الذي يستطيع زميل سابق التحقق منه؟",
+  he: "כיצד מדדתם את התוצאה, מה השתנה בזכות עבודתכם ואיזו טענה עמית לשעבר יכול לאמת?",
+  hi: "आपने परिणाम कैसे मापा, आपके काम से क्या बदला और किस दावे की पुष्टि कोई पूर्व सहकर्मी कर सकता है?",
+  bn: "আপনি ফলাফল কীভাবে মেপেছিলেন, আপনার কাজের কারণে কী বদলেছিল এবং কোন দাবিটি একজন সাবেক সহকর্মী যাচাই করতে পারবেন?",
+  ur: "آپ نے نتیجہ کیسے ناپا، آپ کے کام سے کیا بدلا، اور کس دعوے کی سابق ساتھی تصدیق کر سکتا ہے؟",
+  id: "Bagaimana Anda mengukur hasilnya, apa yang berubah karena pekerjaan Anda, dan klaim mana yang dapat diverifikasi oleh mantan rekan kerja?",
+  ms: "Bagaimanakah anda mengukur hasilnya, apakah yang berubah kerana kerja anda, dan dakwaan manakah yang boleh disahkan oleh bekas rakan sekerja?",
+  th: "คุณวัดผลลัพธ์อย่างไร งานของคุณทำให้เกิดการเปลี่ยนแปลงอะไร และข้อใดที่อดีตเพื่อนร่วมงานสามารถยืนยันได้?",
+  vi: "Bạn đo lường kết quả như thế nào, điều gì thay đổi nhờ công việc của bạn và nhận định nào có thể được đồng nghiệp cũ xác minh?",
+  fil: "Paano mo sinukat ang resulta, ano ang nagbago dahil sa trabaho mo, at aling pahayag ang mapatutunayan ng dati mong katrabaho?",
+  sv: "Hur mätte du resultatet, vad förändrades tack vare ditt arbete och vilket påstående skulle en tidigare kollega kunna bekräfta?",
+  no: "Hvordan målte du resultatet, hva endret seg på grunn av arbeidet ditt, og hvilken påstand kunne en tidligere kollega bekrefte?",
+  da: "Hvordan målte du resultatet, hvad ændrede sig på grund af dit arbejde, og hvilken påstand kunne en tidligere kollega bekræfte?",
+  fi: "Miten mittasit tuloksen, mikä muuttui työsi ansiosta ja minkä väitteen entinen kollega voisi vahvistaa?",
+  cs: "Jak jste výsledek měřili, co se díky vaší práci změnilo a které tvrzení by mohl potvrdit bývalý kolega?",
+  sk: "Ako ste výsledok merali, čo sa vďaka vašej práci zmenilo a ktoré tvrdenie by mohol potvrdiť bývalý kolega?",
+  hu: "Hogyan mérte az eredményt, mi változott a munkája hatására, és mely állítást tudná egy korábbi kollégája igazolni?",
+  ro: "Cum ați măsurat rezultatul, ce s-a schimbat datorită muncii dumneavoastră și ce afirmație ar putea verifica un fost coleg?",
+  el: "Πώς μετρήσατε το αποτέλεσμα, τι άλλαξε χάρη στη δουλειά σας και ποιον ισχυρισμό θα μπορούσε να επιβεβαιώσει ένας πρώην συνάδελφος;",
+  bg: "Как измерихте резултата, какво се промени благодарение на работата ви и кое твърдение би могъл да потвърди бивш колега?",
+  hr: "Kako ste mjerili rezultat, što se promijenilo zahvaljujući vašem radu i koju bi tvrdnju mogao potvrditi bivši kolega?",
+  sr: "Како сте мерили резултат, шта се променило захваљујући вашем раду и коју би тврдњу могао да потврди бивши колега?",
+  sl: "Kako ste izmerili rezultat, kaj se je spremenilo zaradi vašega dela in katero trditev bi lahko potrdil nekdanji sodelavec?",
+  sw: "Ulipimaje matokeo, ni nini kilibadilika kwa sababu ya kazi yako, na ni dai gani ambalo mfanyakazi mwenzako wa zamani anaweza kuthibitisha?",
+  fa: "نتیجه را چگونه سنجیدید، به‌دلیل کار شما چه چیزی تغییر کرد و کدام ادعا را یک همکار سابق می‌تواند تأیید کند؟",
+};
+
+const INTERVIEW_FLOW_COPY: Record<LocaleCode, InterviewFlowCopy> = {
+  en: { stages: ["Context", "Ownership", "Decision", "Outcome", "Reflection"], nextQuestion: "Next follow-up", newTopic: "Start a new topic", topic: "Topic", step: "Question", you: "You", autoRead: "Read each new question aloud", languageLocked: "Question and voice are locked to English." },
+  ja: { stages: ["背景", "責任", "判断", "成果", "振り返り"], nextQuestion: "次の質問", newTopic: "新しいテーマ", topic: "テーマ", step: "質問", you: "あなた", autoRead: "新しい質問を自動で読み上げる", languageLocked: "質問と音声は日本語に固定されています。" },
+  ko: { stages: ["배경", "책임", "판단", "성과", "회고"], nextQuestion: "다음 후속 질문", newTopic: "새 주제 시작", topic: "주제", step: "질문", you: "나", autoRead: "새 질문 자동 읽기", languageLocked: "질문과 음성이 한국어로 고정되었습니다." },
+  "zh-CN": { stages: ["背景", "责任", "判断", "结果", "复盘"], nextQuestion: "下一个追问", newTopic: "开始新主题", topic: "主题", step: "问题", you: "你", autoRead: "自动朗读每个新问题", languageLocked: "问题与语音已锁定为简体中文。" },
+  "zh-TW": { stages: ["背景", "責任", "判斷", "成果", "反思"], nextQuestion: "下一個追問", newTopic: "開始新主題", topic: "主題", step: "問題", you: "你", autoRead: "自動朗讀每個新問題", languageLocked: "問題與語音已鎖定為繁體中文。" },
+  es: { stages: ["Contexto", "Responsabilidad", "Decisión", "Resultado", "Reflexión"], nextQuestion: "Siguiente pregunta", newTopic: "Iniciar otro tema", topic: "Tema", step: "Pregunta", you: "Tú", autoRead: "Leer cada pregunta nueva", languageLocked: "Las preguntas y la voz están configuradas en español." },
+  fr: { stages: ["Contexte", "Responsabilité", "Décision", "Résultat", "Réflexion"], nextQuestion: "Question suivante", newTopic: "Nouveau sujet", topic: "Sujet", step: "Question", you: "Vous", autoRead: "Lire chaque nouvelle question", languageLocked: "Les questions et la voix sont réglées en français." },
+  de: { stages: ["Kontext", "Verantwortung", "Entscheidung", "Ergebnis", "Reflexion"], nextQuestion: "Nächste Nachfrage", newTopic: "Neues Thema", topic: "Thema", step: "Frage", you: "Sie", autoRead: "Jede neue Frage vorlesen", languageLocked: "Fragen und Stimme sind auf Deutsch eingestellt." },
+  "pt-BR": { stages: ["Contexto", "Responsabilidade", "Decisão", "Resultado", "Reflexão"], nextQuestion: "Próxima pergunta", newTopic: "Novo tema", topic: "Tema", step: "Pergunta", you: "Você", autoRead: "Ler cada nova pergunta", languageLocked: "Perguntas e voz estão configuradas em português." },
+  it: { stages: ["Contesto", "Responsabilità", "Decisione", "Risultato", "Riflessione"], nextQuestion: "Domanda successiva", newTopic: "Nuovo argomento", topic: "Argomento", step: "Domanda", you: "Tu", autoRead: "Leggi ogni nuova domanda", languageLocked: "Domande e voce sono impostate in italiano." },
+  nl: { stages: ["Context", "Eigenaarschap", "Besluit", "Resultaat", "Reflectie"], nextQuestion: "Volgende vraag", newTopic: "Nieuw onderwerp", topic: "Onderwerp", step: "Vraag", you: "Jij", autoRead: "Lees elke nieuwe vraag voor", languageLocked: "Vragen en stem zijn ingesteld op Nederlands." },
+  pl: { stages: ["Kontekst", "Odpowiedzialność", "Decyzja", "Wynik", "Refleksja"], nextQuestion: "Następne pytanie", newTopic: "Nowy temat", topic: "Temat", step: "Pytanie", you: "Ty", autoRead: "Czytaj każde nowe pytanie", languageLocked: "Pytania i głos są ustawione na język polski." },
+  tr: { stages: ["Bağlam", "Sorumluluk", "Karar", "Sonuç", "Değerlendirme"], nextQuestion: "Sonraki soru", newTopic: "Yeni konu", topic: "Konu", step: "Soru", you: "Siz", autoRead: "Her yeni soruyu seslendir", languageLocked: "Sorular ve ses Türkçe olarak ayarlandı." },
+  ru: { stages: ["Контекст", "Ответственность", "Решение", "Результат", "Выводы"], nextQuestion: "Следующий вопрос", newTopic: "Новая тема", topic: "Тема", step: "Вопрос", you: "Вы", autoRead: "Озвучивать каждый новый вопрос", languageLocked: "Вопросы и голос настроены на русский язык." },
+  uk: { stages: ["Контекст", "Відповідальність", "Рішення", "Результат", "Висновки"], nextQuestion: "Наступне питання", newTopic: "Нова тема", topic: "Тема", step: "Питання", you: "Ви", autoRead: "Озвучувати кожне нове питання", languageLocked: "Питання й голос налаштовано українською." },
+  ar: { stages: ["السياق", "المسؤولية", "القرار", "النتيجة", "التأمل"], nextQuestion: "سؤال المتابعة التالي", newTopic: "موضوع جديد", topic: "الموضوع", step: "السؤال", you: "أنت", autoRead: "قراءة كل سؤال جديد", languageLocked: "تم ضبط الأسئلة والصوت على العربية." },
+  he: { stages: ["הקשר", "אחריות", "החלטה", "תוצאה", "למידה"], nextQuestion: "שאלת ההמשך הבאה", newTopic: "נושא חדש", topic: "נושא", step: "שאלה", you: "אתם", autoRead: "להקריא כל שאלה חדשה", languageLocked: "השאלות והקול מוגדרים לעברית." },
+  hi: { stages: ["संदर्भ", "ज़िम्मेदारी", "निर्णय", "परिणाम", "चिंतन"], nextQuestion: "अगला प्रश्न", newTopic: "नया विषय", topic: "विषय", step: "प्रश्न", you: "आप", autoRead: "हर नया प्रश्न पढ़ें", languageLocked: "प्रश्न और आवाज़ हिंदी पर सेट हैं।" },
+  bn: { stages: ["প্রেক্ষাপট", "দায়িত্ব", "সিদ্ধান্ত", "ফলাফল", "পর্যালোচনা"], nextQuestion: "পরবর্তী প্রশ্ন", newTopic: "নতুন বিষয়", topic: "বিষয়", step: "প্রশ্ন", you: "আপনি", autoRead: "প্রতিটি নতুন প্রশ্ন পড়ুন", languageLocked: "প্রশ্ন ও কণ্ঠ বাংলা ভাষায় নির্ধারিত।" },
+  ur: { stages: ["پس منظر", "ذمہ داری", "فیصلہ", "نتیجہ", "غور"], nextQuestion: "اگلا سوال", newTopic: "نیا موضوع", topic: "موضوع", step: "سوال", you: "آپ", autoRead: "ہر نیا سوال پڑھیں", languageLocked: "سوال اور آواز اردو پر مقرر ہیں۔" },
+  id: { stages: ["Konteks", "Tanggung jawab", "Keputusan", "Hasil", "Refleksi"], nextQuestion: "Pertanyaan berikutnya", newTopic: "Topik baru", topic: "Topik", step: "Pertanyaan", you: "Anda", autoRead: "Bacakan setiap pertanyaan baru", languageLocked: "Pertanyaan dan suara diatur ke bahasa Indonesia." },
+  ms: { stages: ["Konteks", "Tanggungjawab", "Keputusan", "Hasil", "Refleksi"], nextQuestion: "Soalan seterusnya", newTopic: "Topik baharu", topic: "Topik", step: "Soalan", you: "Anda", autoRead: "Bacakan setiap soalan baharu", languageLocked: "Soalan dan suara ditetapkan kepada bahasa Melayu." },
+  th: { stages: ["บริบท", "ความรับผิดชอบ", "การตัดสินใจ", "ผลลัพธ์", "การทบทวน"], nextQuestion: "คำถามถัดไป", newTopic: "หัวข้อใหม่", topic: "หัวข้อ", step: "คำถาม", you: "คุณ", autoRead: "อ่านทุกคำถามใหม่", languageLocked: "ตั้งคำถามและเสียงเป็นภาษาไทยแล้ว" },
+  vi: { stages: ["Bối cảnh", "Trách nhiệm", "Quyết định", "Kết quả", "Suy ngẫm"], nextQuestion: "Câu hỏi tiếp theo", newTopic: "Chủ đề mới", topic: "Chủ đề", step: "Câu hỏi", you: "Bạn", autoRead: "Đọc mỗi câu hỏi mới", languageLocked: "Câu hỏi và giọng nói được đặt thành tiếng Việt." },
+  fil: { stages: ["Konteksto", "Pananagutan", "Desisyon", "Resulta", "Pagninilay"], nextQuestion: "Susunod na tanong", newTopic: "Bagong paksa", topic: "Paksa", step: "Tanong", you: "Ikaw", autoRead: "Basahin ang bawat bagong tanong", languageLocked: "Nakatakda sa Filipino ang mga tanong at boses." },
+  sv: { stages: ["Kontext", "Ansvar", "Beslut", "Resultat", "Reflektion"], nextQuestion: "Nästa följdfråga", newTopic: "Nytt ämne", topic: "Ämne", step: "Fråga", you: "Du", autoRead: "Läs upp varje ny fråga", languageLocked: "Frågor och röst är inställda på svenska." },
+  no: { stages: ["Kontekst", "Ansvar", "Beslutning", "Resultat", "Refleksjon"], nextQuestion: "Neste spørsmål", newTopic: "Nytt tema", topic: "Tema", step: "Spørsmål", you: "Du", autoRead: "Les opp hvert nytt spørsmål", languageLocked: "Spørsmål og stemme er satt til norsk." },
+  da: { stages: ["Kontekst", "Ansvar", "Beslutning", "Resultat", "Refleksion"], nextQuestion: "Næste spørgsmål", newTopic: "Nyt emne", topic: "Emne", step: "Spørgsmål", you: "Du", autoRead: "Læs hvert nyt spørgsmål op", languageLocked: "Spørgsmål og stemme er indstillet til dansk." },
+  fi: { stages: ["Konteksti", "Vastuu", "Päätös", "Tulos", "Pohdinta"], nextQuestion: "Seuraava kysymys", newTopic: "Uusi aihe", topic: "Aihe", step: "Kysymys", you: "Sinä", autoRead: "Lue jokainen uusi kysymys", languageLocked: "Kysymykset ja ääni ovat suomeksi." },
+  cs: { stages: ["Kontext", "Odpovědnost", "Rozhodnutí", "Výsledek", "Reflexe"], nextQuestion: "Další otázka", newTopic: "Nové téma", topic: "Téma", step: "Otázka", you: "Vy", autoRead: "Přečíst každou novou otázku", languageLocked: "Otázky a hlas jsou nastaveny na češtinu." },
+  sk: { stages: ["Kontext", "Zodpovednosť", "Rozhodnutie", "Výsledok", "Reflexia"], nextQuestion: "Ďalšia otázka", newTopic: "Nová téma", topic: "Téma", step: "Otázka", you: "Vy", autoRead: "Prečítať každú novú otázku", languageLocked: "Otázky a hlas sú nastavené na slovenčinu." },
+  hu: { stages: ["Kontextus", "Felelősség", "Döntés", "Eredmény", "Reflexió"], nextQuestion: "Következő kérdés", newTopic: "Új téma", topic: "Téma", step: "Kérdés", you: "Ön", autoRead: "Minden új kérdés felolvasása", languageLocked: "A kérdések és a hang magyar nyelvűek." },
+  ro: { stages: ["Context", "Responsabilitate", "Decizie", "Rezultat", "Reflecție"], nextQuestion: "Următoarea întrebare", newTopic: "Subiect nou", topic: "Subiect", step: "Întrebare", you: "Dumneavoastră", autoRead: "Citește fiecare întrebare nouă", languageLocked: "Întrebările și vocea sunt setate în română." },
+  el: { stages: ["Πλαίσιο", "Ευθύνη", "Απόφαση", "Αποτέλεσμα", "Αναστοχασμός"], nextQuestion: "Επόμενη ερώτηση", newTopic: "Νέο θέμα", topic: "Θέμα", step: "Ερώτηση", you: "Εσείς", autoRead: "Ανάγνωση κάθε νέας ερώτησης", languageLocked: "Οι ερωτήσεις και η φωνή έχουν οριστεί στα ελληνικά." },
+  bg: { stages: ["Контекст", "Отговорност", "Решение", "Резултат", "Равносметка"], nextQuestion: "Следващ въпрос", newTopic: "Нова тема", topic: "Тема", step: "Въпрос", you: "Вие", autoRead: "Прочитай всеки нов въпрос", languageLocked: "Въпросите и гласът са зададени на български." },
+  hr: { stages: ["Kontekst", "Odgovornost", "Odluka", "Rezultat", "Osvrt"], nextQuestion: "Sljedeće pitanje", newTopic: "Nova tema", topic: "Tema", step: "Pitanje", you: "Vi", autoRead: "Pročitaj svako novo pitanje", languageLocked: "Pitanja i glas postavljeni su na hrvatski." },
+  sr: { stages: ["Контекст", "Одговорност", "Одлука", "Резултат", "Осврт"], nextQuestion: "Следеће питање", newTopic: "Нова тема", topic: "Тема", step: "Питање", you: "Ви", autoRead: "Прочитај свако ново питање", languageLocked: "Питања и глас су подешени на српски." },
+  sl: { stages: ["Kontekst", "Odgovornost", "Odločitev", "Rezultat", "Razmislek"], nextQuestion: "Naslednje vprašanje", newTopic: "Nova tema", topic: "Tema", step: "Vprašanje", you: "Vi", autoRead: "Preberi vsako novo vprašanje", languageLocked: "Vprašanja in glas so nastavljeni na slovenščino." },
+  sw: { stages: ["Muktadha", "Wajibu", "Uamuzi", "Matokeo", "Tafakari"], nextQuestion: "Swali linalofuata", newTopic: "Mada mpya", topic: "Mada", step: "Swali", you: "Wewe", autoRead: "Soma kila swali jipya", languageLocked: "Maswali na sauti vimewekwa kwa Kiswahili." },
+  fa: { stages: ["زمینه", "مسئولیت", "تصمیم", "نتیجه", "بازنگری"], nextQuestion: "پرسش بعدی", newTopic: "موضوع جدید", topic: "موضوع", step: "پرسش", you: "شما", autoRead: "خواندن هر پرسش جدید", languageLocked: "پرسش‌ها و صدا روی فارسی تنظیم شده‌اند." },
+};
+
 export function speechLocaleFor(locale: LocaleCode) {
   return SPEECH_LOCALES[locale];
 }
@@ -333,11 +475,51 @@ export function localizedInterviewQuestion(
   proofLabel: string,
   gapLabel: string,
 ) {
-  const template =
-    GENERIC_QUESTIONS[locale][Math.min(turn, GENERIC_QUESTIONS[locale].length - 1)];
+  const base = GENERIC_QUESTIONS[locale];
+  const templates = [
+    base[0],
+    OWNERSHIP_QUESTIONS[locale],
+    base[1],
+    OUTCOME_QUESTIONS[locale],
+    base[2],
+  ];
+  const template = templates[Math.min(Math.max(turn, 0), INTERVIEW_DEPTH_COUNT - 1)];
   return template
     .replaceAll("{proof}", proofLabel)
     .replaceAll("{gap}", gapLabel);
+}
+
+export function interviewFlowCopyFor(locale: LocaleCode) {
+  return INTERVIEW_FLOW_COPY[locale];
+}
+
+export function questionOnly(content: string) {
+  const blocks = content
+    .replaceAll("\r\n", "\n")
+    .split(/\n\s*\n+/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  return (blocks.at(-1) || content).trim();
+}
+
+export function pronunciationTextFor(content: string, locale: LocaleCode) {
+  const question = questionOnly(content)
+    .replace(/[*_`#]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const replacements: Array<[RegExp, string]> = [
+    [/\bSQL\b/giu, "S Q L"],
+    [/\bAPI\b/giu, "A P I"],
+    [/\bKPI\b/giu, "K P I"],
+    [/\bCEO\b/giu, "C E O"],
+    [/\bCOO\b/giu, "C O O"],
+    [/\bHR\b/giu, "H R"],
+    [/\bJD\b/giu, locale === "en" ? "job description" : "J D"],
+  ];
+  return replacements.reduce(
+    (spoken, [pattern, replacement]) => spoken.replace(pattern, replacement),
+    question,
+  );
 }
 
 export function bestSpeechVoice(

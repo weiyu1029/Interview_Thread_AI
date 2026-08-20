@@ -10,7 +10,7 @@ follow-up questions without inventing achievements.
 
 > Keywords may be reformulated, never fabricated.
 
-[Try CareerStoryMap](https://careerstorymap.com) · [Product strategy](docs/product_strategy.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try CareerStoryMap](https://careerstorymap.com) · [Product strategy](docs/product_strategy.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Voice interview architecture](docs/voice_interview_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Why CareerStoryMap exists
 
