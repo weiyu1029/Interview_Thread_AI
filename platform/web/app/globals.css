@@ -2212,6 +2212,66 @@ input:focus {
   border-radius: 12px;
   background: #fbfbfa;
 }
+.interview-schedule-field {
+  min-width: 0;
+}
+.interview-schedule-field legend {
+  padding: 0 7px;
+  color: #33434f;
+  font-family:
+    var(--font-cormorant), "Iowan Old Style", "Palatino Linotype",
+    "Noto Serif", "Noto Serif CJK TC", Georgia, serif;
+  font-size: 21px;
+  font-weight: 700;
+}
+.interview-schedule-field > p {
+  margin: 0 0 13px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.interview-schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 0.8fr 1.35fr;
+  gap: 11px;
+}
+.interview-schedule-grid label {
+  min-width: 0;
+}
+.interview-schedule-grid label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #52636f;
+  font-size: 14px;
+  font-weight: 700;
+}
+.interview-schedule-grid input,
+.interview-schedule-grid select {
+  width: 100%;
+  max-width: none;
+  min-height: 48px;
+}
+.interview-schedule-estimate {
+  margin-top: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  border: 1px solid #d4dde2;
+  border-radius: 9px;
+  background: #eef3f5;
+}
+.interview-schedule-estimate > span {
+  min-width: 0;
+  margin-right: auto;
+  color: #536976;
+  font-size: 14px;
+}
+.interview-schedule-estimate > b {
+  color: var(--accent-deep);
+  font-size: 14px;
+  white-space: nowrap;
+}
 .proof-context-field input {
   max-width: 520px;
 }
@@ -2351,6 +2411,35 @@ input:focus {
 }
 .proof-pack-followups li p {
   margin: 0;
+}
+.proof-pack-followups li > div {
+  min-width: 0;
+}
+.proof-pack-followups li small,
+.proof-pack-followups li b {
+  display: inline-block;
+  margin: 0 7px 5px 0;
+  vertical-align: middle;
+}
+.proof-pack-followups li small {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #e8eef1;
+  color: #536a78;
+  font-size: 14px;
+  font-weight: 700;
+}
+.proof-pack-followups li b {
+  color: #52636f;
+  font-size: 14px;
+}
+.question-prediction-note {
+  margin: 18px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
 }
 .proof-pack-plan ol {
   margin-bottom: 16px;
@@ -4438,6 +4527,9 @@ input:focus {
     margin-left: 18px;
     margin-right: 18px;
   }
+  .interview-schedule-grid {
+    grid-template-columns: 1fr 1fr;
+  }
   .example-value-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4695,6 +4787,16 @@ input:focus {
   .proof-pack-result-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .interview-schedule-grid {
+    grid-template-columns: 1fr;
+  }
+  .interview-schedule-estimate {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .interview-schedule-estimate > span {
+    margin-right: 0;
   }
   .proof-pack-result-heading > span {
     max-width: 100%;

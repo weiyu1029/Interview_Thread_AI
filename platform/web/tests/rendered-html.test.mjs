@@ -112,8 +112,13 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Strongest role-match evidence/);
   assert.match(page, /Real gaps/);
   assert.match(page, /Defensible interview stories/);
-  assert.match(page, /10 likely follow-up questions/);
-  assert.match(page, /30-minute interview preparation/);
+  assert.match(page, /Interview date, time, and duration/);
+  assert.match(page, /type="date"/);
+  assert.match(page, /type="time"/);
+  assert.match(page, /Estimated live questions/);
+  assert.match(page, /Questions to prepare/);
+  assert.match(page, /predictedPreparationCount/);
+  assert.match(page, /preparation for a \$\{interviewDuration\}-minute interview/);
   assert.match(page, /Product Analyst applying to a new role/);
   assert.match(page, /Show what this example proves/);
   assert.match(page, /not your information/);

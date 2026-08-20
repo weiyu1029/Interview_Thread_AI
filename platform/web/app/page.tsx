@@ -355,6 +355,72 @@ const PROVIDERS = [
     model: "local-model",
   },
 ] as const;
+
+type InterviewStageId =
+  | "recruiter-screen"
+  | "hiring-manager"
+  | "technical"
+  | "case-portfolio"
+  | "panel"
+  | "final-executive";
+
+type InterviewStageConfig = {
+  id: InterviewStageId;
+  label: string;
+  personas: InterviewPersonaId[];
+};
+
+const INTERVIEW_STAGE_CONFIGS: InterviewStageConfig[] = [
+  {
+    id: "recruiter-screen",
+    label: "Recruiter or HR screen",
+    personas: ["hr", "recruiter", "hiring-manager", "values", "panel"],
+  },
+  {
+    id: "hiring-manager",
+    label: "Hiring manager interview",
+    personas: [
+      "hiring-manager",
+      "functional-lead",
+      "peer",
+      "cross-functional",
+      "panel",
+    ],
+  },
+  {
+    id: "technical",
+    label: "Technical round",
+    personas: [
+      "technical",
+      "system-design",
+      "functional-lead",
+      "hiring-manager",
+      "peer",
+    ],
+  },
+  {
+    id: "case-portfolio",
+    label: "Case or portfolio round",
+    personas: ["case", "portfolio", "customer", "functional-lead", "panel"],
+  },
+  {
+    id: "panel",
+    label: "Panel interview",
+    personas: [
+      "panel",
+      "hiring-manager",
+      "peer",
+      "cross-functional",
+      "technical",
+    ],
+  },
+  {
+    id: "final-executive",
+    label: "Final or executive round",
+    personas: ["ceo", "coo", "values", "hiring-manager", "panel"],
+  },
+];
+
 const INTERVIEW_PERSONAS: InterviewPersona[] = [
   {
     id: "hr",
@@ -1723,6 +1789,84 @@ function interviewStudioUiFor(locale: LocaleCode) {
   };
 }
 
+function interviewScheduleUiFor(locale: LocaleCode) {
+  if (locale === "zh-TW")
+    return {
+      title: "面試時間與時長",
+      intro: "時間與關卡會影響預計題數、追問深度與準備優先順序。",
+      date: "面試日期",
+      time: "開始時間",
+      duration: "預計時長",
+      stage: "面試關卡",
+      minutes: "分鐘",
+      estimated: "預估現場問題",
+      prepare: "建議準備問題",
+      likely: "高機率",
+      probable: "可能追問",
+      possible: "延伸準備",
+      unscheduled: "尚未設定日期",
+      methodology: "依面試時長、面試關卡、JD 必要條件、履歷證據與缺口排序；這是準備用估算，不代表雇主的實際題庫。",
+    };
+  if (locale === "zh-CN")
+    return {
+      title: "面试时间与时长",
+      intro: "时间与关卡会影响预计题数、追问深度和准备优先级。",
+      date: "面试日期",
+      time: "开始时间",
+      duration: "预计时长",
+      stage: "面试关卡",
+      minutes: "分钟",
+      estimated: "预计现场问题",
+      prepare: "建议准备问题",
+      likely: "高概率",
+      probable: "可能追问",
+      possible: "延伸准备",
+      unscheduled: "尚未设置日期",
+      methodology: "按面试时长、面试关卡、JD 必要条件、简历证据与缺口排序；这是准备估算，不代表雇主的实际题库。",
+    };
+  return {
+    title: "Interview date, time, and duration",
+    intro: "Timing and interview stage shape the expected question count, follow-up depth, and preparation priorities.",
+    date: "Interview date",
+    time: "Start time",
+    duration: "Expected duration",
+    stage: "Interview stage",
+    minutes: "minutes",
+    estimated: "Estimated live questions",
+    prepare: "Questions to prepare",
+    likely: "Most likely",
+    probable: "Likely follow-up",
+    possible: "Extended preparation",
+    unscheduled: "Date not scheduled",
+    methodology: "Ranked from interview duration and stage, JD must-haves, resume evidence, and visible gaps. This is a preparation estimate—not the employer’s actual question list.",
+  };
+}
+
+function localizedInterviewStageLabel(
+  locale: LocaleCode,
+  stage: InterviewStageConfig,
+) {
+  const labels: Partial<Record<LocaleCode, Record<InterviewStageId, string>>> = {
+    "zh-TW": {
+      "recruiter-screen": "招募顧問或 HR 初談",
+      "hiring-manager": "用人主管面試",
+      technical: "技術面試",
+      "case-portfolio": "案例或作品集面試",
+      panel: "綜合面試小組",
+      "final-executive": "最終或高階主管面試",
+    },
+    "zh-CN": {
+      "recruiter-screen": "招聘顾问或 HR 初筛",
+      "hiring-manager": "招聘经理面试",
+      technical: "技术面试",
+      "case-portfolio": "案例或作品集面试",
+      panel: "综合面试小组",
+      "final-executive": "最终或高管面试",
+    },
+  };
+  return labels[locale]?.[stage.id] || stage.label;
+}
+
 export default function Home({
   initialLocale,
 }: {
@@ -1734,7 +1878,11 @@ export default function Home({
     useState<ApplicationMode>("Manual");
   const [jd, setJd] = useState("");
   const [resume, setResume] = useState("");
-  const [interviewContext, setInterviewContext] = useState("");
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewTime, setInterviewTime] = useState("");
+  const [interviewDuration, setInterviewDuration] = useState(45);
+  const [interviewStage, setInterviewStage] =
+    useState<InterviewStageId>("hiring-manager");
   const [exampleLoaded, setExampleLoaded] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [provider, setProvider] = useState("Evidence engine");
@@ -1810,6 +1958,7 @@ export default function Home({
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
   const interviewStudioUi = interviewStudioUiFor(locale);
+  const interviewScheduleUi = interviewScheduleUiFor(locale);
   const faq = faqCopyFor(locale);
   const scoring = scoringGuideFor(locale);
   const selectedProvider =
@@ -2087,9 +2236,19 @@ export default function Home({
   }
 
   function loadProofPackExample(openAfterLoading = false) {
+    const exampleDate = new Date();
+    exampleDate.setDate(exampleDate.getDate() + 7);
+    const dateValue = [
+      exampleDate.getFullYear(),
+      String(exampleDate.getMonth() + 1).padStart(2, "0"),
+      String(exampleDate.getDate()).padStart(2, "0"),
+    ].join("-");
     setJd(SAMPLE_JD);
     setResume(SAMPLE_RESUME);
-    setInterviewContext("Hiring manager interview · next Tuesday");
+    setInterviewDate(dateValue);
+    setInterviewTime("10:00");
+    setInterviewDuration(45);
+    setInterviewStage("hiring-manager");
     setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
     setExampleLoaded(true);
     if (openAfterLoading) openWorkspace("Analyze");
@@ -3191,16 +3350,74 @@ export default function Home({
     .filter((item) => item.status === "Gap")
     .slice(0, 3);
   const defensibleStories = strongestProofs.slice(0, 5);
-  const followUpQuestions = Array.from({ length: 10 }, (_, index) =>
-    localizedInterviewQuestion(
-      locale,
-      index % 5,
-      strongestProofs[index % Math.max(1, strongestProofs.length)]?.keyword ||
-        detail.matchedEvidence,
-      realGaps[index % Math.max(1, realGaps.length)]?.keyword ||
-        detail.evidenceCoverage,
-    ),
+  const selectedInterviewStage =
+    INTERVIEW_STAGE_CONFIGS.find((item) => item.id === interviewStage) ||
+    INTERVIEW_STAGE_CONFIGS[1];
+  const estimatedLiveQuestionCount = Math.max(
+    4,
+    Math.round(interviewDuration / 5) + 1,
   );
+  const predictedPreparationCount = Math.min(
+    30,
+    Math.max(12, estimatedLiveQuestionCount * 2),
+  );
+  const likelyInterviewQuestions = (() => {
+    const questions: Array<{
+      persona: string;
+      likelihood: string;
+      question: string;
+    }> = [];
+    const seen = new Set<string>();
+    const attempts = predictedPreparationCount * 4;
+    for (let index = 0; index < attempts; index += 1) {
+      const personaIndex =
+        Math.floor(index / INTERVIEW_DEPTH_COUNT) %
+        selectedInterviewStage.personas.length;
+      const personaId = selectedInterviewStage.personas[personaIndex];
+      const turn = index % INTERVIEW_DEPTH_COUNT;
+      const topicIndex = Math.floor(
+        index /
+          (INTERVIEW_DEPTH_COUNT * selectedInterviewStage.personas.length),
+      );
+      const question = questionOnly(
+        questionForInterview(
+          personaId,
+          turn,
+          matches,
+          locale,
+          topicIndex,
+        ),
+      );
+      const fingerprint = `${personaId}:${question.toLocaleLowerCase()}`;
+      if (seen.has(fingerprint)) continue;
+      seen.add(fingerprint);
+      const persona =
+        INTERVIEW_PERSONAS.find((item) => item.id === personaId) ||
+        INTERVIEW_PERSONAS[0];
+      const rank = questions.length;
+      questions.push({
+        persona: localizedPersonaLabel(locale, persona.id, persona.label),
+        likelihood:
+          rank < estimatedLiveQuestionCount
+            ? interviewScheduleUi.likely
+            : rank < estimatedLiveQuestionCount * 2
+              ? interviewScheduleUi.probable
+              : interviewScheduleUi.possible,
+        question,
+      });
+      if (questions.length >= predictedPreparationCount) break;
+    }
+    return questions;
+  })();
+  const scheduledInterviewLabel = interviewDate
+    ? new Intl.DateTimeFormat(locale, {
+        dateStyle: "medium",
+        ...(interviewTime ? { timeStyle: "short" as const } : {}),
+      }).format(
+        new Date(`${interviewDate}T${interviewTime || "12:00"}:00`),
+      )
+    : interviewScheduleUi.unscheduled;
+  const interviewTimingSummary = `${scheduledInterviewLabel} · ${localizedInterviewStageLabel(locale, selectedInterviewStage)} · ${interviewDuration} ${interviewScheduleUi.minutes}`;
   const prepPlan = [
     { time: "0–5", label: proofPackFlow[1] },
     { time: "5–15", label: proofPackFlow[2] },
@@ -3689,27 +3906,67 @@ export default function Home({
                   </label>
                 </div>
               </div>
-              <label className="proof-context-field">
-                <span>
-                  {locale === "en"
-                    ? "Interview date or current application stage"
-                    : interview.focus}
-                </span>
-                <input
-                  value={interviewContext}
-                  onChange={(event) => setInterviewContext(event.target.value)}
-                  placeholder={
-                    locale === "en"
-                      ? "Example: Hiring manager interview next Tuesday"
-                      : interview.focus
-                  }
-                />
-                <small>
-                  {locale === "en"
-                    ? "Optional. This helps prioritize the 30-minute preparation plan."
-                    : detail.readiness}
-                </small>
-              </label>
+              <fieldset className="proof-context-field interview-schedule-field">
+                <legend>{interviewScheduleUi.title}</legend>
+                <p>{interviewScheduleUi.intro}</p>
+                <div className="interview-schedule-grid">
+                  <label>
+                    <span>{interviewScheduleUi.date}</span>
+                    <input
+                      type="date"
+                      value={interviewDate}
+                      onChange={(event) => setInterviewDate(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>{interviewScheduleUi.time}</span>
+                    <input
+                      type="time"
+                      value={interviewTime}
+                      onChange={(event) => setInterviewTime(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>{interviewScheduleUi.duration}</span>
+                    <select
+                      value={interviewDuration}
+                      onChange={(event) =>
+                        setInterviewDuration(Number(event.target.value))
+                      }
+                    >
+                      {[15, 30, 45, 60, 90].map((minutes) => (
+                        <option value={minutes} key={minutes}>
+                          {minutes} {interviewScheduleUi.minutes}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{interviewScheduleUi.stage}</span>
+                    <select
+                      value={interviewStage}
+                      onChange={(event) =>
+                        setInterviewStage(event.target.value as InterviewStageId)
+                      }
+                    >
+                      {INTERVIEW_STAGE_CONFIGS.map((stage) => (
+                        <option value={stage.id} key={stage.id}>
+                          {localizedInterviewStageLabel(locale, stage)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="interview-schedule-estimate" role="status">
+                  <span>{interviewTimingSummary}</span>
+                  <b>
+                    {interviewScheduleUi.estimated}: {estimatedLiveQuestionCount}
+                  </b>
+                  <b>
+                    {interviewScheduleUi.prepare}: {predictedPreparationCount}
+                  </b>
+                </div>
+              </fieldset>
               {uploadMessage && (
                 <p className="notice" role="status">
                   {uploadMessage}
@@ -3898,10 +4155,7 @@ export default function Home({
                       </p>
                       <h3 id="proof-pack-title">Interview Proof Pack</h3>
                     </div>
-                    <span>
-                      {interviewContext ||
-                        (locale === "en" ? "Timing not added" : detail.readiness)}
-                    </span>
+                    <span>{interviewTimingSummary}</span>
                   </div>
                   <div className="proof-pack-result-grid">
                     <article>
@@ -3988,26 +4242,35 @@ export default function Home({
                       <div className="proof-pack-result-label">
                         <span>04</span>
                         <h4>
-                          {locale === "en"
-                            ? "10 likely follow-up questions"
-                            : interview.focus}
+                          {likelyInterviewQuestions.length} {interviewScheduleUi.prepare.toLocaleLowerCase()}
                         </h4>
                       </div>
                       <ol>
-                        {followUpQuestions.map((item, index) => (
-                          <li key={`${index}-${item}`}>
+                        {likelyInterviewQuestions.map((item, index) => (
+                          <li key={`${item.persona}-${index}-${item.question}`}>
                             <span>{String(index + 1).padStart(2, "0")}</span>
-                            <p>{item}</p>
+                            <div>
+                              <small>{item.likelihood}</small>
+                              <b>{item.persona}</b>
+                              <p>{item.question}</p>
+                            </div>
                           </li>
                         ))}
                       </ol>
+                      <p className="question-prediction-note">
+                        {interviewScheduleUi.methodology}
+                      </p>
                     </article>
                     <article className="proof-pack-plan">
                       <div className="proof-pack-result-label">
                         <span>05</span>
                         <h4>
                           {locale === "en"
-                            ? "30-minute interview preparation"
+                            ? `30-minute preparation for a ${interviewDuration}-minute interview`
+                            : locale === "zh-TW"
+                              ? `30 分鐘準備計畫 · ${interviewDuration} 分鐘面試`
+                              : locale === "zh-CN"
+                                ? `30 分钟准备计划 · ${interviewDuration} 分钟面试`
                             : detail.readiness}
                         </h4>
                       </div>
