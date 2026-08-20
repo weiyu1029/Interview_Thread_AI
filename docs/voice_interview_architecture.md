@@ -1,4 +1,4 @@
-# CareerStoryMap voice interview architecture
+# InterviewThread voice interview architecture
 
 ## Product contract
 

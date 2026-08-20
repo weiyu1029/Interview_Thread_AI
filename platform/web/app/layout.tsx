@@ -27,17 +27,17 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const title = "CareerStoryMap — Build interview stories you can defend.";
+  const title = "InterviewThread — Free AI mock interview practice";
   const description =
-    "Turn one job description and your real experience into an evidence map, defensible interview stories, likely follow-up questions, and a focused mock interview.";
-  const image = new URL("/og-careerstorymap.png", origin).toString();
+    "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback.";
+  const image = new URL("/og-interviewthread.png", origin).toString();
   const englishHome = new URL("/en", origin).toString();
 
   return {
     metadataBase: new URL(origin),
     title: {
       default: title,
-      template: "%s | CareerStoryMap",
+      template: "%s | InterviewThread",
     },
     description,
     alternates: {
@@ -51,10 +51,13 @@ export async function generateMetadata(): Promise<Metadata> {
       "career evidence map",
       "resume evidence gaps",
       "AI mock interview",
+      "free mock interview",
+      "job interview practice",
+      "AI interview coach",
       "interview story coaching",
       "open source career tools",
     ],
-    applicationName: "CareerStoryMap",
+    applicationName: "InterviewThread",
     category: "career technology",
     manifest: "/site.webmanifest",
     icons: {
@@ -73,7 +76,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      siteName: "CareerStoryMap",
+      siteName: "InterviewThread",
       url: englishHome,
       title,
       description,
@@ -83,7 +86,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: image,
           width: 1200,
           height: 630,
-          alt: "CareerStoryMap Interview Proof Pack",
+          alt: "InterviewThread Interview Proof Pack",
         },
       ],
     },
@@ -104,19 +107,19 @@ export default async function RootLayout({
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "CareerStoryMap",
-      slogan: "Map your evidence. Own your story.",
+      name: "InterviewThread",
+      slogan: "Find the thread. Own the interview.",
       url: origin,
-      sameAs: ["https://github.com/weiyu1029/CareerStoryMap-agent"],
+      sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
     },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "CareerStoryMap",
+      name: "InterviewThread",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Turn a real resume and job description into an evidence-grounded Interview Proof Pack with defensible stories, visible gaps, likely follow-ups, and a focused mock interview.",
+        "Upload a real resume and job description to practice realistic interview questions with truthful, role-specific feedback.",
       featureList: [
         "Resume-to-job-description evidence map",
         "Three strongest role-match proofs",
@@ -137,13 +140,13 @@ export default async function RootLayout({
           priceCurrency: "USD",
         },
       ],
-      license: "https://github.com/weiyu1029/CareerStoryMap-agent/blob/main/LICENSE",
+      license: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
     },
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: "CareerStoryMap",
-      alternateName: "Career Story Map",
+      name: "InterviewThread",
+      alternateName: ["Interview Thread", "InterviewThread AI"],
       url: origin,
       description:
         "Open-source interview preparation grounded in evidence a candidate can defend.",

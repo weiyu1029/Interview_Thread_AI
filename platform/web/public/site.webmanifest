@@ -1,6 +1,6 @@
 {
-  "name": "CareerStoryMap",
-  "short_name": "CareerStoryMap",
+  "name": "InterviewThread",
+  "short_name": "InterviewThread",
   "description": "Turn one job description and your real experience into interview stories you can defend.",
   "start_url": "/",
   "display": "standalone",

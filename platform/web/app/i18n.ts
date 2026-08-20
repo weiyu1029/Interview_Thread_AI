@@ -43,6 +43,53 @@ export const LANGUAGES = [
 
 export type LocaleCode = (typeof LANGUAGES)[number][0];
 
+const BRAND_TAGLINES: Record<LocaleCode, string> = {
+  en: "Find the thread. Own the interview.",
+  ja: "つながりを見つけ、面接を自分のものに。",
+  ko: "연결고리를 찾고, 면접을 주도하세요.",
+  "zh-CN": "找到主线，掌握面试。",
+  "zh-TW": "找到主線，掌握面試。",
+  es: "Encuentra el hilo. Domina la entrevista.",
+  fr: "Trouvez le fil. Maîtrisez l’entretien.",
+  de: "Finde den roten Faden. Meistere das Gespräch.",
+  "pt-BR": "Encontre o fio da história. Domine a entrevista.",
+  it: "Trova il filo. Domina il colloquio.",
+  nl: "Vind de rode draad. Neem de regie in je sollicitatiegesprek.",
+  pl: "Znajdź wspólny wątek. Przejmij kontrolę nad rozmową.",
+  tr: "Hikâyenin izini bul. Mülakata hâkim ol.",
+  ru: "Найдите связующую нить. Управляйте собеседованием.",
+  uk: "Знайдіть спільну нитку. Впевнено ведіть співбесіду.",
+  ar: "اعثر على الخيط. امتلك زمام المقابلة.",
+  he: "מצאו את החוט המקשר. הובילו את הריאיון.",
+  hi: "अपनी कहानी की कड़ी खोजें। इंटरव्यू पर पकड़ बनाएँ।",
+  bn: "গল্পের যোগসূত্র খুঁজুন। সাক্ষাৎকারে নিয়ন্ত্রণ নিন।",
+  ur: "اپنی کہانی کی کڑی تلاش کریں۔ انٹرویو پر گرفت رکھیں۔",
+  id: "Temukan benang merahnya. Kuasai wawancara.",
+  ms: "Temui benang merahnya. Kuasai temu duga.",
+  th: "หาเส้นเรื่องให้เจอ แล้วคุมเกมสัมภาษณ์ให้ได้",
+  vi: "Tìm mạch câu chuyện. Làm chủ buổi phỏng vấn.",
+  fil: "Hanapin ang malinaw na ugnayan. Pangunahan ang interview.",
+  sv: "Hitta den röda tråden. Ta kontroll över intervjun.",
+  no: "Finn den røde tråden. Ta styringen i intervjuet.",
+  da: "Find den røde tråd. Tag styringen i interviewet.",
+  fi: "Löydä punainen lanka. Ota haastattelu haltuun.",
+  cs: "Najděte červenou nit. Vezměte pohovor do svých rukou.",
+  sk: "Nájdite červenú niť. Vezmite pohovor do vlastných rúk.",
+  hu: "Találd meg a vezérfonalat. Irányítsd az interjút.",
+  ro: "Găsește firul roșu. Preia controlul interviului.",
+  el: "Βρες το νήμα. Πάρε τον έλεγχο της συνέντευξης.",
+  bg: "Открийте нишката. Поемете контрола на интервюто.",
+  hr: "Pronađite nit vodilju. Preuzmite kontrolu nad intervjuom.",
+  sr: "Пронађите нит водиљу. Преузмите контролу над интервјуом.",
+  sl: "Poiščite rdečo nit. Prevzemite nadzor nad razgovorom.",
+  sw: "Pata uzi wa hadithi. Ongoza usaili.",
+  fa: "رشتهٔ اصلی را پیدا کنید. هدایت مصاحبه را در دست بگیرید.",
+};
+
+export function brandTaglineFor(locale: LocaleCode) {
+  return BRAND_TAGLINES[locale];
+}
+
 export const DEFAULT_LOCALE: LocaleCode = "en";
 
 export function localeToPath(locale: LocaleCode) {
@@ -930,7 +977,7 @@ const enDetail: DetailCopy = {
   marketTitle: "Openings, share, and momentum",
   trackerTitle: "Keep every opportunity moving",
   assistantTitle: "Build a stronger, truthful story for each role",
-  feedbackTitle: "Help the community improve CareerStoryMap",
+  feedbackTitle: "Help the community improve InterviewThread",
   send: "Send",
   submitFeedback: "Submit feedback",
   region: "Region",
@@ -1056,7 +1103,7 @@ const reviewedDetails: Partial<Record<LocaleCode, DetailCopy>> = {
     marketTitle: "채용 수·비율·추세",
     trackerTitle: "모든 기회를 다음 단계로",
     assistantTitle: "직무별로 더 강하고 정직한 이야기 만들기",
-    feedbackTitle: "커뮤니티와 CareerStoryMap 개선",
+    feedbackTitle: "커뮤니티와 InterviewThread 개선",
     send: "보내기",
     submitFeedback: "피드백 제출",
     region: "지역",
@@ -1118,7 +1165,7 @@ const reviewedDetails: Partial<Record<LocaleCode, DetailCopy>> = {
     marketTitle: "职位数量、占比与趋势",
     trackerTitle: "让每个机会持续推进",
     assistantTitle: "为每个职位建立更有力且真实的故事",
-    feedbackTitle: "帮助社区改进 CareerStoryMap",
+    feedbackTitle: "帮助社区改进 InterviewThread",
     send: "发送",
     submitFeedback: "提交反馈",
     region: "地区",
@@ -1178,7 +1225,7 @@ const reviewedDetails: Partial<Record<LocaleCode, DetailCopy>> = {
     marketTitle: "職缺數量、占比與趨勢",
     trackerTitle: "讓每個機會持續前進",
     assistantTitle: "為每個職缺建立更有力且真實的故事",
-    feedbackTitle: "協助社群改進 CareerStoryMap",
+    feedbackTitle: "協助社群改進 InterviewThread",
     send: "送出",
     submitFeedback: "提交回饋",
     region: "地區",
@@ -1238,7 +1285,7 @@ const reviewedDetails: Partial<Record<LocaleCode, DetailCopy>> = {
     marketTitle: "Vacantes, proporción e impulso",
     trackerTitle: "Mantén cada oportunidad en marcha",
     assistantTitle: "Crea una historia más sólida y veraz para cada puesto",
-    feedbackTitle: "Ayuda a la comunidad a mejorar CareerStoryMap",
+    feedbackTitle: "Ayuda a la comunidad a mejorar InterviewThread",
     send: "Enviar",
     submitFeedback: "Enviar comentarios",
     region: "Región",
@@ -1301,7 +1348,7 @@ const reviewedDetails: Partial<Record<LocaleCode, DetailCopy>> = {
     trackerTitle: "Faites avancer chaque opportunité",
     assistantTitle:
       "Construisez un récit plus fort et fidèle pour chaque poste",
-    feedbackTitle: "Aidez la communauté à améliorer CareerStoryMap",
+    feedbackTitle: "Aidez la communauté à améliorer InterviewThread",
     send: "Envoyer",
     submitFeedback: "Envoyer l’avis",
     region: "Région",
@@ -1364,7 +1411,7 @@ const reviewedDetails: Partial<Record<LocaleCode, DetailCopy>> = {
     trackerTitle: "Jede Chance voranbringen",
     assistantTitle:
       "Für jede Rolle eine stärkere, wahrheitsgemäße Geschichte entwickeln",
-    feedbackTitle: "Hilf der Community, CareerStoryMap zu verbessern",
+    feedbackTitle: "Hilf der Community, InterviewThread zu verbessern",
     send: "Senden",
     submitFeedback: "Feedback senden",
     region: "Region",

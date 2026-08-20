@@ -1,25 +1,25 @@
-# CareerStoryMap Brand Guide
+# InterviewThread Brand Guide
 
 ## Canonical identity
 
-- Product name: **CareerStoryMap**
+- Product name: **InterviewThread**
 - Core product: **Interview Proof Pack**
 - Primary promise: **Turn one job description and your real experience into
   interview stories you can defend.**
-- Supporting line: **Map your evidence. Own your story.**
-- Domain: [careerstorymap.com](https://careerstorymap.com)
-- Source: [weiyu1029/CareerStoryMap-agent](https://github.com/weiyu1029/CareerStoryMap-agent)
+- Supporting line: **Find the thread. Own the interview.**
+- Domain: [interviewthread.com](https://interviewthread.com)
+- Source: [weiyu1029/careerproof-agent](https://github.com/weiyu1029/careerproof-agent)
 
 ## Public naming rule
 
-Use CareerStoryMap in UI text, metadata, structured data, social cards,
+Use InterviewThread in UI text, metadata, structured data, social cards,
 documentation, presentations, press materials, and contributor communications.
 Do not publish retired working names. Legacy configuration keys and module paths
 are compatibility identifiers, not public brand names.
 
 ## Social accounts
 
-Use `CareerStoryMap` or `careerstorymap` as the preferred handle where available.
+Use `InterviewThread` or `interviewthread` as the preferred handle where available.
 Before adding a social profile to metadata or documentation, confirm that the
 project owner controls it. Do not publish an unverified handle or create a
 `sameAs` structured-data entry for an account the project does not own.
@@ -33,7 +33,7 @@ project owner controls it. Do not publish an unverified handle or create a
 - Mist blue: `#E7ECEF`
 - Muted slate: `#69737D`
 
-Use the connected CS mark with the product wordmark. Keep typography sans-serif,
+Use the connected IT thread mark with the product wordmark. Keep typography sans-serif,
 clear, and restrained. Do not use emoji as interface decoration.
 
 ## Voice
@@ -47,8 +47,8 @@ creates achievements the candidate cannot support.
 
 Before a public release, verify:
 
-1. page title, description, structured data, and social card use CareerStoryMap;
-2. screenshots and downloadable filenames use CareerStoryMap;
+1. page title, description, structured data, and social card use InterviewThread;
+2. screenshots and downloadable filenames use InterviewThread;
 3. repository, issue templates, contributor docs, and security docs use the
    canonical source link;
 4. public social links point only to owner-controlled accounts;

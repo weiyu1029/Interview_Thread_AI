@@ -1,8 +1,8 @@
-# CareerStoryMap
+# InterviewThread
 
-![CareerStoryMap](platform/web/public/og-careerstorymap.png)
+![InterviewThread](platform/web/public/og-interviewthread.png)
 
-**CareerStoryMap turns one job description and your real experience into
+**InterviewThread turns one job description and your real experience into
 interview stories you can defend.** It is an open-source, evidence-grounded
 interview preparation product that links every suggestion to candidate evidence,
 keeps unsupported requirements visible as gaps, and rehearses role-specific
@@ -10,11 +10,11 @@ follow-up questions without inventing achievements.
 
 > Keywords may be reformulated, never fabricated.
 
-[Try CareerStoryMap](https://careerstorymap.com) · [Product strategy](docs/product_strategy.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Voice interview architecture](docs/voice_interview_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try InterviewThread](https://interviewthread.com) · [Product strategy](docs/product_strategy.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Voice interview architecture](docs/voice_interview_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-## Why CareerStoryMap exists
+## Why InterviewThread exists
 
-Generic keyword tools reward repetition. Generic AI tools can produce fluent but unsupported claims. CareerStoryMap uses a different sequence:
+Generic keyword tools reward repetition. Generic AI tools can produce fluent but unsupported claims. InterviewThread uses a different sequence:
 
 1. decode the role and industry;
 2. extract required, core, and preferred concepts;
@@ -28,7 +28,7 @@ The result is useful for resume tailoring and interview preparation while remain
 ## Interview Proof Pack
 
 Provide one real resume, one real job description, and an interview date or
-current application stage. Within about ten minutes, CareerStoryMap produces:
+current application stage. Within about ten minutes, InterviewThread produces:
 
 1. three strongest role-match proofs linked to source evidence;
 2. three real capability or evidence gaps;
@@ -40,7 +40,7 @@ The primary journey is:
 
 `Resume + JD → Evidence Map → 3 Interview Stories → Mock Interview`
 
-CareerStoryMap does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
+InterviewThread does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
 
 ## Public web experience
 
@@ -87,7 +87,7 @@ The web client is available at `http://localhost:3000` and the documented API at
 
 ## Open and local model ecosystem
 
-CareerStoryMap does not freeze a list that will become obsolete. It discovers
+InterviewThread does not freeze a list that will become obsolete. It discovers
 models at runtime and supports any compatible chat model served by:
 
 - Ollama;
@@ -123,7 +123,7 @@ Never commit a real key or resume.
 
 ## Transparent scoring
 
-CareerStoryMap weights detected concepts by where and how they appear in the job description:
+InterviewThread weights detected concepts by where and how they appear in the job description:
 
 | Priority | Typical source | Relative weight |
 |---|---|---:|
@@ -184,7 +184,7 @@ The deterministic matrix remains canonical when Gemini is enabled.
 ## Project structure
 
 ```text
-CareerStoryMap-agent/
+careerproof-agent/
 ├── app/
 │   ├── agent.py                 # Google ADK entry point
 │   ├── schemas.py               # validated public request contract
@@ -266,8 +266,8 @@ feature incubator.
 
 ## Origins and attribution
 
-This repository is the canonical home for the public CareerStoryMap project.
-The brand, domain, metadata, documentation, and product UI use CareerStoryMap.
+This repository is the canonical home for the public InterviewThread project.
+The brand, domain, metadata, documentation, and product UI use InterviewThread.
 Legacy environment-variable and Python-module identifiers remain temporarily
 supported only to avoid breaking existing self-hosted installations.
 

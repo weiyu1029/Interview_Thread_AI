@@ -13,6 +13,7 @@ import {
   getChatGPTUser,
 } from "../../chatgpt-auth";
 import {
+  brandTaglineFor,
   copyFor,
   detailFor,
   localeDisplayName,
@@ -36,7 +37,7 @@ export async function generateMetadata({
   const labels = accountCopyFor(locale);
   const intro = accountIntroCopyFor(locale);
   return {
-    title: `${labels.account} · CareerStoryMap`,
+    title: `${labels.account} · InterviewThread`,
     description: intro.description,
     robots: { index: false, follow: false },
   };
@@ -68,15 +69,15 @@ export default async function AccountPage({
       dir={RTL_LOCALES.has(locale) ? "rtl" : "ltr"}
     >
       <header className="account-header">
-        <a className="brand" href={localizedPath(locale)} aria-label="CareerStoryMap">
+        <a className="brand" href={localizedPath(locale)} aria-label="InterviewThread">
           <BrandMark />
-          <span>CareerStoryMap <small>Evidence to opportunity</small></span>
+          <span>InterviewThread <small>{brandTaglineFor(locale)}</small></span>
         </a>
         <span className="account-language">{localeDisplayName(locale)}</span>
         <MobileNav
           label={labels.account}
           items={[
-            { label: "CareerStoryMap", href: localizedPath(locale) },
+            { label: "InterviewThread", href: localizedPath(locale) },
             { label: labels.account, href: "#account-card" },
             { label: core.enter, href: workspacePath },
             ...(user
@@ -88,7 +89,7 @@ export default async function AccountPage({
 
       <section className="account-simple">
         <div className="account-intro">
-          <p className="eyebrow">CareerStoryMap · {labels.account}</p>
+          <p className="eyebrow">InterviewThread · {labels.account}</p>
           <h1>{intro.title}</h1>
           <p className="account-intro-copy">{intro.description}</p>
           <div className="account-saved-work" aria-label={intro.title}>
@@ -108,7 +109,7 @@ export default async function AccountPage({
 
           {user ? (
             <div className="account-user">
-              <small>CareerStoryMap ID</small>
+              <small>InterviewThread ID</small>
               <strong>{user.displayName}</strong>
               <span>{user.email}</span>
             </div>

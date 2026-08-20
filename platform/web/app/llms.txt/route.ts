@@ -1,13 +1,13 @@
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  "https://careerstorymap.com";
+  "https://interviewthread.com";
 
 export function GET() {
-  const body = `# CareerStoryMap
+  const body = `# InterviewThread
 
-> Turn one job description and your real experience into interview stories you can defend.
+> Find the thread. Own the interview.
 
-CareerStoryMap is an open-source, evidence-grounded interview preparation product. A candidate provides one real resume, one real job description, and an interview date or application stage. CareerStoryMap returns an Interview Proof Pack without inventing achievements.
+InterviewThread is a free, open-source AI mock interview product. Upload a real resume and job description to get truthful stories, realistic questions, and role-specific feedback without invented achievements.
 
 ## Primary pages
 - Product: ${siteUrl}/en/#product
@@ -19,7 +19,7 @@ CareerStoryMap is an open-source, evidence-grounded interview preparation produc
 - Resume keyword analyzer: ${siteUrl}/en/resume-keyword-analyzer
 - Job match recommendations: ${siteUrl}/en/job-match-recommendations
 - Career market insights: ${siteUrl}/en/career-market-insights
-- Source code: https://github.com/weiyu1029/CareerStoryMap-agent
+- Source code: https://github.com/weiyu1029/careerproof-agent
 
 ## Language editions
 Every public page has an indexable, canonical language URL and reciprocal hreflang annotations. Supported URL prefixes are:
@@ -45,7 +45,7 @@ Every public page has an indexable, canonical language URL and reciprocal hrefla
 - Accounts may be used for identity and future cross-device persistence, not payment
 
 ## Data policy
-CareerStoryMap uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
+InterviewThread uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
 `;
 
   return new Response(body, {

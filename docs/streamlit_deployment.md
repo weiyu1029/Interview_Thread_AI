@@ -14,7 +14,7 @@ streamlit_app.py
 
 1. Push the repository to GitHub.
 2. Open [Streamlit Community Cloud](https://share.streamlit.io/).
-3. Create an app from `weiyu1029/CareerStoryMap-agent`.
+3. Create an app from `weiyu1029/careerproof-agent`.
 4. Select the production branch.
 5. Set the main file path to `streamlit_app.py`.
 6. Deploy without a model key for deterministic public access.

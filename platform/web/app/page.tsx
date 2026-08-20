@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import {
+  brandTaglineFor,
   copyFor,
   detailFor,
   LANGUAGES,
@@ -47,7 +48,14 @@ type Match = {
   keyword: string;
   priority: "Required" | "Core" | "Preferred";
   status: MatchStatus;
+  score: number;
   evidence: string;
+};
+type InterviewTopic = {
+  focusLabel: string;
+  proofLabel: string;
+  gapLabel: string;
+  kind: "proof" | "gap" | "fallback";
 };
 type TrackerItem = {
   id: string;
@@ -140,8 +148,29 @@ type InterviewScore = {
 type InterviewPersona = {
   id: InterviewPersonaId;
   label: string;
+  round: string;
   focus: string;
   pressure: string;
+  decision: string;
+  answerPattern: string;
+  redFlags: string;
+  prepChecklist: string[];
+  resourceTags: InterviewResourceTag[];
+};
+type InterviewResourceTag =
+  | "behavioral"
+  | "coding"
+  | "system-design"
+  | "frontend"
+  | "data-sql"
+  | "ml-ai"
+  | "security";
+type InterviewResource = {
+  name: string;
+  href: string;
+  tags: InterviewResourceTag[];
+  access: string;
+  bestFor: string;
 };
 type InterviewCopy = {
   eyebrow: string;
@@ -271,6 +300,10 @@ const SAMPLE_JD =
   "We are looking for a product analyst who can use SQL, design experiments, build stakeholder-ready dashboards, and communicate findings to cross-functional partners. Python is preferred. The analyst will define KPIs and improve product decisions.";
 const SAMPLE_RESUME =
   "Product analyst who built SQL dashboards used by product and operations leaders. Partnered with cross-functional stakeholders to translate customer behavior into decisions and automated a weekly validation workflow, reducing preparation time by 30%.";
+const OUTCOME_EVIDENCE_PATTERN =
+  /\p{N}+(?:[.,]\p{N}+)?\s?%|[$€£¥₹₩]\s?\p{N}|\p{N}+\s?(?:x|倍|hours?|days?|weeks?|months?|users?|customers?)|reduc|increas|grew|saved|improv|accelerat|revenue|adoption|降低|減少|提升|成長|增加|改善|節省|减少|增长|提高|节省|削減|向上|増加|성장|증가|개선|절감|reduj|aument|mejor|ahorr|rédu|amélior|économ|reduzier|steiger|verbesser|eingespart/iu;
+const ACTION_EVIDENCE_PATTERN =
+  /\b(?:built|led|launched|owned|designed|automated|delivered|created|managed|partnered)\b|建立|建置|領導|推出|設計|自動化|交付|管理|合作|领导|发布|自动化|協働|主導|設計した|自動化した|구축|주도|출시|설계|자동화|lider|diseñ|automatiz|dirig|conçu|automatis|livré|geleitet|entwickelt|automatisiert/iu;
 const PROVIDERS = [
   {
     id: "Evidence engine",
@@ -326,38 +359,248 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
   {
     id: "hr",
     label: "HR screening",
-    focus: "Motivation, role fit, concise career narrative",
-    pressure: "Warm, time-boxed, and skeptical of vague claims",
+    round: "Qualification and logistics",
+    focus: "Baseline qualifications, motivation, career narrative, availability, and constraints",
+    pressure: "Warm and time-boxed; checks whether your claims and expectations match the role",
+    decision: "Should this candidate advance to the hiring team?",
+    answerPattern: "Give a 60–90 second fit summary, then support each must-have with one proof point.",
+    redFlags: "Long autobiography, unclear motivation, unsupported requirements, or avoidable logistics surprises.",
+    prepChecklist: ["Must-have qualification map", "Why this role now", "Career transition explanation", "Availability and work authorization facts"],
+    resourceTags: ["behavioral"],
+  },
+  {
+    id: "recruiter",
+    label: "Recruiter",
+    round: "Market fit and process readiness",
+    focus: "Search-fit keywords, level, scope, compensation alignment, and a clean candidate narrative",
+    pressure: "Compares you with the active candidate pool and tests whether your story is easy to represent",
+    decision: "Can I credibly present this candidate to the client or hiring manager?",
+    answerPattern: "Lead with target role, relevant scope, strongest proof, and a concise reason for the move.",
+    redFlags: "Undefined target, title inflation, compensation surprises, or a story that changes under follow-up.",
+    prepChecklist: ["Target-title sentence", "Scope and seniority examples", "Compensation range research", "Three recruiter-ready proof bullets"],
+    resourceTags: ["behavioral"],
   },
   {
     id: "hiring-manager",
     label: "Hiring manager",
+    round: "Behavioral and role execution",
     focus: "Role-specific judgment, execution, and measurable outcomes",
     pressure: "Detailed follow-ups on ownership and trade-offs",
+    decision: "Can this person solve the problems my team actually owns?",
+    answerPattern: "Use STAR-L: situation, task, your action, measurable result, and what you learned.",
+    redFlags: "Team-only language, missing decisions, polished stories without numbers, or no reflection.",
+    prepChecklist: ["Three JD-linked STAR stories", "Ownership boundaries", "Trade-off and failure story", "First-90-day hypothesis"],
+    resourceTags: ["behavioral"],
+  },
+  {
+    id: "functional-lead",
+    label: "Functional leader",
+    round: "Craft depth and operating judgment",
+    focus: "Domain depth, standards, prioritization, quality bar, and how you develop the function",
+    pressure: "Tests whether your expertise transfers beyond one familiar project or tool",
+    decision: "Will this person raise the quality and judgment of the function?",
+    answerPattern: "Explain your principle, show one applied example, name the trade-off, then generalize the lesson.",
+    redFlags: "Tool memorization, no quality standard, weak prioritization, or expertise that cannot be taught.",
+    prepChecklist: ["Core operating principles", "Quality-bar example", "Prioritization framework", "How you coach or document decisions"],
+    resourceTags: ["behavioral"],
+  },
+  {
+    id: "technical",
+    label: "Technical interviewer",
+    round: "Coding, SQL, debugging, or technical fundamentals",
+    focus: "Problem decomposition, correctness, testing, complexity, debugging, and communication",
+    pressure: "Changes constraints and expects you to think aloud instead of jumping to a memorized answer",
+    decision: "Can this candidate reason clearly and produce reliable technical work under constraints?",
+    answerPattern: "Clarify, state assumptions, propose a simple solution, test it, analyze trade-offs, then improve it.",
+    redFlags: "Silent coding, premature optimization, no test cases, bluffing, or ignoring edge cases.",
+    prepChecklist: ["Language and environment check", "Core data structures or SQL patterns", "Think-aloud practice", "Testing and complexity checklist"],
+    resourceTags: ["coding", "data-sql", "frontend"],
+  },
+  {
+    id: "system-design",
+    label: "System design interviewer",
+    round: "Architecture and scalability",
+    focus: "Requirements, scale, APIs, data model, reliability, observability, security, and trade-offs",
+    pressure: "Adds traffic, failure, privacy, and cost constraints while testing whether you lead the conversation",
+    decision: "Can this candidate design and explain a resilient system at the expected level?",
+    answerPattern: "Clarify requirements, estimate scale, draw the high-level design, deep-dive, then test failure modes.",
+    redFlags: "Architecture before requirements, buzzword stacking, no numbers, or no failure and trade-off analysis.",
+    prepChecklist: ["Requirements questions", "Back-of-envelope estimates", "Core component trade-offs", "Reliability and observability review"],
+    resourceTags: ["system-design", "ml-ai", "security"],
+  },
+  {
+    id: "portfolio",
+    label: "Portfolio reviewer",
+    round: "Work sample and presentation",
+    focus: "Problem selection, process, artifacts, decisions, quality, impact, and honest attribution",
+    pressure: "Interrupts the polished walkthrough to test what you actually did and why",
+    decision: "Does the work demonstrate the craft and judgment required for this role?",
+    answerPattern: "Start with the problem and constraint, show two pivotal decisions, then prove the outcome and your contribution.",
+    redFlags: "Pretty output without reasoning, confidential details, unclear ownership, or no evidence of iteration.",
+    prepChecklist: ["Two-minute overview", "Three decision artifacts", "Before-and-after evidence", "Confidentiality-safe backup detail"],
+    resourceTags: ["frontend", "behavioral"],
   },
   {
     id: "coo",
     label: "COO",
+    round: "Operations and scale",
     focus: "Operating leverage, process quality, and cross-functional delivery",
     pressure: "Tests scale, risk, and repeatability",
+    decision: "Can this person make the organization more reliable as complexity grows?",
+    answerPattern: "Show the broken operating system, your intervention, adoption controls, and the audited result.",
+    redFlags: "Heroics instead of systems, no controls, fragile handoffs, or results that depend on one person.",
+    prepChecklist: ["Process map", "Operating metric", "Risk and control example", "Scale and repeatability story"],
+    resourceTags: ["behavioral", "system-design"],
   },
   {
     id: "ceo",
     label: "CEO",
+    round: "Strategy and executive judgment",
     focus: "Business impact, strategic clarity, and why you",
     pressure: "Expects a direct point of view and executive brevity",
+    decision: "Will this person create disproportionate value and make sound decisions with limited context?",
+    answerPattern: "State your point of view first, support it with one business proof, then name the risk and next move.",
+    redFlags: "Feature-level detail without business relevance, weak opinions, inflated impact, or long answers.",
+    prepChecklist: ["Company thesis", "One high-leverage proof", "Contrarian but defensible view", "Executive 30-second answer"],
+    resourceTags: ["behavioral"],
   },
   {
     id: "peer",
     label: "Future teammate",
+    round: "Collaboration and working style",
     focus: "Collaboration, conflict, feedback, and working style",
     pressure: "Looks for self-awareness and practical partnership",
+    decision: "Would I trust this person in the difficult, ordinary parts of the work?",
+    answerPattern: "Describe the tension honestly, your behavior, the other person’s contribution, and what changed afterward.",
+    redFlags: "Blaming, claiming all credit, fake conflict, or no evidence that feedback changed behavior.",
+    prepChecklist: ["Conflict story", "Feedback received", "How you unblock others", "Working-style preferences"],
+    resourceTags: ["behavioral"],
+  },
+  {
+    id: "cross-functional",
+    label: "Cross-functional partner",
+    round: "Influence without authority",
+    focus: "Stakeholder empathy, alignment, negotiation, decision records, and durable handoffs",
+    pressure: "Introduces competing incentives and incomplete authority",
+    decision: "Can this person move shared work forward without creating organizational debt?",
+    answerPattern: "Map incentives, show the disagreement, explain your influence mechanism, and prove the shared outcome.",
+    redFlags: "Escalation as the first tool, one-sided empathy, missing decision owners, or weak follow-through.",
+    prepChecklist: ["Stakeholder map", "Influence story", "Decision-document example", "Difficult handoff and recovery"],
+    resourceTags: ["behavioral"],
+  },
+  {
+    id: "customer",
+    label: "Customer or user representative",
+    round: "Customer judgment and communication",
+    focus: "Problem discovery, user empathy, expectation setting, clarity, and response to difficult feedback",
+    pressure: "Challenges assumptions and asks you to explain complex work without internal jargon",
+    decision: "Will this person earn trust and solve the right customer problem?",
+    answerPattern: "Name the user problem, show how you learned it, explain the decision plainly, and close the feedback loop.",
+    redFlags: "Solution-first thinking, jargon, dismissing feedback, or promising what the team cannot deliver.",
+    prepChecklist: ["Customer discovery story", "Plain-language explanation", "Expectation reset example", "Feedback-to-roadmap proof"],
+    resourceTags: ["behavioral"],
+  },
+  {
+    id: "values",
+    label: "Culture and values interviewer",
+    round: "Values, learning, and ethics",
+    focus: "Behavior under pressure, learning velocity, integrity, inclusion, and consistency with stated values",
+    pressure: "Asks for counterexamples and what you did when the right action was inconvenient",
+    decision: "Do this candidate’s repeated behaviors match the organization’s values?",
+    answerPattern: "Choose a real tension, name the value at stake, show the costly action, and explain the lasting behavior change.",
+    redFlags: "Abstract values, perfect-hero stories, no cost or tension, or answers optimized to please the interviewer.",
+    prepChecklist: ["Failure and learning story", "Ethical tension", "Inclusion in action", "Value you challenged constructively"],
+    resourceTags: ["behavioral"],
   },
   {
     id: "case",
     label: "Case breakdown",
+    round: "Structured problem solving",
     focus: "Problem framing, assumptions, prioritization, and synthesis",
     pressure: "Introduces ambiguity and challenges your reasoning",
+    decision: "Can this candidate structure ambiguity and reach an evidence-based recommendation?",
+    answerPattern: "Restate the objective, structure the problem, prioritize hypotheses, analyze evidence, and synthesize a decision.",
+    redFlags: "Analysis before objective, hidden assumptions, no prioritization, or a conclusion disconnected from evidence.",
+    prepChecklist: ["Clarifying questions", "Issue tree", "Mental-math checks", "One-minute recommendation"],
+    resourceTags: ["data-sql", "behavioral"],
+  },
+  {
+    id: "panel",
+    label: "Interview panel",
+    round: "Cross-round consistency",
+    focus: "Consistency across qualification, craft, collaboration, strategy, and evidence",
+    pressure: "Switches perspectives quickly and checks whether your core story remains coherent",
+    decision: "Does the complete evidence support a confident, aligned hire decision?",
+    answerPattern: "Answer the named stakeholder directly, keep the same facts, and adjust only the level and angle.",
+    redFlags: "Contradictory scope, changing numbers, overfitting to each interviewer, or defensive follow-ups.",
+    prepChecklist: ["One-page evidence map", "Consistent numbers and ownership", "Short and deep answer versions", "Questions for each panelist"],
+    resourceTags: ["behavioral", "coding", "system-design"],
+  },
+];
+
+const TECHNICAL_RESOURCES: InterviewResource[] = [
+  {
+    name: "LeetCode Explore",
+    href: "https://leetcode.com/explore/",
+    tags: ["coding"],
+    access: "External platform · free and paid content",
+    bestFor: "Algorithms, data structures, and timed coding patterns",
+  },
+  {
+    name: "Exercism",
+    href: "https://exercism.org/tracks",
+    tags: ["coding"],
+    access: "Open source · free",
+    bestFor: "Language fluency, tests, and mentor feedback",
+  },
+  {
+    name: "freeCodeCamp Coding Interview Prep",
+    href: "https://www.freecodecamp.org/learn/coding-interview-prep/",
+    tags: ["coding", "frontend"],
+    access: "Open-source curriculum · free",
+    bestFor: "Algorithms, projects, and progressive practice",
+  },
+  {
+    name: "System Design Primer",
+    href: "https://github.com/donnemartin/system-design-primer",
+    tags: ["system-design"],
+    access: "Open source · CC BY 4.0",
+    bestFor: "Scalability, trade-offs, design questions, and sample solutions",
+  },
+  {
+    name: "Tech Interview Handbook",
+    href: "https://github.com/yangshun/tech-interview-handbook",
+    tags: ["behavioral", "coding"],
+    access: "Open source · free",
+    bestFor: "Study plans, coding rounds, behavioral preparation, and checklists",
+  },
+  {
+    name: "Front End Interview Handbook",
+    href: "https://github.com/yangshun/front-end-interview-handbook",
+    tags: ["frontend", "system-design"],
+    access: "Open source · free",
+    bestFor: "HTML, CSS, JavaScript, browser knowledge, and front-end design",
+  },
+  {
+    name: "SQL Murder Mystery",
+    href: "https://github.com/NUKnightLab/sql-mysteries",
+    tags: ["data-sql"],
+    access: "Open source · MIT and CC BY-SA 4.0",
+    bestFor: "SQL joins, filtering, investigation, and query reasoning",
+  },
+  {
+    name: "Machine Learning Systems Design",
+    href: "https://github.com/chiphuyen/machine-learning-systems-design",
+    tags: ["ml-ai", "system-design"],
+    access: "Open repository · community answers",
+    bestFor: "ML problem framing, data, evaluation, serving, and trade-offs",
+  },
+  {
+    name: "OWASP NodeGoat",
+    href: "https://github.com/OWASP/NodeGoat",
+    tags: ["security"],
+    access: "Open source · Apache-2.0",
+    bestFor: "Web security risks, exploitation, remediation, and secure design",
   },
 ];
 
@@ -834,21 +1077,38 @@ function runMatch(jd: string, resume: string): Match[] {
         /preferred|nice to have|bonus|plus/i.test(line),
     );
     const exact = aliases.some((alias) => includesPhrase(resume, alias));
-    const partial = keyword
+    const partialTerms = keyword
       .toLowerCase()
       .split(/\W+/)
-      .filter((word) => word.length > 3)
-      .some((word) => includesPhrase(resume, word));
+      .filter((word) => word.length > 3);
+    const partial = partialTerms.some((word) => includesPhrase(resume, word));
+    const evidence = evidenceLine(resume, [...aliases, ...partialTerms]);
+    const score = Math.min(
+      100,
+      (exact ? 65 : partial ? 45 : 0) +
+        (exact || partial
+          ? ACTION_EVIDENCE_PATTERN.test(evidence)
+            ? 15
+            : 0
+          : 0) +
+        (exact || partial
+          ? OUTCOME_EVIDENCE_PATTERN.test(evidence)
+            ? 20
+            : 0
+          : 0),
+    );
     return [
       {
         keyword,
         priority: preferred ? "Preferred" : required ? "Required" : "Core",
-        status: exact
-          ? "Strong evidence"
-          : partial
-            ? "Partial evidence"
-            : "Gap",
-        evidence: evidenceLine(resume, aliases),
+        status:
+          score >= 80
+            ? "Strong evidence"
+            : score >= 45
+              ? "Partial evidence"
+              : "Gap",
+        score,
+        evidence,
       },
     ];
   });
@@ -856,14 +1116,13 @@ function runMatch(jd: string, resume: string): Match[] {
 function scoreMatches(matches: Match[]) {
   if (!matches.length) return 0;
   const weights = { Required: 1.35, Core: 1, Preferred: 0.65 };
-  const values = { "Strong evidence": 1, "Partial evidence": 0.55, Gap: 0 };
   const possible = matches.reduce(
     (sum, item) => sum + weights[item.priority],
     0,
   );
   return Math.round(
     (matches.reduce(
-      (sum, item) => sum + weights[item.priority] * values[item.status],
+      (sum, item) => sum + weights[item.priority] * (item.score / 100),
       0,
     ) /
       possible) *
@@ -875,11 +1134,8 @@ function coverageFor(matches: Match[], priority?: Match["priority"]) {
     ? matches.filter((item) => item.priority === priority)
     : matches;
   if (!filtered.length) return scoreMatches(matches);
-  const values = { "Strong evidence": 1, "Partial evidence": 0.55, Gap: 0 };
   return Math.round(
-    (filtered.reduce((sum, item) => sum + values[item.status], 0) /
-      filtered.length) *
-      100,
+    filtered.reduce((sum, item) => sum + item.score, 0) / filtered.length,
   );
 }
 function outcomeStrengthFor(matches: Match[]) {
@@ -891,19 +1147,11 @@ function outcomeStrengthFor(matches: Match[]) {
     .map((item) => item.evidence);
   if (!evidence.length) return 0;
   if (
-    evidence.some((line) =>
-      /\p{N}+(?:[.,]\p{N}+)?\s?%|[$€£¥₹₩]\s?\p{N}|\p{N}+\s?(?:x|倍|hours?|days?|weeks?|months?|users?|customers?)|reduc|increas|grew|saved|improv|accelerat|revenue|adoption|降低|減少|提升|成長|增加|改善|節省|减少|增长|提高|节省|削減|向上|増加|성장|증가|개선|절감|reduj|aument|mejor|ahorr|rédu|amélior|économ|reduzier|steiger|verbesser|eingespart/iu.test(
-        line,
-      ),
-    )
+    evidence.some((line) => OUTCOME_EVIDENCE_PATTERN.test(line))
   )
     return 100;
   if (
-    evidence.some((line) =>
-      /\b(?:built|led|launched|owned|designed|automated|delivered|created|managed|partnered)\b|建立|建置|領導|推出|設計|自動化|交付|管理|合作|领导|发布|自动化|協働|主導|設計した|自動化した|구축|주도|출시|설계|자동화|lider|diseñ|automatiz|dirig|conçu|automatis|livré|geleitet|entwickelt|automatisiert/iu.test(
-        line,
-      ),
-    )
+    evidence.some((line) => ACTION_EVIDENCE_PATTERN.test(line))
   )
     return 72;
   return 45;
@@ -932,31 +1180,98 @@ function firstEvidence(matches: Match[]) {
   );
 }
 
+function interviewTopicsFor(
+  matches: Match[],
+  locale: LocaleCode,
+): InterviewTopic[] {
+  const proofs = matches.filter(
+    (item) =>
+      item.status !== "Gap" && item.evidence !== "No source evidence found.",
+  );
+  const gaps = matches.filter((item) => item.status === "Gap");
+  const fallbackProof =
+    proofs[0]?.keyword ||
+    (locale === "zh-TW"
+      ? "最相關的履歷經驗"
+      : locale === "zh-CN"
+        ? "最相关的简历经历"
+        : "your most relevant resume experience");
+  const fallbackGap =
+    gaps[0]?.keyword ||
+    (locale === "zh-TW"
+      ? "這個職位尚未證明的要求"
+      : locale === "zh-CN"
+        ? "这个职位尚未证明的要求"
+        : "an unproven requirement in this role");
+  const topics: InterviewTopic[] = [
+    ...proofs.map((proof, index) => ({
+      focusLabel: proof.keyword,
+      proofLabel: proof.keyword,
+      gapLabel: gaps[index % Math.max(1, gaps.length)]?.keyword || fallbackGap,
+      kind: "proof" as const,
+    })),
+    ...gaps.map((gap, index) => ({
+      focusLabel: gap.keyword,
+      proofLabel:
+        proofs[index % Math.max(1, proofs.length)]?.keyword || fallbackProof,
+      gapLabel: gap.keyword,
+      kind: "gap" as const,
+    })),
+  ];
+  if (topics.length) return topics;
+  return interviewFlowCopyFor(locale).stages.map((stage) => ({
+    focusLabel: stage,
+    proofLabel: fallbackProof,
+    gapLabel: fallbackGap,
+    kind: "fallback" as const,
+  }));
+}
+
+function gapTopicOpening(
+  locale: LocaleCode,
+  proofLabel: string,
+  gapLabel: string,
+) {
+  if (locale === "zh-TW")
+    return `這份 JD 要求「${gapLabel}」，但履歷裡還沒有直接證據。請誠實說明你會如何補足，並指出最接近的「${proofLabel}」經驗。`;
+  if (locale === "zh-CN")
+    return `这份 JD 要求“${gapLabel}”，但简历里还没有直接证据。请诚实说明你会如何补足，并指出最接近的“${proofLabel}”经历。`;
+  if (locale === "en")
+    return `This job description calls for ${gapLabel}, but your resume does not show direct evidence yet. How would you address that honestly, and which ${proofLabel} experience is the closest bridge?`;
+  return localizedInterviewQuestion(locale, 4, proofLabel, gapLabel);
+}
+
 function questionForInterview(
   persona: InterviewPersonaId,
   turn: number,
   matches: Match[],
   locale: LocaleCode,
   topicIndex = 0,
+  previousAnswer = "",
 ) {
-  const proofs = matches.filter(
-    (item) =>
-      item.status !== "Gap" && item.evidence !== "No source evidence found.",
-  );
-  const gaps = matches.filter((item) => item.status === "Gap");
-  const proof = proofs[topicIndex % Math.max(1, proofs.length)] || firstEvidence(matches);
-  const gap = gaps[topicIndex % Math.max(1, gaps.length)];
-  const proofLabel = proof?.keyword || "the most relevant achievement on your resume";
-  const gapLabel = gap?.keyword || "an unfamiliar part of this role";
-  if (locale !== "en")
-    return localizedInterviewQuestion(locale, turn, proofLabel, gapLabel);
+  const topics = interviewTopicsFor(matches, locale);
+  const topic = topics[topicIndex % topics.length];
+  const proofLabel = topic.proofLabel;
+  const gapLabel = topic.gapLabel;
+  let question = "";
+  if (topic.kind === "gap" && turn === 0)
+    question = gapTopicOpening(locale, proofLabel, gapLabel);
+  else if (locale !== "en")
+    question = localizedInterviewQuestion(locale, turn, proofLabel, gapLabel);
   const questions: Record<InterviewPersonaId, string[]> = {
     hr: [
-      `Give me the two-minute version of your career story, and connect it directly to this role—not just your job titles.`,
-      `Which part of your ${proofLabel} example was directly yours, and where did your responsibility begin and end?`,
-      `Why is this role the right next step for you, and what does your ${proofLabel} experience let you contribute immediately?`,
-      `Which outcome from that experience can a former colleague verify, and how did you measure it?`,
-      `What should I understand about ${gapLabel}, and how would you address it without overstating your experience?`,
+      `Give me the 90-second version of your background. Which two requirements in this job description are you already qualified to handle?`,
+      `Which must-have qualification is best supported by your ${proofLabel} experience, and what exactly proves it?`,
+      `Why this role, why this company, and why now—not simply why you want to leave your current situation?`,
+      `What practical constraint should we discuss now: location, timing, work authorization, travel, or compensation expectations?`,
+      `The resume does not yet prove ${gapLabel}. How would you explain that gap honestly without talking yourself out of the role?`,
+    ],
+    recruiter: [
+      `What exact role are you targeting, at what level, and what evidence makes that target credible?`,
+      `If I presented you to a hiring manager in three sentences, which ${proofLabel} result must I include?`,
+      `Walk me through the scope behind your titles: team size, stakeholders, decision authority, and business scale.`,
+      `What compensation range and work arrangement are you targeting, and what information would change that answer?`,
+      `What concern is a recruiter most likely to hear about your profile, and what verifiable evidence addresses it?`,
     ],
     "hiring-manager": [
       `Walk me through your strongest ${proofLabel} example. What problem did you own, what did you decide, and what changed?`,
@@ -964,6 +1279,34 @@ function questionForInterview(
       `Which trade-off in that example was genuinely yours to make, and what evidence told you it was the right call?`,
       `How did you measure the outcome, and which claim could a former colleague verify?`,
       `If you joined this team, how would you apply that proof to the priorities in this job description during your first 90 days?`,
+    ],
+    "functional-lead": [
+      `What principle guides your strongest ${proofLabel} work, and where did you learn that principle the hard way?`,
+      `Show me how you set the quality bar in that example. What would have counted as unacceptable work?`,
+      `Which competing priorities did you reject, and how did you defend that decision to the team?`,
+      `How did you review the work, detect weak reasoning, and improve the function rather than only the deliverable?`,
+      `What part of ${gapLabel} would you need to learn, and how would you reach our quality bar quickly?`,
+    ],
+    technical: [
+      `Before solving anything, clarify the inputs, outputs, constraints, and edge cases you would confirm for a ${proofLabel}-related task.`,
+      `Talk me through the simplest correct approach first. What would you implement, query, or test before optimizing it?`,
+      `Now assume the data volume or traffic is ten times larger. What breaks, and how would you measure the bottleneck?`,
+      `Give me three test cases—including one failure case—and explain what each test proves.`,
+      `You are stuck after twenty minutes. How do you debug systematically, communicate progress, and decide when to ask for help?`,
+    ],
+    "system-design": [
+      `Design a system related to ${proofLabel}. Start by asking the requirements and scale questions you need before drawing components.`,
+      `State your traffic, storage, latency, availability, and consistency assumptions. Which estimate most affects the design?`,
+      `Describe the high-level architecture and data flow. Why did you choose each boundary, API, and storage model?`,
+      `One dependency fails and traffic triples. How does the system degrade, recover, and tell operators what happened?`,
+      `Where are the security, privacy, cost, and observability trade-offs, and what would you change in version two?`,
+    ],
+    portfolio: [
+      `Choose one work sample that best proves ${proofLabel}. What user or business problem existed before you touched it?`,
+      `Which two decisions in the work were genuinely yours, and what alternatives did you reject?`,
+      `Show the messy middle: what changed after research, review, testing, or failed attempts?`,
+      `What evidence shows the work succeeded, and which result can another person verify?`,
+      `If you rebuilt this work with what you know now, what would you change and why?`,
     ],
     coo: [
       `Choose one example where your work improved an operating process. What was unreliable before, and how did the operating rhythm change?`,
@@ -986,6 +1329,27 @@ function questionForInterview(
       `What observable result showed that the partnership improved rather than simply becoming more agreeable?`,
       `What feedback would that teammate give you about how you operate under pressure?`,
     ],
+    "cross-functional": [
+      `Tell me about a project where teams wanted different outcomes. How did you map the incentives before proposing a solution?`,
+      `What authority did you not have, and which influence mechanism actually moved the decision?`,
+      `Which stakeholder disagreed most strongly, and what evidence or trade-off changed the conversation?`,
+      `How did you record the decision, assign ownership, and prevent the handoff from failing later?`,
+      `What would those partners say you made easier—and what would they ask you to improve?`,
+    ],
+    customer: [
+      `Describe the customer problem behind your strongest ${proofLabel} example without using internal jargon.`,
+      `How did you know the stated request was—or was not—the underlying user need?`,
+      `Tell me about difficult customer feedback you initially disagreed with. What did you do next?`,
+      `How did you set expectations when the team could not deliver everything the customer wanted?`,
+      `Which customer signal changed your decision, and how did you close the loop with the people affected?`,
+    ],
+    values: [
+      `Tell me about a time doing the right thing made the work slower, harder, or less popular. What did you choose?`,
+      `Describe a meaningful failure. What part was yours, and what behavior changed afterward?`,
+      `When did someone with less authority change your mind, and how did you create room for that?`,
+      `Which company value is hardest to practice under pressure, and what evidence shows how you handle that tension?`,
+      `Tell me about a value you challenged constructively rather than simply agreeing with it.`,
+    ],
     case: [
       `Case: a key product metric fell 12% in two weeks after a release. Structure how you would diagnose the problem before proposing a fix.`,
       `Which part of the diagnosis would you own directly, and what would you delegate to product, engineering, or analytics partners?`,
@@ -993,18 +1357,174 @@ function questionForInterview(
       `Define the decision metric, the comparison you would trust, and the threshold that would change your recommendation.`,
       `You have one analyst and five working days. Prioritize the plan, name the trade-offs, and give me your executive recommendation.`,
     ],
+    panel: [
+      `Give us the two-minute through-line connecting your background, ${proofLabel}, and the problems in this role.`,
+      `From a hiring manager’s perspective, what did you own; from a teammate’s perspective, how did you work?`,
+      `Now answer technically: which decision was hardest, what alternatives existed, and what evidence chose the path?`,
+      `Now answer as an executive: what changed for the business, and what is the most defensible number?`,
+      `Across this panel, what concern have we not asked about—and what honest evidence should shape our final decision?`,
+    ],
   };
-  return questions[persona][
-    Math.min(Math.max(turn, 0), INTERVIEW_DEPTH_COUNT - 1)
-  ];
+  if (!question)
+    question = questions[persona][
+      Math.min(Math.max(turn, 0), INTERVIEW_DEPTH_COUNT - 1)
+    ];
+  if (previousAnswer.trim())
+    question = naturalInterviewFollowUp(
+      question,
+      previousAnswer,
+      persona,
+      turn,
+      locale,
+    );
+  const topicLabel = interviewFlowCopyFor(locale).topic;
+  return `${topicLabel} ${topicIndex + 1} · ${topic.focusLabel}\n\n${question}`;
+}
+
+function answerAnchor(answer: string, locale: LocaleCode) {
+  const cleaned = answer.replace(/\s+/g, " ").trim();
+  if (["zh-CN", "zh-TW", "ja", "th"].includes(locale))
+    return cleaned.slice(0, 28);
+  return cleaned.split(" ").slice(0, 10).join(" ");
+}
+
+function naturalInterviewFollowUp(
+  plannedQuestion: string,
+  answer: string,
+  persona: InterviewPersonaId,
+  turn: number,
+  locale: LocaleCode,
+) {
+  const words = answer.trim().split(/\s+/).filter(Boolean);
+  const anchor = answerAnchor(answer, locale);
+  const hasOwnership =
+    /\b(?:I|my|mine)\b|我|本人|제가|내가|私|yo\b|je\b|ich\b/iu.test(answer);
+  const hasOutcome =
+    /\p{N}+(?:[.,]\p{N}+)?\s?%|\b(?:increased|reduced|saved|grew|improved|result|outcome)\b|提升|降低|減少|增加|改善|成果|結果|성과|결과|向上|削減/iu.test(
+      answer,
+    );
+  const isTechnical = ["technical", "system-design", "case"].includes(persona);
+
+  if (locale === "zh-TW") {
+    if (words.length < 10)
+      return `你剛才提到「${anchor}」。請先把情境說具體：你面對什麼限制、親自做了什麼？`;
+    if (!hasOwnership)
+      return `你剛才多次使用團隊語氣。具體來說，哪個決定與行動是你本人負責的？`;
+    if (turn >= 3 && !hasOutcome)
+      return `你說明了做法，但還沒有結果。最後改變了什麼，如何衡量，誰可以驗證？`;
+    if (isTechnical)
+      return `你剛才提到「${anchor}」。${plannedQuestion}`;
+    return `我想沿著你剛才提到的「${anchor}」追問：${plannedQuestion}`;
+  }
+  if (locale === "zh-CN") {
+    if (words.length < 10)
+      return `你刚才提到“${anchor}”。请先把情境说具体：你面对什么限制、亲自做了什么？`;
+    if (!hasOwnership)
+      return `你刚才多次使用团队语气。具体来说，哪个决定与行动是你本人负责的？`;
+    if (turn >= 3 && !hasOutcome)
+      return `你说明了做法，但还没有结果。最后改变了什么，如何衡量，谁可以验证？`;
+    return `我想沿着你刚才提到的“${anchor}”追问：${plannedQuestion}`;
+  }
+  if (locale === "en") {
+    if (words.length < 18)
+      return `You said “${anchor}.” Make that concrete: what constraint were you facing, and what did you personally do?`;
+    if (!hasOwnership)
+      return `You have described the team’s work. What decision and action were specifically yours, and where did your ownership end?`;
+    if (turn >= 3 && !hasOutcome)
+      return `I understand the approach, but not the result yet. What changed, how did you measure it, and who could verify it?`;
+    return `You mentioned “${anchor}.” ${plannedQuestion}`;
+  }
+  return plannedQuestion;
 }
 
 function appendTranscript(current: string, next: string, locale: LocaleCode) {
   if (!current.trim()) return next.trim();
+  const normalizedCurrent = current.toLocaleLowerCase().replace(/\s+/g, " ").trim();
+  const normalizedNext = next.toLocaleLowerCase().replace(/\s+/g, " ").trim();
+  if (
+    normalizedCurrent === normalizedNext ||
+    normalizedCurrent.endsWith(normalizedNext)
+  )
+    return current;
   const separator = ["zh-CN", "zh-TW", "ja", "th"].includes(locale)
     ? ""
     : " ";
   return `${current.trim()}${separator}${next.trim()}`;
+}
+
+function speechVocabularyFor(
+  jd: string,
+  resume: string,
+  matches: Match[],
+  persona: InterviewPersonaId,
+) {
+  const role = INTERVIEW_PERSONAS.find((item) => item.id === persona);
+  const preferred = [
+    ...matches.map((item) => item.keyword),
+    role?.label || "",
+    "SQL",
+    "API",
+    "KPI",
+    "Power BI",
+    "Tableau",
+    "Python",
+    "JavaScript",
+    "TypeScript",
+  ];
+  const sourceTerms = `${jd}\n${resume}`.match(
+    /\b[A-Za-z][A-Za-z0-9.+#/-]{1,28}\b/g,
+  ) || [];
+  const stopWords = new Set([
+    "about", "after", "again", "also", "and", "are", "because", "been",
+    "being", "but", "can", "could", "each", "for", "from", "have", "into",
+    "more", "most", "other", "our", "that", "the", "their", "then", "this",
+    "through", "using", "what", "when", "where", "which", "with", "would", "your",
+  ]);
+  const seen = new Set<string>();
+  return [...preferred, ...sourceTerms]
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2 && term.length <= 32)
+    .filter((term) => !stopWords.has(term.toLowerCase()))
+    .filter((term) => {
+      const key = term.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 60);
+}
+
+function normalizeSpeechTranscript(transcript: string, vocabulary: string[]) {
+  let normalized = transcript.replace(/\s+/g, " ").trim();
+  const canonical = new Map(vocabulary.map((term) => [term.toLowerCase(), term]));
+  const replacements: Array<[RegExp, string]> = [
+    [/\bsequel\b/giu, canonical.get("sql") || "SQL"],
+    [/\bpower\s+bee\b/giu, canonical.get("power bi") || "Power BI"],
+    [/\btableu\b/giu, canonical.get("tableau") || "Tableau"],
+    [/\btype\s*script\b/giu, canonical.get("typescript") || "TypeScript"],
+    [/\bjava\s*script\b/giu, canonical.get("javascript") || "JavaScript"],
+  ];
+  for (const [pattern, replacement] of replacements)
+    normalized = normalized.replace(pattern, replacement);
+  for (const [lower, display] of canonical) {
+    if (!/[A-Z+#.]/.test(display)) continue;
+    normalized = normalized.replace(
+      new RegExp(`\\b${lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "giu"),
+      display,
+    );
+  }
+  return normalized;
+}
+
+function recognitionAlternativeScore(
+  alternative: { transcript: string; confidence?: number },
+  vocabulary: string[],
+) {
+  const transcript = alternative.transcript.toLowerCase();
+  const vocabularyMatches = vocabulary.filter((term) =>
+    transcript.includes(term.toLowerCase()),
+  ).length;
+  return (alternative.confidence || 0) * 100 + vocabularyMatches * 7;
 }
 
 async function availableSpeechVoices() {
@@ -1100,6 +1620,109 @@ function preferredLocale(languages: readonly string[]) {
   return "en";
 }
 
+function scoringGuideFor(locale: LocaleCode) {
+  if (locale === "zh-TW")
+    return {
+      eyebrow: "評分與判斷標準",
+      title: "這是證據覆蓋率估算，不是 ATS 錄取或淘汰分數",
+      intro: "系統只根據你提供的履歷與 JD 判斷；沒有找到證據，不代表你沒有能力。",
+      overall: "整體證據覆蓋率",
+      keywordEvidence: "關鍵字與履歷證據",
+      score: "分數",
+      priority: "JD 優先級",
+      classification: "分類",
+      strong: "證據充分",
+      partial: "部分證據",
+      gap: "證據缺口",
+      strongRule: "直接相關，且包含具體行動或可量化結果。",
+      partialRule: "有相關技能或字詞，但責任、情境或結果不夠完整。",
+      gapRule: "履歷中沒有找到可支持此要求的內容。",
+      formula: "單項：相關字詞 45–65 分＋具體行動 15 分＋可量化結果 20 分。整體分數依 JD 優先級加權。",
+      priorityLabels: { Required: "必要條件 · 1.35×", Core: "核心條件 · 1.0×", Preferred: "加分條件 · 0.65×" },
+      statusLabels: { "Strong evidence": "證據充分", "Partial evidence": "部分證據", Gap: "證據缺口" },
+    };
+  if (locale === "zh-CN")
+    return {
+      eyebrow: "评分与判断标准",
+      title: "这是证据覆盖率估算，不是 ATS 录取或淘汰分数",
+      intro: "系统只根据你提供的简历与 JD 判断；没有找到证据，不代表你没有能力。",
+      overall: "整体证据覆盖率",
+      keywordEvidence: "关键词与简历证据",
+      score: "分数",
+      priority: "JD 优先级",
+      classification: "分类",
+      strong: "证据充分",
+      partial: "部分证据",
+      gap: "证据缺口",
+      strongRule: "直接相关，并包含具体行动或可量化结果。",
+      partialRule: "有相关技能或词语，但责任、情境或结果不够完整。",
+      gapRule: "简历中没有找到可支持此要求的内容。",
+      formula: "单项：相关词语 45–65 分＋具体行动 15 分＋可量化结果 20 分。整体分数按 JD 优先级加权。",
+      priorityLabels: { Required: "必要条件 · 1.35×", Core: "核心条件 · 1.0×", Preferred: "加分条件 · 0.65×" },
+      statusLabels: { "Strong evidence": "证据充分", "Partial evidence": "部分证据", Gap: "证据缺口" },
+    };
+  return {
+    eyebrow: "Scoring and classification",
+    title: "This estimates evidence coverage—not ATS acceptance or rejection",
+    intro: "The score only uses the resume and job description you provide. Missing evidence does not mean missing ability.",
+    overall: "Overall evidence coverage",
+    keywordEvidence: "Keyword and resume evidence",
+    score: "Score",
+    priority: "JD priority",
+    classification: "Classification",
+    strong: "Strong evidence",
+    partial: "Partial evidence",
+    gap: "Evidence gap",
+    strongRule: "Directly relevant, with a concrete action or measurable result.",
+    partialRule: "A related skill appears, but ownership, context, or results are incomplete.",
+    gapRule: "No resume content was found that supports this requirement.",
+    formula: "Per keyword: related term 45–65 points + concrete action 15 + measurable result 20. Overall coverage is weighted by JD priority.",
+    priorityLabels: { Required: "Required · 1.35×", Core: "Core · 1.0×", Preferred: "Preferred · 0.65×" },
+    statusLabels: { "Strong evidence": "Strong evidence", "Partial evidence": "Partial evidence", Gap: "Evidence gap" },
+  };
+}
+
+function interviewStudioUiFor(locale: LocaleCode) {
+  if (locale === "zh-TW")
+    return {
+      round: "面試關卡",
+      decision: "這位面試官要做的決定",
+      answerPattern: "最有力的回答方式",
+      avoid: "常見扣分點",
+      prep: "進入這關前先準備",
+      resources: "Technical Round 練習資源",
+      resourcesIntro: "依目前面試角色推薦；開啟外部網站前，請自行確認帳號、價格與隱私條款。",
+      vocabulary: "語音專有名詞強化",
+      vocabularyNote: "辨識會優先考慮履歷、JD 與此關卡的詞彙；文字仍可在送出前編輯。",
+      thinking: "面試官正在準備追問…",
+    };
+  if (locale === "zh-CN")
+    return {
+      round: "面试关卡",
+      decision: "这位面试官要做的决定",
+      answerPattern: "最有力的回答方式",
+      avoid: "常见扣分点",
+      prep: "进入这关前先准备",
+      resources: "Technical Round 练习资源",
+      resourcesIntro: "按当前面试角色推荐；打开外部网站前，请自行确认账号、价格与隐私条款。",
+      vocabulary: "语音专业词汇增强",
+      vocabularyNote: "识别会优先考虑简历、JD 与本关词汇；文字仍可在发送前编辑。",
+      thinking: "面试官正在准备追问…",
+    };
+  return {
+    round: "Interview round",
+    decision: "Decision this interviewer owns",
+    answerPattern: "Strong answer pattern",
+    avoid: "Common red flags",
+    prep: "Prepare before this round",
+    resources: "Technical-round practice",
+    resourcesIntro: "Selected for this interviewer. External sites have their own accounts, pricing, privacy, and terms.",
+    vocabulary: "Speech vocabulary boost",
+    vocabularyNote: "Recognition prioritizes terms from your resume, JD, and this round. You can edit the transcript before sending.",
+    thinking: "The interviewer is preparing a follow-up…",
+  };
+}
+
 export default function Home({
   initialLocale,
 }: {
@@ -1112,6 +1735,7 @@ export default function Home({
   const [jd, setJd] = useState("");
   const [resume, setResume] = useState("");
   const [interviewContext, setInterviewContext] = useState("");
+  const [exampleLoaded, setExampleLoaded] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
@@ -1166,6 +1790,7 @@ export default function Home({
     useState(false);
   const [interviewScores, setInterviewScores] =
     useState<InterviewScore | null>(null);
+  const [interviewThinking, setInterviewThinking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
@@ -1184,7 +1809,9 @@ export default function Home({
   const openSourceLabel = openSourceLabelFor(locale);
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
+  const interviewStudioUi = interviewStudioUiFor(locale);
   const faq = faqCopyFor(locale);
+  const scoring = scoringGuideFor(locale);
   const selectedProvider =
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
   const preferencesLoaded = useRef(false);
@@ -1194,6 +1821,12 @@ export default function Home({
   } | null>(null);
   const keepListeningRef = useRef(false);
   const interviewLocaleRef = useRef(locale);
+  const lastFinalSpeechRef = useRef({ text: "", at: 0 });
+  const speechRestartCountRef = useRef(0);
+  const speechVocabulary = useMemo(
+    () => speechVocabularyFor(jd, resume, matches, interviewPersona),
+    [interviewPersona, jd, matches, resume],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -1458,6 +2091,7 @@ export default function Home({
     setResume(SAMPLE_RESUME);
     setInterviewContext("Hiring manager interview · next Tuesday");
     setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
+    setExampleLoaded(true);
     if (openAfterLoading) openWorkspace("Analyze");
   }
 
@@ -1774,7 +2408,7 @@ export default function Home({
 
     setModelRunning(true);
     setModelStatus(`Running ${modelName.trim()} on your configured endpoint…`);
-    const prompt = `You are CareerStoryMap, an evidence-grounded career coach. Compare the resume evidence with the job description. Never invent experience. Return concise plain text with exactly three headings: BEST STORY, PROOF TO QUOTE, GAPS TO ADDRESS.\n\nJOB DESCRIPTION\n${jd.slice(0, 10_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 10_000)}`;
+    const prompt = `You are InterviewThread, an evidence-grounded career coach. Compare the resume evidence with the job description. Never invent experience. Return concise plain text with exactly three headings: BEST STORY, PROOF TO QUOTE, GAPS TO ADDRESS.\n\nJOB DESCRIPTION\n${jd.slice(0, 10_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 10_000)}`;
     try {
       const content = await requestConfiguredModel(prompt);
       setModelInsight(content.trim());
@@ -1933,7 +2567,7 @@ export default function Home({
       setNotificationPermission(permission);
       const top = newlyQualified[0];
       if (permission === "granted" && top)
-        new Notification("CareerStoryMap Story Signal", {
+        new Notification("InterviewThread Story Signal", {
           body: `${top.storyFit}% story fit · ${top.title} at ${top.company}. ${top.proofCount} proof-backed signals.`,
           tag: `aptograph-${top.id}`,
         });
@@ -1991,7 +2625,7 @@ export default function Home({
         modelName.trim()
       ) {
         reply = await requestConfiguredModel(
-          `You are CareerStoryMap, an evidence-grounded career copilot. Answer the user's question in ${LANGUAGES.find(([code]) => code === locale)?.[1] || "English"}. Never invent experience. Ground the answer in the resume and JD, clearly label any gap, and give wording the candidate can truthfully say.\n\nQUESTION\n${userQuestion}\n\nJOB DESCRIPTION\n${jd.slice(0, 8_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 8_000)}`,
+          `You are InterviewThread, an evidence-grounded career copilot. Answer the user's question in ${LANGUAGES.find(([code]) => code === locale)?.[1] || "English"}. Never invent experience. Ground the answer in the resume and JD, clearly label any gap, and give wording the candidate can truthfully say.\n\nQUESTION\n${userQuestion}\n\nJOB DESCRIPTION\n${jd.slice(0, 8_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 8_000)}`,
         );
       }
       setMessages((current) => [
@@ -2030,8 +2664,13 @@ export default function Home({
   }
 
   function nextInterviewCoordinates(forceNewTopic = false) {
-    if (forceNewTopic || interviewTurn >= INTERVIEW_DEPTH_COUNT - 1)
-      return { turn: 0, topicIndex: interviewTopicIndex + 1 };
+    if (forceNewTopic || interviewTurn >= INTERVIEW_DEPTH_COUNT - 1) {
+      const topicCount = interviewTopicsFor(matches, locale).length;
+      return {
+        turn: 0,
+        topicIndex: (interviewTopicIndex + 1) % topicCount,
+      };
+    }
     return { turn: interviewTurn + 1, topicIndex: interviewTopicIndex };
   }
 
@@ -2064,32 +2703,60 @@ export default function Home({
       window.setTimeout(() => void speakInterviewQuestion(nextQuestion), 0);
   }
 
-  function submitInterviewAnswer(event: FormEvent) {
+  async function modelInterviewFollowUp(
+    answer: string,
+    next: { turn: number; topicIndex: number },
+    fallbackQuestion: string,
+  ) {
+    if (
+      selectedProvider.kind === "built-in" ||
+      !modelEndpoint.trim() ||
+      !modelName.trim()
+    )
+      return fallbackQuestion;
+    const persona =
+      INTERVIEW_PERSONAS.find((item) => item.id === interviewPersona) ||
+      INTERVIEW_PERSONAS[0];
+    const topic = interviewTopicsFor(matches, locale)[next.topicIndex];
+    const priorQuestions = interviewMessages
+      .filter((message) => message.role === "assistant")
+      .map((message) => questionOnly(message.content))
+      .slice(-5)
+      .join("\n- ");
+    const language =
+      LANGUAGES.find(([code]) => code === locale)?.[1] || "English";
+    const prompt = `Act as a real ${persona.label}, not a coach and not an AI assistant. Your hiring decision is: ${persona.decision}\nYour focus: ${persona.focus}\nYour pressure style: ${persona.pressure}\n\nAsk exactly ONE concise, natural follow-up question in ${language}. Refer to a specific detail from the candidate's latest answer. Probe the weakest missing evidence from this role's perspective. Do not praise, summarize, score, give advice, use headings, say "as an AI", or invent facts. Do not repeat any earlier question. Keep the question under 34 words when the language uses spaces.\n\nLATEST ANSWER\n${answer.slice(0, 3_500)}\n\nCURRENT TOPIC\n${topic?.focusLabel || "role evidence"}\n\nEARLIER QUESTIONS\n- ${priorQuestions || "None"}\n\nJOB DESCRIPTION\n${jd.slice(0, 5_000)}\n\nRESUME EVIDENCE\n${resume.slice(0, 5_000)}`;
+    const response = await requestConfiguredModel(prompt);
+    const naturalQuestion = response
+      .replace(/^(?:question|follow-up|interviewer)\s*:\s*/i, "")
+      .replace(/^["“]|["”]$/g, "")
+      .trim();
+    if (!naturalQuestion || /as an ai/i.test(naturalQuestion))
+      return fallbackQuestion;
+    const topicLabel = interviewFlowCopyFor(locale).topic;
+    return `${topicLabel} ${next.topicIndex + 1} · ${topic?.focusLabel || "Role evidence"}\n\n${naturalQuestion.slice(0, 500)}`;
+  }
+
+  async function submitInterviewAnswer(event: FormEvent) {
     event.preventDefault();
     const answer = interviewAnswer.trim();
-    if (!answer || !interviewMessages.length) return;
+    if (!answer || !interviewMessages.length || interviewThinking) return;
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     const scores = scoreInterviewAnswer(answer, matches);
     const next = nextInterviewCoordinates();
-    const nextQuestion = questionForInterview(
+    const fallbackQuestion = questionForInterview(
       interviewPersona,
       next.turn,
       matches,
       locale,
       next.topicIndex,
+      answer,
     );
     const feedback = interviewFeedback(scores, interview, interviewMode);
     setInterviewMessages((current) => [
       ...current,
       { role: "user", content: answer },
-      {
-        role: "assistant",
-        content:
-          interviewMode === "Coaching"
-            ? `${feedback}\n\n${nextQuestion}`
-            : nextQuestion,
-      },
     ]);
     setInterviewScores(scores);
     setInterviewTurn(next.turn);
@@ -2099,6 +2766,29 @@ export default function Home({
     setVoiceInterim("");
     setRecognitionConfidence(null);
     setIsListening(false);
+    setInterviewThinking(true);
+    let nextQuestion = fallbackQuestion;
+    try {
+      nextQuestion = await modelInterviewFollowUp(
+        answer,
+        next,
+        fallbackQuestion,
+      );
+    } catch {
+      nextQuestion = fallbackQuestion;
+    } finally {
+      setInterviewThinking(false);
+    }
+    setInterviewMessages((current) => [
+      ...current,
+      {
+        role: "assistant",
+        content:
+          interviewMode === "Coaching"
+            ? `${feedback}\n\n${nextQuestion}`
+            : nextQuestion,
+      },
+    ]);
     if (autoReadInterviewQuestions)
       window.setTimeout(() => void speakInterviewQuestion(nextQuestion), 0);
   }
@@ -2163,6 +2853,7 @@ export default function Home({
       continuous: boolean;
       interimResults: boolean;
       maxAlternatives: number;
+      phrases?: Array<{ phrase: string; boost?: number }>;
       start: () => void;
       stop: () => void;
       onresult:
@@ -2175,9 +2866,14 @@ export default function Home({
       onerror: ((event: { error?: string }) => void) | null;
     };
     type RecognitionConstructor = new () => BrowserRecognition;
+    type RecognitionPhraseConstructor = new (
+      phrase: string,
+      boost?: number,
+    ) => { phrase: string; boost?: number };
     const voiceWindow = window as typeof window & {
       SpeechRecognition?: RecognitionConstructor;
       webkitSpeechRecognition?: RecognitionConstructor;
+      SpeechRecognitionPhrase?: RecognitionPhraseConstructor;
     };
     const Recognition =
       voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
@@ -2197,7 +2893,17 @@ export default function Home({
     recognition.lang = speechLocale;
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.maxAlternatives = 3;
+    recognition.maxAlternatives = 5;
+    const Phrase = voiceWindow.SpeechRecognitionPhrase;
+    if (Phrase) {
+      try {
+        recognition.phrases = speechVocabulary
+          .slice(0, 30)
+          .map((phrase) => new Phrase(phrase, 7));
+      } catch {
+        // Contextual phrase bias is progressive enhancement.
+      }
+    }
     recognition.onresult = (event) => {
       const finalSegments: string[] = [];
       const interimSegments: string[] = [];
@@ -2206,10 +2912,14 @@ export default function Home({
       for (let index = startIndex; index < event.results.length; index += 1) {
         const result = event.results[index];
         const alternatives = Array.from(result).sort(
-          (left, right) => (right.confidence || 0) - (left.confidence || 0),
+          (left, right) =>
+            recognitionAlternativeScore(right, speechVocabulary) -
+            recognitionAlternativeScore(left, speechVocabulary),
         );
         const best = alternatives[0];
-        const transcript = best?.transcript?.trim();
+        const transcript = best?.transcript
+          ? normalizeSpeechTranscript(best.transcript, speechVocabulary)
+          : "";
         if (!transcript) continue;
         if (typeof best.confidence === "number" && best.confidence > 0)
           confidences.push(best.confidence);
@@ -2219,10 +2929,20 @@ export default function Home({
       const finalText = finalSegments.join(
         ["zh-CN", "zh-TW", "ja", "th"].includes(locale) ? "" : " ",
       );
-      if (finalText)
-        setInterviewAnswer((current) =>
-          appendTranscript(current, finalText, locale),
-        );
+      if (finalText) {
+        const now = Date.now();
+        const fingerprint = finalText.toLocaleLowerCase().replace(/\s+/g, " ");
+        if (
+          fingerprint !== lastFinalSpeechRef.current.text ||
+          now - lastFinalSpeechRef.current.at > 4_000
+        ) {
+          setInterviewAnswer((current) =>
+            appendTranscript(current, finalText, locale),
+          );
+          lastFinalSpeechRef.current = { text: fingerprint, at: now };
+        }
+        speechRestartCountRef.current = 0;
+      }
       setVoiceInterim(
         interimSegments.join(
           ["zh-CN", "zh-TW", "ja", "th"].includes(locale) ? "" : " ",
@@ -2239,6 +2959,11 @@ export default function Home({
     };
     recognition.onend = () => {
       if (keepListeningRef.current) {
+        const delay = Math.min(
+          1_500,
+          200 + speechRestartCountRef.current * 180,
+        );
+        speechRestartCountRef.current += 1;
         window.setTimeout(() => {
           if (!keepListeningRef.current) return;
           try {
@@ -2247,7 +2972,7 @@ export default function Home({
             keepListeningRef.current = false;
             setIsListening(false);
           }
-        }, 250);
+        }, delay);
       } else {
         setIsListening(false);
       }
@@ -2266,6 +2991,8 @@ export default function Home({
     };
     speechRecognitionRef.current = recognition;
     keepListeningRef.current = true;
+    lastFinalSpeechRef.current = { text: "", at: 0 };
+    speechRestartCountRef.current = 0;
     try {
       recognition.start();
       setIsListening(true);
@@ -2388,19 +3115,32 @@ export default function Home({
       selectedInterviewPersonaBase.label,
     ),
   };
+  const selectedInterviewResources = TECHNICAL_RESOURCES.filter((resource) =>
+    resource.tags.some((tag) =>
+      selectedInterviewPersonaBase.resourceTags.includes(tag),
+    ),
+  ).slice(0, 5);
   const interviewProofs = matches.filter(
     (item) =>
       item.status !== "Gap" && item.evidence !== "No source evidence found.",
   );
   const interviewGaps = matches.filter((item) => item.status === "Gap");
-  const interviewProof =
-    interviewProofs[
-      interviewTopicIndex % Math.max(1, interviewProofs.length)
-    ] || firstEvidence(matches);
-  const interviewGap =
-    interviewGaps[
-      interviewTopicIndex % Math.max(1, interviewGaps.length)
+  const interviewTopics = interviewTopicsFor(matches, locale);
+  const currentInterviewTopic =
+    interviewTopics[interviewTopicIndex % interviewTopics.length];
+  const nextInterviewTopic =
+    interviewTopics[(interviewTopicIndex + 1) % interviewTopics.length];
+  const nextInterviewStage =
+    interviewFlow.stages[
+      interviewTurn >= INTERVIEW_DEPTH_COUNT - 1 ? 0 : interviewTurn + 1
     ];
+  const interviewProof =
+    interviewProofs.find(
+      (item) => item.keyword === currentInterviewTopic.proofLabel,
+    ) || firstEvidence(matches);
+  const interviewGap = interviewGaps.find(
+    (item) => item.keyword === currentInterviewTopic.gapLabel,
+  );
   const interviewAverage = interviewScores
     ? Math.round(
         (interviewScores.relevance +
@@ -2413,23 +3153,23 @@ export default function Home({
     : null;
   const landingTitle =
     locale === "en"
-      ? "Turn one job description and your real experience into interview stories you can defend."
+      ? "Practice the interview for the job you want."
       : copy.heroTitle;
   const landingSubtitle =
     locale === "en"
-      ? "CareerStoryMap finds your strongest evidence, exposes the real gaps, and drills you with role-specific follow-ups—without inventing achievements."
+      ? "Upload your resume and the job description. Get truthful stories, realistic questions, and role-specific feedback—without made-up achievements."
       : copy.heroBody;
   const landingPrimaryCta =
-    locale === "en" ? "Build my free evidence map" : detail.runMatch;
+    locale === "en" ? "Start my free mock interview" : detail.runMatch;
   const landingSecondaryCta =
-    locale === "en" ? "See a 2-minute example" : detail.sample;
+    locale === "en" ? "See how it works" : detail.sample;
   const proofPackFlow =
     locale === "en"
       ? [
-          "Resume + JD",
-          "Evidence Map",
-          "3 Interview Stories",
-          "Mock Interview",
+          "Upload your resume",
+          "Paste the job description",
+          "Get truthful stories",
+          "Practice the interview",
         ]
       : [
           `${detail.resumeEvidence} + ${detail.jobDescription}`,
@@ -2486,10 +3226,10 @@ export default function Home({
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="CareerStoryMap home">
+        <a className="brand" href="#top" aria-label="InterviewThread home">
           <BrandMark />
           <span>
-            CareerStoryMap <small>Evidence to opportunity</small>
+            InterviewThread <small>{brandTaglineFor(locale)}</small>
           </span>
         </a>
         <nav className="topnav" aria-label="Primary navigation">
@@ -2503,14 +3243,15 @@ export default function Home({
               openWorkspace("Analyze");
             }}
           >
-            {locale === "en" ? "Interview Proof Pack" : detail.workspace}
+            {locale === "en" ? "Start practicing" : detail.workspace}
           </a>
-          <a href="#questions">{faq.eyebrow}</a>
+          <a href="#questions">{locale === "en" ? "FAQ" : faq.eyebrow}</a>
           <a href="#plans">{openSourceLabel}</a>
         </nav>
         <label className="locale-control">
           <span>{copy.language}</span>
           <select
+            aria-label={copy.language}
             value={locale}
             onChange={(event) =>
               chooseLocale(event.target.value as LocaleCode)
@@ -2538,10 +3279,10 @@ export default function Home({
             },
             {
               label:
-                locale === "en" ? "Interview Proof Pack" : detail.workspace,
+                locale === "en" ? "Start practicing" : detail.workspace,
               href: `${localizedPath(locale)}?view=Analyze#workspace`,
             },
-            { label: faq.eyebrow, href: "#questions" },
+            { label: locale === "en" ? "FAQ" : faq.eyebrow, href: "#questions" },
             { label: openSourceLabel, href: "#plans" },
             {
               label: accountLabels.account,
@@ -2549,7 +3290,7 @@ export default function Home({
             },
             {
               label: detail.source,
-              href: "https://github.com/weiyu1029/CareerStoryMap-agent",
+              href: "https://github.com/weiyu1029/careerproof-agent",
               external: true,
             },
           ]}
@@ -2592,7 +3333,7 @@ export default function Home({
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">
-            {locale === "en" ? "Interview Proof Pack" : detail.evidenceWorkspace}
+            {locale === "en" ? "Free AI mock interview practice" : detail.evidenceWorkspace}
           </p>
           <h1>{landingTitle}</h1>
           <p className="lede">{landingSubtitle}</p>
@@ -2753,16 +3494,24 @@ export default function Home({
               <div className="section-heading">
                 <div>
                   <p className="eyebrow">
-                    {locale === "en" ? "Core product" : detail.evidenceWorkspace}
+                    {locale === "en"
+                      ? exampleLoaded
+                        ? "For example"
+                        : "Start here"
+                      : detail.evidenceWorkspace}
                   </p>
                   <h2>
                     {locale === "en"
-                      ? "Build your Interview Proof Pack"
+                      ? exampleLoaded
+                        ? "See how one resume becomes interview practice"
+                        : "Start with your resume and job description"
                       : detail.compare}
                   </h2>
                   <p>
                     {locale === "en"
-                      ? "Add one real resume, one real job description, and your interview timing. CareerStoryMap will only use evidence it can trace back to your input."
+                      ? exampleLoaded
+                        ? "This is sample data, not your information. We show what the candidate can prove, what is still missing, and which answer they should practice next."
+                        : "Add your real experience and the role you want. We will never add achievements that are not in your resume."
                       : copy.heroBody}
                   </p>
                 </div>
@@ -2773,6 +3522,38 @@ export default function Home({
                   {detail.sample}
                 </button>
               </div>
+              {exampleLoaded && locale === "en" && (
+                <aside className="example-tour" role="note">
+                  <div className="example-tour-heading">
+                    <span>For example</span>
+                    <div>
+                      <b>Product Analyst applying to a new role</b>
+                      <p>
+                        One sample resume and one sample job description become a
+                        clear, truthful interview plan.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="example-value-strip" aria-label="Example result preview">
+                    <div>
+                      <span>1 · The job asks for</span>
+                      <b>SQL, dashboards, experiments, and KPI ownership</b>
+                    </div>
+                    <div>
+                      <span>2 · The resume proves</span>
+                      <b>SQL dashboards and 30% less preparation time</b>
+                    </div>
+                    <div>
+                      <span>3 · The real gaps</span>
+                      <b>Experiments, Python, and KPI ownership are not proven yet</b>
+                    </div>
+                    <div>
+                      <span>4 · Practice this story</span>
+                      <b>How the candidate automated a weekly validation workflow</b>
+                    </div>
+                  </div>
+                </aside>
+              )}
               <ol className="workspace-progress" aria-label={landingPrimaryCta}>
                 {proofPackFlow.map((item, index) => {
                   const inputsReady = Boolean(resume.trim() && jd.trim());
@@ -2800,13 +3581,37 @@ export default function Home({
                 <div className="document-field guided-card">
                   <div className="guided-card-heading">
                     <span>1</span>
-                    <label htmlFor="resume-text">{detail.resumeEvidence}</label>
-                    {resume.trim() && <small>{detail.checked}</small>}
+                    <label htmlFor="resume-text">
+                      {locale === "en"
+                        ? exampleLoaded
+                          ? "For example: what this candidate has actually done"
+                          : "Your resume or work experience"
+                        : detail.resumeEvidence}
+                    </label>
+                    {resume.trim() && (
+                      <small>
+                        {locale === "en"
+                          ? exampleLoaded
+                            ? "Example"
+                            : "Ready"
+                          : detail.checked}
+                      </small>
+                    )}
                   </div>
+                  {locale === "en" && (
+                    <p className="guided-card-explainer">
+                      {exampleLoaded
+                        ? "The product only uses experience it can find in this text."
+                        : "Paste or upload the experience you can truthfully discuss."}
+                    </p>
+                  )}
                   <textarea
                     id="resume-text"
                     value={resume}
-                    onChange={(event) => setResume(event.target.value)}
+                    onChange={(event) => {
+                      setResume(event.target.value);
+                      setExampleLoaded(false);
+                    }}
                     placeholder={detail.resumeEvidence}
                   />
                   <label className="upload-control" htmlFor="resume-file">
@@ -2815,7 +3620,10 @@ export default function Home({
                       type="file"
                       accept="*/*"
                       multiple
-                      onChange={(event) => loadFile(event, "resume")}
+                      onChange={(event) => {
+                        setExampleLoaded(false);
+                        loadFile(event, "resume");
+                      }}
                     />
                     <span>
                       {uploadingDestination === "resume"
@@ -2828,13 +3636,37 @@ export default function Home({
                 <div className="document-field guided-card">
                   <div className="guided-card-heading">
                     <span>2</span>
-                    <label htmlFor="jd-text">{detail.jobDescription}</label>
-                    {jd.trim() && <small>{detail.checked}</small>}
+                    <label htmlFor="jd-text">
+                      {locale === "en"
+                        ? exampleLoaded
+                          ? "For example: what this employer is looking for"
+                          : "The job description you are applying to"
+                        : detail.jobDescription}
+                    </label>
+                    {jd.trim() && (
+                      <small>
+                        {locale === "en"
+                          ? exampleLoaded
+                            ? "Example"
+                            : "Ready"
+                          : detail.checked}
+                      </small>
+                    )}
                   </div>
+                  {locale === "en" && (
+                    <p className="guided-card-explainer">
+                      {exampleLoaded
+                        ? "We turn these requirements into strengths, gaps, stories, and interview questions."
+                        : "Paste the full posting so the questions match the real role."}
+                    </p>
+                  )}
                   <textarea
                     id="jd-text"
                     value={jd}
-                    onChange={(event) => setJd(event.target.value)}
+                    onChange={(event) => {
+                      setJd(event.target.value);
+                      setExampleLoaded(false);
+                    }}
                     placeholder={detail.jobDescription}
                   />
                   <label className="upload-control" htmlFor="jd-file">
@@ -2843,7 +3675,10 @@ export default function Home({
                       type="file"
                       accept="*/*"
                       multiple
-                      onChange={(event) => loadFile(event, "jd")}
+                      onChange={(event) => {
+                        setExampleLoaded(false);
+                        loadFile(event, "jd");
+                      }}
                     />
                     <span>
                       {uploadingDestination === "jd"
@@ -2883,10 +3718,16 @@ export default function Home({
               <div className="analysis-primary-action">
                 <div>
                   <span>3</span>
-                  <b>{landingPrimaryCta}</b>
+                  <b>
+                    {locale === "en" && exampleLoaded
+                      ? "Show what this example proves"
+                      : landingPrimaryCta}
+                  </b>
                   <small>
                     {locale === "en"
-                      ? "Evidence, gaps, stories, follow-ups, and a prep plan"
+                      ? exampleLoaded
+                        ? "Supported strengths, real gaps, one truthful story, and likely follow-up questions"
+                        : "Evidence, gaps, stories, follow-ups, and a prep plan"
                       : detail.matrix}
                   </small>
                 </div>
@@ -2903,7 +3744,11 @@ export default function Home({
                   }}
                   disabled={modelRunning || !jd.trim() || !resume.trim()}
                 >
-                  {modelRunning ? "Running…" : landingPrimaryCta}
+                  {modelRunning
+                    ? "Running…"
+                    : locale === "en" && exampleLoaded
+                      ? "Analyze this example"
+                      : landingPrimaryCta}
                 </button>
               </div>
               <details className="advanced-settings">
@@ -2973,6 +3818,43 @@ export default function Home({
                 </div>
               </details>
               <div className="results-card" id="analysis-results">
+                <section className="scoring-guide" aria-labelledby="scoring-guide-title">
+                  <div className="scoring-guide-heading">
+                    <div>
+                      <p className="eyebrow">{scoring.eyebrow}</p>
+                      <h3 id="scoring-guide-title">{scoring.title}</h3>
+                      <p>{scoring.intro}</p>
+                    </div>
+                    <div className="coverage-score">
+                      <span>{scoring.overall}</span>
+                      <strong>{matches.length ? scoreMatches(matches) : "—"}</strong>
+                      <small>/100</small>
+                    </div>
+                  </div>
+                  <div className="score-band-grid">
+                    <article className="strong">
+                      <span>80–100</span>
+                      <b>{scoring.strong}</b>
+                      <p>{scoring.strongRule}</p>
+                    </article>
+                    <article className="partial">
+                      <span>45–79</span>
+                      <b>{scoring.partial}</b>
+                      <p>{scoring.partialRule}</p>
+                    </article>
+                    <article className="gap">
+                      <span>0–44</span>
+                      <b>{scoring.gap}</b>
+                      <p>{scoring.gapRule}</p>
+                    </article>
+                  </div>
+                  <div className="priority-weights" aria-label={scoring.priority}>
+                    <span>{scoring.priorityLabels.Required}</span>
+                    <span>{scoring.priorityLabels.Core}</span>
+                    <span>{scoring.priorityLabels.Preferred}</span>
+                  </div>
+                  <p className="score-formula">{scoring.formula}</p>
+                </section>
                 <div className="results-title">
                   <h3>{detail.matrix}</h3>
                   <span>
@@ -2980,6 +3862,12 @@ export default function Home({
                   </span>
                 </div>
                 <div className="keyword-table">
+                  <div className="keyword-table-header" aria-hidden="true">
+                    <span>{scoring.keywordEvidence}</span>
+                    <span>{scoring.score}</span>
+                    <span>{scoring.priority}</span>
+                    <span>{scoring.classification}</span>
+                  </div>
                   {matches.length ? (
                     matches.map((item) => (
                       <div className="keyword-row detailed" key={item.keyword}>
@@ -2987,11 +3875,12 @@ export default function Home({
                           <b>{item.keyword}</b>
                           <small>{item.evidence}</small>
                         </div>
-                        <span>{item.priority}</span>
+                        <span className="keyword-score">{item.score}/100</span>
+                        <span>{scoring.priorityLabels[item.priority]}</span>
                         <span
                           className={item.status === "Gap" ? "gap" : "evidence"}
                         >
-                          {item.status}
+                          {scoring.statusLabels[item.status]}
                         </span>
                       </div>
                     ))
@@ -3157,7 +4046,7 @@ export default function Home({
                   <h2>{interview.title}</h2>
                   <p>{interview.subtitle}</p>
                 </div>
-                <span className="status-pill light">CareerStoryMap ProofLoop</span>
+                <span className="status-pill light">InterviewThread ProofLoop</span>
               </div>
 
               <div className="interview-setup">
@@ -3165,6 +4054,7 @@ export default function Home({
                   <span>{interview.role}</span>
                   <select
                     value={interviewPersona}
+                    disabled={interviewThinking}
                     onChange={(event) => {
                       setInterviewPersona(
                         event.target.value as InterviewPersonaId,
@@ -3192,6 +4082,7 @@ export default function Home({
                           role="radio"
                           aria-checked={interviewMode === mode}
                           className={interviewMode === mode ? "active" : ""}
+                          disabled={interviewThinking}
                           key={mode}
                           onClick={() => setInterviewMode(mode)}
                         >
@@ -3207,6 +4098,7 @@ export default function Home({
                   type="button"
                   className="button primary"
                   onClick={startInterview}
+                  disabled={interviewThinking}
                 >
                   {interviewMessages.length ? interview.restart : interview.start}
                 </button>
@@ -3237,6 +4129,76 @@ export default function Home({
                 </article>
               </div>
 
+              <section
+                className="interview-role-playbook"
+                aria-labelledby="interview-role-playbook-title"
+              >
+                <div className="interview-role-playbook-heading">
+                  <div>
+                    <p className="eyebrow">{interviewStudioUi.round}</p>
+                    <h3 id="interview-role-playbook-title">
+                      {selectedInterviewPersona.round}
+                    </h3>
+                  </div>
+                  <span className="status-pill light">
+                    {selectedInterviewPersona.label}
+                  </span>
+                </div>
+                <div className="interview-role-guide-grid">
+                  <article>
+                    <span>{interviewStudioUi.decision}</span>
+                    <p>{selectedInterviewPersona.decision}</p>
+                  </article>
+                  <article>
+                    <span>{interviewStudioUi.answerPattern}</span>
+                    <p>{selectedInterviewPersona.answerPattern}</p>
+                  </article>
+                  <article className="warning">
+                    <span>{interviewStudioUi.avoid}</span>
+                    <p>{selectedInterviewPersona.redFlags}</p>
+                  </article>
+                </div>
+                <div className="interview-prep-checklist">
+                  <b>{interviewStudioUi.prep}</b>
+                  <ul>
+                    {selectedInterviewPersona.prepChecklist.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+
+              <section
+                className="technical-round-library"
+                aria-labelledby="technical-round-library-title"
+              >
+                <div className="technical-round-library-heading">
+                  <div>
+                    <p className="eyebrow">{interviewStudioUi.resources}</p>
+                    <h3 id="technical-round-library-title">
+                      {selectedInterviewPersona.label}
+                    </h3>
+                  </div>
+                  <p>{interviewStudioUi.resourcesIntro}</p>
+                </div>
+                <div className="technical-resource-grid">
+                  {selectedInterviewResources.map((resource) => (
+                    <a
+                      className="technical-resource-card"
+                      href={resource.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      key={resource.name}
+                    >
+                      <span>{resource.access}</span>
+                      <b>{resource.name}</b>
+                      <p>{resource.bestFor}</p>
+                      <small>Open practice resource ↗</small>
+                    </a>
+                  ))}
+                </div>
+              </section>
+
               <div className="interview-stage">
                 <section className="interview-room" aria-label="Mock interview transcript">
                   <div className="interview-room-bar">
@@ -3261,7 +4223,7 @@ export default function Home({
                       type="button"
                       className="voice-button"
                       onClick={speakLatestInterviewQuestion}
-                      disabled={!interviewMessages.length}
+                      disabled={!interviewMessages.length || interviewThinking}
                       aria-pressed={isSpeaking}
                     >
                       {isSpeaking ? interview.mute : interview.speak}
@@ -3270,7 +4232,10 @@ export default function Home({
                   <div className="interview-progress-wrap">
                     <div className="interview-progress-heading">
                       <b>
-                        {interviewFlow.topic} {interviewTopicIndex + 1}
+                        {interviewFlow.topic}{" "}
+                        {(interviewTopicIndex % interviewTopics.length) + 1} /{" "}
+                        {interviewTopics.length} ·{" "}
+                        {currentInterviewTopic.focusLabel}
                       </b>
                       <span>
                         {interviewFlow.step} {interviewTurn + 1} /{" "}
@@ -3300,35 +4265,44 @@ export default function Home({
                         type="button"
                         className="button secondary"
                         onClick={() => addNextInterviewQuestion(false)}
-                        disabled={!interviewMessages.length}
+                        disabled={!interviewMessages.length || interviewThinking}
                       >
-                        {interviewFlow.nextQuestion}
+                        {interviewFlow.nextQuestion} · {nextInterviewStage}
                       </button>
                       <button
                         type="button"
                         className="button secondary"
                         onClick={() => addNextInterviewQuestion(true)}
-                        disabled={!interviewMessages.length}
+                        disabled={!interviewMessages.length || interviewThinking}
                       >
-                        {interviewFlow.newTopic}
+                        {interviewFlow.newTopic} ·{" "}
+                        {nextInterviewTopic.focusLabel}
                       </button>
                     </div>
                   </div>
                   <div className="interview-transcript" aria-live="polite">
                     {interviewMessages.length ? (
-                      interviewMessages.map((message, index) => (
-                        <div
-                          className={`interview-message ${message.role}`}
-                          key={`${message.role}-${index}`}
-                        >
-                          <b>
-                            {message.role === "assistant"
-                              ? selectedInterviewPersona.label
-                              : interviewFlow.you}
-                          </b>
-                          <p>{message.content}</p>
-                        </div>
-                      ))
+                      <>
+                        {interviewMessages.map((message, index) => (
+                          <div
+                            className={`interview-message ${message.role}`}
+                            key={`${message.role}-${index}`}
+                          >
+                            <b>
+                              {message.role === "assistant"
+                                ? selectedInterviewPersona.label
+                                : interviewFlow.you}
+                            </b>
+                            <p>{message.content}</p>
+                          </div>
+                        ))}
+                        {interviewThinking && (
+                          <div className="interview-message assistant pending">
+                            <b>{selectedInterviewPersona.label}</b>
+                            <p>{interviewStudioUi.thinking}</p>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="interview-empty">
                         <b>{interview.storySpine}</b>
@@ -3353,7 +4327,7 @@ export default function Home({
                       value={interviewAnswer}
                       onChange={(event) => setInterviewAnswer(event.target.value)}
                       placeholder={interview.placeholder}
-                      disabled={!interviewMessages.length}
+                      disabled={!interviewMessages.length || interviewThinking}
                     />
                     {(isListening || voiceInterim) && (
                       <div className="voice-live-transcript" role="status">
@@ -3373,7 +4347,7 @@ export default function Home({
                         type="button"
                         className={`button secondary ${isListening ? "listening" : ""}`}
                         onClick={toggleInterviewListening}
-                        disabled={!interviewMessages.length}
+                        disabled={!interviewMessages.length || interviewThinking}
                         aria-pressed={isListening}
                       >
                         {isListening
@@ -3382,15 +4356,30 @@ export default function Home({
                       </button>
                       <button
                         className="button primary"
-                        disabled={!interviewMessages.length || !interviewAnswer.trim()}
+                        disabled={
+                          !interviewMessages.length ||
+                          !interviewAnswer.trim() ||
+                          interviewThinking
+                        }
                       >
-                        {interview.send}
+                        {interviewThinking
+                          ? interviewStudioUi.thinking
+                          : interview.send}
                       </button>
                     </div>
                     <small className="voice-disclosure">
                       {voiceMessage ||
                         `${interviewFlow.languageLocked} ${interview.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
                     </small>
+                    <div className="speech-vocabulary">
+                      <b>{interviewStudioUi.vocabulary}</b>
+                      <div>
+                        {speechVocabulary.slice(0, 10).map((term) => (
+                          <span key={term}>{term}</span>
+                        ))}
+                      </div>
+                      <small>{interviewStudioUi.vocabularyNote}</small>
+                    </div>
                     <label className="auto-read-toggle">
                       <input
                         type="checkbox"
@@ -3437,7 +4426,7 @@ export default function Home({
                   <div className="scorecard-note">
                     <b>Evidence before polish</b>
                     <p>
-                      CareerStoryMap rewards a specific decision, verifiable action,
+                      InterviewThread rewards a specific decision, verifiable action,
                       measurable outcome, and explicit link to this JD. Fluency
                       alone cannot create a high score.
                     </p>
@@ -3655,7 +4644,7 @@ export default function Home({
               <section className="story-radar" aria-labelledby="story-radar-title">
                 <div className="story-radar-heading">
                   <div>
-                    <p className="eyebrow">CareerStoryMap Story Signal</p>
+                    <p className="eyebrow">InterviewThread Story Signal</p>
                     <h3 id="story-radar-title">Proof-to-Role Radar</h3>
                     <p>
                       Alerts only when your evidence can carry a credible story—not
@@ -4283,7 +5272,7 @@ export default function Home({
                   >
                     <b>
                       {message.role === "assistant"
-                        ? "CareerStoryMap"
+                        ? "InterviewThread"
                         : detail.privateTitle}
                     </b>
                     <p>{message.content}</p>
@@ -4309,7 +5298,7 @@ export default function Home({
                 <small className="model-note">
                   {selectedProvider.kind === "built-in"
                     ? "Evidence-grounded local guidance."
-                    : `${modelStatus} If the local model is unavailable, CareerStoryMap returns an evidence-engine fallback and labels the failure.`}
+                    : `${modelStatus} If the local model is unavailable, InterviewThread returns an evidence-engine fallback and labels the failure.`}
                 </small>
               </form>
             </>
@@ -4431,39 +5420,47 @@ export default function Home({
       <section className="principles" id="product">
         <div>
           <p className="eyebrow">
-            {locale === "en" ? "One product, one outcome" : detail.product}
+            {locale === "en" ? "Why this exists" : detail.product}
           </p>
           <h2>
             {locale === "en"
-              ? "An Interview Proof Pack you can defend under follow-up."
+              ? "Generic AI can write fast. It cannot know what is true about you."
               : copy.heroTitle}
           </h2>
+          {locale === "en" && (
+            <p className="principles-intro">
+              Job descriptions can feel overwhelming, and generic AI drafts often
+              sound inaccurate or unlike you. We help you understand the role,
+              use only your real experience, and practice until you feel ready—
+              especially when interviewing in a second language.
+            </p>
+          )}
         </div>
         <div className="principle-grid">
           <article>
             <span>01</span>
-            <h3>{locale === "en" ? "Find the proof" : detail.matchedEvidence}</h3>
+            <h3>{locale === "en" ? "Stay truthful" : detail.matchedEvidence}</h3>
             <p>
               {locale === "en"
-                ? "Map each important JD requirement to a specific line in your real resume or career evidence."
+                ? "Turn your real resume into stronger answers without inventing skills, results, or experience."
                 : copy.heroBody}
             </p>
           </article>
           <article>
             <span>02</span>
-            <h3>{locale === "en" ? "Keep the gaps honest" : detail.evidenceCoverage}</h3>
+            <h3>{locale === "en" ? "Understand the job" : detail.evidenceCoverage}</h3>
             <p>
               {locale === "en"
-                ? "Separate stronger wording from missing evidence so you know what to explain, learn, or leave as a real gap."
+                ? "Translate a complicated job description into the evidence, gaps, and questions that matter most."
                 : copy.heroBody}
             </p>
           </article>
           <article>
             <span>03</span>
-            <h3>{locale === "en" ? "Defend the story" : copy.interview}</h3>
+            <h3>{locale === "en" ? "Practice with confidence" : copy.interview}</h3>
             <p>
               {locale === "en"
-                ? "Turn supported evidence into interview stories, then rehearse the questions a real interviewer is likely to ask next."
+                ? "Rehearse realistic follow-up questions and get feedback grounded in the role and your own story."
                 : interview.subtitle}
             </p>
           </article>

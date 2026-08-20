@@ -2,11 +2,20 @@ import type { LocaleCode } from "./i18n";
 
 export type InterviewPersonaId =
   | "hr"
+  | "recruiter"
   | "hiring-manager"
+  | "functional-lead"
+  | "technical"
+  | "system-design"
+  | "portfolio"
   | "coo"
   | "ceo"
   | "peer"
-  | "case";
+  | "cross-functional"
+  | "customer"
+  | "values"
+  | "case"
+  | "panel";
 
 export const INTERVIEW_DEPTH_COUNT = 5;
 
@@ -69,59 +78,122 @@ const PERSONA_LABELS: Partial<
 > = {
   "zh-TW": {
     hr: "人資初談",
+    recruiter: "招募顧問",
     "hiring-manager": "用人主管",
+    "functional-lead": "職能主管",
+    technical: "技術面試官",
+    "system-design": "系統設計面試官",
+    portfolio: "作品集評審",
     coo: "營運長",
     ceo: "執行長",
     peer: "未來同事",
+    "cross-functional": "跨部門合作夥伴",
+    customer: "客戶與使用者代表",
+    values: "文化與價值觀面試官",
     case: "案例拆解",
+    panel: "綜合面試小組",
   },
   "zh-CN": {
     hr: "人力资源初筛",
+    recruiter: "招聘顾问",
     "hiring-manager": "招聘经理",
+    "functional-lead": "职能负责人",
+    technical: "技术面试官",
+    "system-design": "系统设计面试官",
+    portfolio: "作品集评审",
     coo: "首席运营官",
     ceo: "首席执行官",
     peer: "未来同事",
+    "cross-functional": "跨职能合作伙伴",
+    customer: "客户与用户代表",
+    values: "文化与价值观面试官",
     case: "案例分析",
+    panel: "综合面试小组",
   },
   ja: {
     hr: "人事スクリーニング",
+    recruiter: "採用担当者",
     "hiring-manager": "採用責任者",
+    "functional-lead": "部門責任者",
+    technical: "技術面接官",
+    "system-design": "システム設計面接官",
+    portfolio: "ポートフォリオ審査",
     coo: "COO",
     ceo: "CEO",
     peer: "将来の同僚",
+    "cross-functional": "他部門パートナー",
+    customer: "顧客・ユーザー代表",
+    values: "カルチャー・価値観面接官",
     case: "ケース面接",
+    panel: "パネル面接",
   },
   ko: {
     hr: "HR 스크리닝",
+    recruiter: "채용 담당자",
     "hiring-manager": "채용 관리자",
+    "functional-lead": "직무 책임자",
+    technical: "기술 면접관",
+    "system-design": "시스템 설계 면접관",
+    portfolio: "포트폴리오 리뷰어",
     coo: "COO",
     ceo: "CEO",
     peer: "미래 동료",
+    "cross-functional": "협업 부서 파트너",
+    customer: "고객·사용자 대표",
+    values: "문화·가치관 면접관",
     case: "케이스 분석",
+    panel: "패널 면접",
   },
   es: {
     hr: "Filtro de RR. HH.",
+    recruiter: "Recruiter",
     "hiring-manager": "Responsable de contratación",
+    "functional-lead": "Responsable del área",
+    technical: "Entrevistador técnico",
+    "system-design": "Entrevista de diseño de sistemas",
+    portfolio: "Revisión de portafolio",
     coo: "Dirección de operaciones",
     ceo: "Dirección general",
     peer: "Futuro compañero",
+    "cross-functional": "Socio interfuncional",
+    customer: "Representante de clientes",
+    values: "Entrevista de cultura y valores",
     case: "Resolución de caso",
+    panel: "Panel de entrevistas",
   },
   fr: {
     hr: "Présélection RH",
+    recruiter: "Recruteur",
     "hiring-manager": "Responsable du recrutement",
+    "functional-lead": "Responsable métier",
+    technical: "Entretien technique",
+    "system-design": "Entretien de conception système",
+    portfolio: "Revue de portfolio",
     coo: "Direction des opérations",
     ceo: "Direction générale",
     peer: "Futur collègue",
+    "cross-functional": "Partenaire transverse",
+    customer: "Représentant client",
+    values: "Entretien culture et valeurs",
     case: "Étude de cas",
+    panel: "Panel d’entretien",
   },
   de: {
     hr: "HR-Vorgespräch",
+    recruiter: "Recruiting-Gespräch",
     "hiring-manager": "Einstellende Führungskraft",
+    "functional-lead": "Fachbereichsleitung",
+    technical: "Technisches Interview",
+    "system-design": "Systemdesign-Interview",
+    portfolio: "Portfolio-Review",
     coo: "Betriebsleitung",
     ceo: "Geschäftsführung",
     peer: "Künftige Kollegin oder künftiger Kollege",
+    "cross-functional": "Bereichsübergreifende Partnerschaft",
+    customer: "Kundenvertretung",
+    values: "Kultur- und Werteinterview",
     case: "Fallstudie",
+    panel: "Panel-Interview",
   },
 };
 

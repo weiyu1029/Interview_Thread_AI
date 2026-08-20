@@ -4,7 +4,7 @@ import { languageAlternates, localizedPath } from "./intl-routing";
 import { SEO_PAGE_KEYS } from "./seo-content";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://careerstorymap.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://interviewthread.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

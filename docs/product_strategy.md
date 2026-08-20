@@ -1,11 +1,11 @@
-# CareerStoryMap Product Strategy
+# InterviewThread Product Strategy
 
 ## Brand promise
 
 **Turn one job description and your real experience into interview stories you
 can defend.**
 
-CareerStoryMap finds the candidate's strongest evidence, exposes the real gaps,
+InterviewThread finds the candidate's strongest evidence, exposes the real gaps,
 and drills role-specific follow-ups without inventing achievements.
 
 ## Wedge product: Interview Proof Pack
@@ -16,7 +16,7 @@ The first product sells one outcome. A candidate provides:
 2. one real job description;
 3. an interview date or current application stage.
 
-Within about ten minutes, CareerStoryMap produces:
+Within about ten minutes, InterviewThread produces:
 
 1. three strongest role-match proofs, each linked to source evidence;
 2. three real capability or evidence gaps;
@@ -30,7 +30,7 @@ The primary journey is deliberately linear:
 
 ## Product boundary
 
-CareerStoryMap may reframe evidence, organize it, and use language from the job
+InterviewThread may reframe evidence, organize it, and use language from the job
 description when the candidate's source material supports it. It may not invent
 tools, ownership, employers, projects, credentials, results, numbers, or
 authorship claims. Missing support remains visible as a gap.
@@ -38,7 +38,7 @@ authorship claims. Missing support remains visible as a gap.
 ## Differentiation
 
 Most career AI products optimize applications or generate polished answers.
-CareerStoryMap prepares the candidate to defend a truthful answer when a real
+InterviewThread prepares the candidate to defend a truthful answer when a real
 interviewer asks the next question.
 
 The defensibility loop is the product moat:

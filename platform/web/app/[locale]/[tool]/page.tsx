@@ -46,14 +46,14 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       url: path,
-      title: `${page.navLabel} | CareerStoryMap`,
+      title: `${page.navLabel} | InterviewThread`,
       description: page.description,
       locale: localeOpenGraph(locale),
       images: [],
     },
     twitter: {
       card: "summary",
-      title: `${page.navLabel} | CareerStoryMap`,
+      title: `${page.navLabel} | InterviewThread`,
       description: page.description,
       images: [],
     },

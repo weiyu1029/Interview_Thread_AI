@@ -1,6 +1,6 @@
 # 25 Industry Coverage
 
-CareerStoryMap includes an initial Industry Interview Knowledge Graph covering 25 industries:
+InterviewThread includes an initial Industry Interview Knowledge Graph covering 25 industries:
 
 1. Enterprise SaaS / B2B Software
 2. AI / Data Product / MLOps

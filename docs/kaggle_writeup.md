@@ -1,4 +1,4 @@
-# CareerStoryMap Agent
+# InterviewThread Agent
 
 ## Track
 
@@ -6,7 +6,7 @@ Concierge Agents
 
 ## Project summary
 
-CareerStoryMap Agent is a personal AI career concierge that turns job descriptions into evidence-based interview strategy for business, data, BI, product, operations, strategy, consulting, and AI/data product candidates.
+InterviewThread Agent is a personal AI career concierge that turns job descriptions into evidence-based interview strategy for business, data, BI, product, operations, strategy, consulting, and AI/data product candidates.
 
 ## Problem
 
@@ -14,7 +14,7 @@ AI tools can generate polished answers, but candidates still struggle to underst
 
 ## Solution
 
-CareerStoryMap analyzes a job description and candidate profile, then produces:
+InterviewThread analyzes a job description and candidate profile, then produces:
 
 - Role Problem Map
 - Industry Context
@@ -28,7 +28,7 @@ CareerStoryMap analyzes a job description and candidate profile, then produces:
 
 ## Core insight
 
-Generic AI gives answers. CareerStoryMap builds evidence.
+Generic AI gives answers. InterviewThread builds evidence.
 
 ## Technical implementation
 
@@ -36,7 +36,7 @@ The prototype uses Google ADK and Gemini. Deterministic Python tools handle priv
 
 ## Industry coverage
 
-CareerStoryMap includes a 25-industry interview knowledge base, covering SaaS, FinTech, healthcare, retail, logistics, consulting, cybersecurity, HR Tech, EdTech, and more.
+InterviewThread includes a 25-industry interview knowledge base, covering SaaS, FinTech, healthcare, retail, logistics, consulting, cybersecurity, HR Tech, EdTech, and more.
 
 ## Market research
 
@@ -52,4 +52,4 @@ This is a prototype. It does not yet connect to live job boards, LinkedIn, ATS s
 
 ## Future vision
 
-CareerStoryMap can grow into a career intelligence platform with a personal career graph, hiring signal database, industry interview knowledge graph, career coach marketplace, enterprise school dashboard, and API / agent marketplace version.
+InterviewThread can grow into a career intelligence platform with a personal career graph, hiring signal database, industry interview knowledge graph, career coach marketplace, enterprise school dashboard, and API / agent marketplace version.

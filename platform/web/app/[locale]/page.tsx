@@ -28,11 +28,11 @@ export async function generateMetadata({
   const copy = copyFor(locale);
   const title =
     locale === "en"
-      ? "CareerStoryMap — Build interview stories you can defend."
-      : `CareerStoryMap — ${copy.heroTitle}`;
+      ? "InterviewThread — Free AI mock interview practice"
+      : `InterviewThread — ${copy.heroTitle}`;
   const description =
     locale === "en"
-      ? "CareerStoryMap finds your strongest evidence, exposes the real gaps, and drills you with role-specific follow-ups—without inventing achievements."
+      ? "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback."
       : copy.heroBody;
   const path = localizedPath(locale);
   return {
@@ -44,7 +44,7 @@ export async function generateMetadata({
     },
     openGraph: {
       type: "website",
-      siteName: "CareerStoryMap",
+      siteName: "InterviewThread",
       url: path,
       title,
       description,
@@ -54,10 +54,10 @@ export async function generateMetadata({
       ),
       images: [
         {
-          url: "/og-careerstorymap.png",
+          url: "/og-interviewthread.png",
           width: 1200,
           height: 630,
-          alt: "CareerStoryMap Interview Proof Pack",
+          alt: "InterviewThread Interview Proof Pack",
         },
       ],
     },
@@ -65,7 +65,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: ["/og-careerstorymap.png"],
+      images: ["/og-interviewthread.png"],
     },
   };
 }
@@ -77,11 +77,11 @@ export default async function LocalizedHome({ params }: LocalizedHomeProps) {
   const copy = copyFor(locale);
   const pageTitle =
     locale === "en"
-      ? "CareerStoryMap — Build interview stories you can defend."
-      : `CareerStoryMap — ${copy.heroTitle}`;
+      ? "InterviewThread — Free AI mock interview practice"
+      : `InterviewThread — ${copy.heroTitle}`;
   const pageDescription =
     locale === "en"
-      ? "CareerStoryMap finds your strongest evidence, exposes the real gaps, and drills you with role-specific follow-ups—without inventing achievements."
+      ? "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback."
       : copy.heroBody;
   const pageUrl = localizedPath(locale);
   const structuredData = {
@@ -93,7 +93,7 @@ export default async function LocalizedHome({ params }: LocalizedHomeProps) {
     inLanguage: locale,
     isPartOf: {
       "@type": "WebSite",
-      name: "CareerStoryMap",
+      name: "InterviewThread",
       url: "/",
     },
   };

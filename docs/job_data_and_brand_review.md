@@ -5,7 +5,7 @@ terms and obtain counsel before a commercial launch.
 
 ## Approved discovery paths
 
-CareerStoryMap can ingest jobs from sources that explicitly permit programmatic
+InterviewThread can ingest jobs from sources that explicitly permit programmatic
 access, including:
 
 - employer-owned feeds supplied under contract;
@@ -39,14 +39,14 @@ retries, revocation, and an emergency stop.
 
 ## Brand and domain gate
 
-The canonical public brand is **CareerStoryMap**. Use the following identity
+The canonical public brand is **InterviewThread**. Use the following identity
 consistently in the product, documentation, repository metadata, social
 profiles, and launch materials:
 
-- product: CareerStoryMap;
+- product: InterviewThread;
 - core result: Interview Proof Pack;
-- domain: [careerstorymap.com](https://careerstorymap.com);
-- source repository: [weiyu1029/CareerStoryMap-agent](https://github.com/weiyu1029/CareerStoryMap-agent);
+- domain: [interviewthread.com](https://interviewthread.com);
+- source repository: [weiyu1029/careerproof-agent](https://github.com/weiyu1029/careerproof-agent);
 - primary promise: “Turn one job description and your real experience into
   interview stories you can defend.”
 

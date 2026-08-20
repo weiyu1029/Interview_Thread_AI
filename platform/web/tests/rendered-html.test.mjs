@@ -22,6 +22,7 @@ import {
   INTERVIEW_DEPTH_COUNT,
   interviewFlowCopyFor,
   localizedInterviewQuestion,
+  localizedPersonaLabel,
   pronunciationTextFor,
   questionOnly,
   speechLocaleFor,
@@ -32,35 +33,36 @@ async function render(path = "/") {
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
-    new Request(`https://careerstorymap.example${path}`, { headers: { accept: "text/html", host: "careerstorymap.example" } }),
+    new Request(`https://interviewthread.example${path}`, { headers: { accept: "text/html", host: "interviewthread.example" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
-test("server-renders the CareerStoryMap product experience", async () => {
+test("server-renders the InterviewThread product experience", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /CareerStoryMap/);
+  assert.match(html, /InterviewThread/);
   assert.match(
     html,
-    /Turn one job description and your real experience into interview stories you can defend\./i,
+    /Practice the interview for the job you want\./i,
   );
-  assert.match(html, /Build my free evidence map/i);
-  assert.match(html, /See a 2-minute example/i);
-  assert.match(html, /Resume \+ JD/);
-  assert.match(html, /Evidence Map/);
-  assert.match(html, /3 Interview Stories/);
-  assert.match(html, /Mock Interview/);
+  assert.match(html, /Start my free mock interview/i);
+  assert.match(html, /See how it works/i);
+  assert.match(html, /Upload your resume/);
+  assert.match(html, /Paste the job description/);
+  assert.match(html, /Get truthful stories/);
+  assert.match(html, /Practice the interview/);
+  assert.match(html, /Generic AI can write fast/i);
   assert.match(html, /Every suggestion links back to your evidence/i);
   assert.match(html, /No invented achievements/i);
   assert.match(html, /Interview Proof Pack/i);
   assert.match(html, /Keyword evidence matrix/i);
   assert.match(html, /Open source/i);
   assert.match(html, /Clear answers before you build your proof pack/i);
-  assert.match(html, /Will CareerStoryMap invent achievements for me/i);
+  assert.match(html, /Will InterviewThread invent achievements for me/i);
   assert.match(html, /FAQPage/);
   assert.match(html, /home-faq-list/);
   assert.match(html, /href="#questions"/);
@@ -101,17 +103,24 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
     readFile(new URL("../../../docs/product_strategy.md", import.meta.url), "utf8"),
     readFile(new URL("../../../docs/brand.md", import.meta.url), "utf8"),
   ]);
-  await access(new URL("../public/og-careerstorymap.png", import.meta.url));
+  await access(new URL("../public/og-interviewthread.png", import.meta.url));
   assert.match(layout, /openGraph/);
   assert.match(layout, /twitter/);
-  assert.match(layout, /\/og-careerstorymap\.png/);
+  assert.match(layout, /\/og-interviewthread\.png/);
   assert.match(layout, /application\/ld\+json/);
-  assert.match(layout, /Build interview stories you can defend/);
+  assert.match(layout, /Free AI mock interview practice/);
   assert.match(page, /Strongest role-match evidence/);
   assert.match(page, /Real gaps/);
   assert.match(page, /Defensible interview stories/);
   assert.match(page, /10 likely follow-up questions/);
   assert.match(page, /30-minute interview preparation/);
+  assert.match(page, /Product Analyst applying to a new role/);
+  assert.match(page, /Show what this example proves/);
+  assert.match(page, /not your information/);
+  assert.match(page, /80–100/);
+  assert.match(page, /45–79/);
+  assert.match(page, /Overall coverage is weighted by JD priority/);
+  assert.match(page, /item\.score/);
   assert.doesNotMatch(page, /hero-panel|proof-pack-card/);
   const heroSource = page.match(
     /<section className="hero"[\s\S]*?<\/section>/,
@@ -135,19 +144,33 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Story Signal alerts/i);
   assert.match(page, /aptograph-story-radar-settings/i);
   assert.match(page, /zero unsupported must-haves/i);
-  assert.match(page, /CareerStoryMap ProofLoop/i);
+  assert.match(page, /InterviewThread ProofLoop/i);
   assert.match(page, /HR screening/i);
   assert.match(page, /Hiring manager/i);
+  assert.match(page, /Technical interviewer/i);
+  assert.match(page, /System design interviewer/i);
+  assert.match(page, /Cross-functional partner/i);
+  assert.match(page, /Culture and values interviewer/i);
   assert.match(page, /Case breakdown/i);
+  assert.match(page, /LeetCode Explore/i);
+  assert.match(page, /Exercism/i);
+  assert.match(page, /System Design Primer/i);
+  assert.match(page, /not a coach and not an AI assistant/i);
   assert.match(page, /SpeechRecognition/i);
+  assert.match(page, /SpeechRecognitionPhrase/i);
   assert.match(page, /recognition\.continuous = true/);
   assert.match(page, /recognition\.interimResults = true/);
-  assert.match(page, /recognition\.maxAlternatives = 3/);
+  assert.match(page, /recognition\.maxAlternatives = 5/);
+  assert.match(page, /recognitionAlternativeScore/);
+  assert.match(page, /speechVocabularyFor/);
   assert.match(page, /event\.resultIndex/);
   assert.match(page, /bestSpeechVoice/);
   assert.match(page, /questionOnly/);
   assert.match(page, /version: 2/);
   assert.match(page, /interviewTopicIndex/);
+  assert.match(page, /interviewTopicsFor/);
+  assert.match(page, /gapTopicOpening/);
+  assert.match(page, /nextInterviewTopic\.focusLabel/);
   assert.match(page, /addNextInterviewQuestion/);
   assert.match(page, /autoReadInterviewQuestions/);
   assert.match(page, /interview-progress/);
@@ -162,7 +185,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(page, /plan=(?:pro|team)|US\$15|US\$35/);
   assert.match(page, /disabled=\{!company\.trim\(\) \|\| !role\.trim\(\)\}/);
   assert.match(page, /disabled=\{tracker\.some\(\(item\) => item\.id === job\.id\)\}/);
-  assert.doesNotMatch(page, /github\.com\/weiyu1029\/careerproof-agent/);
+  assert.match(page, /github\.com\/weiyu1029\/careerproof-agent/);
   assert.match(page, /Evidence before polish/i);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
@@ -192,12 +215,12 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(seoPage, /const workspaceHref/);
   assert.match(seoPage, /seo-workflow-nav/);
   assert.match(seoPage, /href=\{workspaceHref\}/);
-  assert.doesNotMatch(seoPage, /github\.com\/weiyu1029\/careerproof-agent/);
+  assert.match(seoPage, /github\.com\/weiyu1029\/careerproof-agent/);
   assert.match(auth, /oai-authenticated-user-id/);
   assert.match(auth, /oai-authenticated-user-email/);
   assert.match(auth, /safeRelativeReturnPath/);
   assert.match(auth, /value\.startsWith\("\/\/"\)/);
-  assert.match(brandMark, /brand-mark-orbit/);
+  assert.match(brandMark, /brand-mark-thread/);
   assert.match(brandMark, /brand-mark-letter/);
   assert.match(brandMark, /brand-mark-node-start/);
   assert.match(brandMark, /brand-mark-node-end/);
@@ -224,6 +247,9 @@ test("keeps interview questions, speech, and progression locked to all 40 locale
     localizedInterviewQuestion("zh-TW", 4, "SQL", "實驗設計"),
     /前九十天/,
   );
+  assert.equal(localizedPersonaLabel("zh-TW", "technical", "Technical interviewer"), "技術面試官");
+  assert.equal(localizedPersonaLabel("ja", "system-design", "System design interviewer"), "システム設計面接官");
+  assert.equal(localizedPersonaLabel("de", "values", "Culture and values interviewer"), "Kultur- und Werteinterview");
 
   const chineseQuestion =
     "目前最強：證據 80/100。\n\n請用你最有力的「SQL」經驗帶我走過一次：你負責什麼問題、做了什麼關鍵判斷，最後帶來什麼改變？";
@@ -312,7 +338,7 @@ test("provides a complete, product-specific FAQ in every supported language", ()
   }
 });
 
-test("server-renders every searchable CareerStoryMap page", async () => {
+test("server-renders every searchable InterviewThread page", async () => {
   const pages = [
     ["/en/resume-job-description-match", /Match your resume to a job description/i],
     ["/en/career-story-builder", /Build interview stories from work you can prove/i],
@@ -326,7 +352,7 @@ test("server-renders every searchable CareerStoryMap page", async () => {
     assert.equal(response.status, 200, path);
     const html = await response.text();
     assert.match(html, heading, path);
-    assert.match(html, /CareerStoryMap/i, path);
+    assert.match(html, /InterviewThread/i, path);
     assert.match(html, /application\/ld\+json/i, path);
   }
 });
@@ -339,10 +365,10 @@ test("search pages emit route-specific metadata without the homepage social card
   for (const [path, title, description] of examples) {
     const response = await render(path);
     const html = await response.text();
-    assert.match(html, new RegExp(`<title>${title} \\| CareerStoryMap<\\/title>`));
+    assert.match(html, new RegExp(`<title>${title} \\| InterviewThread<\\/title>`));
     assert.match(html, new RegExp(`name="description" content="${description}`));
-    assert.match(html, new RegExp(`property="og:title" content="${title} \\| CareerStoryMap"`));
-    assert.match(html, new RegExp(`name="twitter:title" content="${title} \\| CareerStoryMap"`));
+    assert.match(html, new RegExp(`property="og:title" content="${title} \\| InterviewThread"`));
+    assert.match(html, new RegExp(`name="twitter:title" content="${title} \\| InterviewThread"`));
     assert.doesNotMatch(html, /og-careerstorymap\.png/);
   }
 });
@@ -356,7 +382,7 @@ test("server-renders all 40 indexable language home pages", async () => {
     assert.ok(
       html.includes(
         locale === "en"
-          ? "Turn one job description and your real experience into interview stories you can defend."
+          ? "Practice the interview for the job you want."
           : copyFor(locale).heroTitle,
       ),
       locale,
@@ -380,7 +406,7 @@ test("localized search pages emit canonical and reciprocal hreflang links", asyn
     assert.ok(html.includes(title), path);
     assert.match(
       html,
-      new RegExp(`<link rel="canonical" href="https://careerstorymap\\.example${path}">`),
+      new RegExp(`<link rel="canonical" href="https://interviewthread\\.example${path}">`),
       path,
     );
     assert.match(html, new RegExp(`hreflang="${locale}"`), path);
@@ -400,17 +426,17 @@ test("sitemap publishes all 280 localized canonical pages and their alternates",
   for (const [locale] of LANGUAGES) {
     const pathLocale = localeToPath(locale);
     assert.ok(
-      xml.includes(`<loc>https://careerstorymap.com/${pathLocale}</loc>`),
+      xml.includes(`<loc>https://interviewthread.com/${pathLocale}</loc>`),
       locale,
     );
     assert.ok(
       xml.includes(
-        `<loc>https://careerstorymap.com/${pathLocale}/ai-mock-interview</loc>`,
+        `<loc>https://interviewthread.com/${pathLocale}/ai-mock-interview</loc>`,
       ),
       locale,
     );
   }
-  assert.match(xml, /hreflang="x-default" href="https:\/\/careerstorymap\.com\/en\/ai-mock-interview"/);
+  assert.match(xml, /hreflang="x-default" href="https:\/\/interviewthread\.com\/en\/ai-mock-interview"/);
   assert.doesNotMatch(
     xml,
     /<loc>https:\/\/careerstorymap\.com\/ai-mock-interview<\/loc>/,
