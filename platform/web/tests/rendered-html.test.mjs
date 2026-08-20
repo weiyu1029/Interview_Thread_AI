@@ -70,9 +70,11 @@ test("server-renders the InterviewThread product experience", async () => {
   assert.match(html, /InterviewThread/);
   assert.match(
     html,
-    /Practice the interview for the job you want\./i,
+    /Ace the interview for the job you want\./i,
   );
-  assert.match(html, /Start my free mock interview/i);
+  assert.match(html, /Start my mock interview/i);
+  assert.doesNotMatch(html, /Free AI mock interview practice/i);
+  assert.doesNotMatch(html, /Upload your resume and the job description/i);
   assert.match(html, /Watch the 60-second walkthrough/i);
   assert.match(html, /Upload your resume/);
   assert.match(html, /Add the job post/);
@@ -378,7 +380,8 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(layout, /twitter/);
   assert.match(layout, /\/og-interviewthread\.png/);
   assert.match(layout, /application\/ld\+json/);
-  assert.match(layout, /Free AI mock interview practice/);
+  assert.match(layout, /AI mock interview preparation/);
+  assert.doesNotMatch(layout, /Free AI mock interview practice/);
   assert.doesNotMatch(layout, /Geist_Mono|font-geist-mono/);
   assert.match(globals, /--font-serif-body/);
   assert.match(globals, /Noto Serif TC/);
@@ -778,7 +781,7 @@ test("server-renders all 40 indexable language home pages", async () => {
     assert.ok(
       html.includes(
         locale === "en"
-          ? "Practice the interview for the job you want."
+          ? "Ace the interview for the job you want."
           : copyFor(locale).heroTitle,
       ),
       locale,

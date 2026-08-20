@@ -35,11 +35,11 @@ export async function generateMetadata({
   const copy = copyFor(locale);
   const title =
     locale === "en"
-      ? "InterviewThread — Free AI mock interview practice"
+      ? "InterviewThread — AI mock interview preparation"
       : `InterviewThread — ${copy.heroTitle}`;
   const description =
     locale === "en"
-      ? "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback."
+      ? "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence."
       : copy.heroBody;
   const path = localizedPath(locale);
   return {
@@ -88,11 +88,11 @@ export default async function LocalizedHome({ params, searchParams }: LocalizedH
   const copy = copyFor(locale);
   const pageTitle =
     locale === "en"
-      ? "InterviewThread — Free AI mock interview practice"
+      ? "InterviewThread — AI mock interview preparation"
       : `InterviewThread — ${copy.heroTitle}`;
   const pageDescription =
     locale === "en"
-      ? "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback."
+      ? "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence."
       : copy.heroBody;
   const pageUrl = localizedPath(locale);
   const structuredData = {

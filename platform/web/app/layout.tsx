@@ -33,9 +33,9 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const title = "InterviewThread — Free AI mock interview practice";
+  const title = "InterviewThread — AI mock interview preparation";
   const description =
-    "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback.";
+    "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence.";
   const image = new URL("/og-interviewthread.png", origin).toString();
   const englishHome = new URL("/en", origin).toString();
 

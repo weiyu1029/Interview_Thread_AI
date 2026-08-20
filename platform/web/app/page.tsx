@@ -4269,14 +4269,10 @@ export default function Home({
       : `${interviewFlow.stages[4]} · ${interview.scoreTitle}`;
   const landingTitle =
     locale === "en"
-      ? "Practice the interview for the job you want."
+      ? "Ace the interview for the job you want."
       : copy.heroTitle;
-  const landingSubtitle =
-    locale === "en"
-      ? "Upload your resume and the job description. Get truthful stories, realistic questions, and role-specific feedback—without made-up achievements."
-      : copy.heroBody;
   const landingPrimaryCta =
-    locale === "en" ? "Start my free mock interview" : detail.runMatch;
+    locale === "en" ? "Start my mock interview" : detail.runMatch;
   const landingSecondaryCta = walkthroughLabelFor(locale);
   const walkthroughCues = useMemo(
     () => walkthroughCuesFor(walkthroughLanguage),
@@ -4569,10 +4565,9 @@ export default function Home({
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">
-            {locale === "en" ? "Free AI mock interview practice" : detail.evidenceWorkspace}
+            {locale === "en" ? "AI mock interview practice" : detail.evidenceWorkspace}
           </p>
           <h1>{landingTitle}</h1>
-          <p className="lede">{landingSubtitle}</p>
           <div className="hero-actions">
             <a
               className="button primary hero-primary-action"
@@ -4648,7 +4643,6 @@ export default function Home({
                   ? "From two documents to confident interview practice"
                   : landingTitle}
               </h2>
-              <p>{landingSubtitle}</p>
             </div>
             <video
               ref={walkthroughVideoRef}
