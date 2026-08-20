@@ -517,6 +517,7 @@ body {
   line-height: 1.55;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 h1,
 h2,
@@ -717,6 +718,32 @@ label:focus-within {
 .mobile-nav-panel b {
   color: var(--accent);
   font-size: 14px;
+}
+.mobile-nav-language {
+  margin: 2px 2px 7px;
+  padding: 10px;
+  display: grid;
+  gap: 7px;
+  border-bottom: 1px solid var(--line);
+}
+.mobile-nav-language > span {
+  color: #697782;
+  font-size: 12px;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mobile-nav-language select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 44px 0 14px;
+  border-color: #b8c5ce;
+  background-color: var(--surface);
+  color: var(--accent-deep);
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  text-align-last: left;
 }
 [dir="rtl"] .mobile-nav-panel {
   right: auto;
@@ -5344,8 +5371,37 @@ input:focus {
 }
 @media (max-width: 650px) {
   .topbar {
+    min-height: 68px;
     padding: 10px 12px;
     gap: 8px;
+  }
+  .topbar .mobile-nav {
+    margin-left: auto;
+  }
+  .mobile-nav-button {
+    width: 48px;
+    height: 48px;
+  }
+  .mobile-nav-panel {
+    position: fixed;
+    top: 74px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: calc(100dvh - 88px);
+    padding: 9px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 16px;
+  }
+  [dir="rtl"] .mobile-nav-panel {
+    right: 12px;
+    left: 12px;
+  }
+  .mobile-nav-panel a {
+    min-height: 48px;
+    padding: 11px 12px;
+    font-size: 16px;
   }
   .example-tour-heading {
     display: grid;
@@ -5378,12 +5434,13 @@ input:focus {
     margin-right: auto;
   }
   .brand-mark {
-    width: 148px;
-    height: 56px;
-    flex-basis: 148px;
+    width: min(158px, 54vw);
+    height: auto;
+    aspect-ratio: 1000 / 380;
+    flex-basis: auto;
   }
-  .locale-control select {
-    width: 110px;
+  .locale-control {
+    display: none;
   }
   .account-link {
     display: none;
@@ -5399,6 +5456,9 @@ input:focus {
   }
   .account-header .brand {
     margin-right: auto;
+  }
+  .account-language {
+    display: none;
   }
   .account-header .mobile-nav {
     display: block;
@@ -5446,7 +5506,8 @@ input:focus {
     font-size: 37px;
   }
   .lede {
-    font-size: 15px;
+    font-size: 17px;
+    line-height: 1.65;
   }
   .hero-actions {
     align-items: stretch;
@@ -5539,11 +5600,11 @@ input:focus {
     border-radius: 13px;
   }
   .workspace-main {
-    padding: 19px;
+    padding: 18px 14px;
   }
   .workspace-context {
-    margin: -19px -19px 21px;
-    padding: 14px 19px;
+    margin: -18px -14px 21px;
+    padding: 14px;
   }
   .workspace-context p {
     white-space: normal;
@@ -5629,8 +5690,8 @@ input:focus {
     width: 100%;
   }
   .workspace-next-step {
-    margin: 25px -19px -19px;
-    padding: 17px 19px;
+    margin: 25px -14px -18px;
+    padding: 17px 14px;
     align-items: stretch;
     flex-direction: column;
   }
@@ -5875,6 +5936,11 @@ input:focus {
     align-items: stretch;
     flex-direction: column;
   }
+  .language-suggestion p {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
   .language-suggestion div {
     margin-right: 0;
   }
@@ -5920,11 +5986,41 @@ input:focus {
     max-width: 94px;
     font-size: 14px;
   }
-  .locale-control select {
-    width: 82px;
+}
+
+@media (max-width: 650px) {
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+    font-size: 16px;
   }
-  .account-language {
-    display: none;
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: anywhere;
+  }
+  button,
+  .button,
+  summary {
+    min-height: 48px;
+  }
+  .workspace-nav-group > button small,
+  .workspace-context p,
+  .workspace-next-step b {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  .site-footer {
+    width: calc(100% - 32px);
+    margin-top: 64px;
+    padding-top: 34px;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .site-footer-legal {
+    grid-column: 1;
   }
 }
 

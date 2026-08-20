@@ -8,12 +8,21 @@ export type MobileNavItem = {
   external?: boolean;
 };
 
+export type MobileNavLanguage = {
+  label: string;
+  value: string;
+  options: readonly (readonly [string, string])[];
+  onChange: (value: string) => void;
+};
+
 export function MobileNav({
   label,
   items,
+  language,
 }: {
   label: string;
   items: MobileNavItem[];
+  language?: MobileNavLanguage;
 }) {
   const [open, setOpen] = useState(false);
   // A deterministic id keeps the server-rendered and hydrated trees aligned.
@@ -57,6 +66,25 @@ export function MobileNav({
         <span />
       </button>
       <nav className="mobile-nav-panel" id={menuId} hidden={!open}>
+        {language ? (
+          <label className="mobile-nav-language">
+            <span>{language.label}</span>
+            <select
+              aria-label={language.label}
+              value={language.value}
+              onChange={(event) => {
+                setOpen(false);
+                language.onChange(event.target.value);
+              }}
+            >
+              {language.options.map(([value, optionLabel]) => (
+                <option value={value} key={value}>
+                  {optionLabel}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         {items.map((item) => (
           <a
             href={item.href}

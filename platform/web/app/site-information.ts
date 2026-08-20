@@ -113,7 +113,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
     title: "Contact the right inbox—and keep personal data private.",
     description:
       "Questions, product feedback, partnerships, support, privacy requests, security reports, and open-source contributions each have a clear path.",
-    callout: "Never email or publicly post a password, OAuth token, API key, full resume, or interview transcript. Use sample content for product reports.",
+    callout: "Never post a resume, interview transcript, password, OAuth token, or API key by email or in a public issue. Use sample content for product reports.",
     sections: [
       {
         title: "Product questions and feedback",
