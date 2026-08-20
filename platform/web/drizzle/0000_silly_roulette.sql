@@ -1,4 +1,4 @@
-CREATE TABLE `feedback_submissions` (
+CREATE TABLE IF NOT EXISTS `feedback_submissions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`category` text NOT NULL,
 	`rating` integer NOT NULL,
@@ -10,6 +10,6 @@ CREATE TABLE `feedback_submissions` (
 	`created_at` text NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `idx_feedback_priority_created_at` ON `feedback_submissions` (`priority`,`created_at`);
+CREATE INDEX IF NOT EXISTS `idx_feedback_priority_created_at` ON `feedback_submissions` (`priority`,`created_at`);
 --> statement-breakpoint
 PRAGMA optimize;

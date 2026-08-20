@@ -5,7 +5,7 @@ import { SEO_PAGE_KEYS } from "./seo-content";
 import { INFORMATION_PAGE_KEYS } from "./site-information";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://interviewthread.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://interviewthreadai.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

@@ -12,7 +12,7 @@ questions—without inventing an achievement.
 > **Evidence rule:** no source, no claim. Partial proof stays qualified. Missing
 > proof stays visible.
 
-[Try the live product](https://careerstorymap.com/en) · [Technical design](docs/technical_solution.md) · [Closed beta](docs/product_iteration.md) · [Product strategy](docs/product_strategy.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try the live product](https://interviewthreadai.com/en) · [Technical design](docs/technical_solution.md) · [Closed beta](docs/product_iteration.md) · [Product strategy](docs/product_strategy.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Most career AI writes first. InterviewThread verifies first.
 
