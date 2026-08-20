@@ -358,7 +358,7 @@ test("localizes market filters while retaining canonical values", () => {
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
-  const [layout, page, globals, i18n, speech, seoPage, siteFooter, auth, appAuth, oauthSecurity, oauthCallback, brandMark, mobileNav, readme, strategy, brandGuide] = await Promise.all([
+  const [layout, page, globals, i18n, speech, seoPage, siteFooter, auth, appAuth, oauthSecurity, oauthCallback, brandMark, mobileNav, manifest, readme, strategy, brandGuide] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -372,6 +372,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
     readFile(new URL("../app/api/auth/callback/[provider]/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/BrandMark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobileNav.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/site.webmanifest", import.meta.url), "utf8"),
     readFile(new URL("../../../README.md", import.meta.url), "utf8"),
     readFile(new URL("../../../docs/product_strategy.md", import.meta.url), "utf8"),
     readFile(new URL("../../../docs/brand.md", import.meta.url), "utf8"),
@@ -402,6 +403,11 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(globals, /\.hero-title--long/);
   assert.match(globals, /\[lang="ko"\] \.hero-title/);
+  assert.match(layout, /\/favicon\.ico/);
+  assert.match(layout, /\/favicon-32x32\.png/);
+  assert.match(layout, /\/apple-touch-icon\.png/);
+  assert.match(manifest, /\/icon-192\.png/);
+  assert.match(manifest, /\/icon-512\.png/);
   assert.match(
     globals,
     /\.hero \.hero-actions\s*\{[^}]*margin-top:\s*clamp\(30px,\s*3\.2vw,\s*38px\)/s,
