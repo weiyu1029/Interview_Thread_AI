@@ -529,10 +529,12 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(oauthSecurity, /code_challenge|sha256Base64Url/);
   assert.match(oauthCallback, /statePayload\.state !==/);
   assert.doesNotMatch(oauthCallback, /access_token.*INSERT|INSERT.*access_token/is);
-  assert.match(brandMark, /brand-mark-thread/);
+  assert.match(brandMark, /interviewthread-logo-lockup\.png/);
+  assert.match(brandMark, /width="1000"/);
+  assert.match(brandMark, /height="380"/);
   assert.doesNotMatch(brandMark, /brand-mark-letter/);
-  assert.match(brandMark, /brand-mark-node-start/);
-  assert.match(brandMark, /brand-mark-node-end/);
+  assert.doesNotMatch(brandMark, /brand-mark-node-start/);
+  assert.doesNotMatch(brandMark, /brand-mark-node-end/);
   assert.doesNotMatch(page, />CS<\/span>/);
   assert.match(mobileNav, /aria-expanded=\{open\}/);
   assert.match(mobileNav, /mobile-navigation-menu/);

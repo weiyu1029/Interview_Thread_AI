@@ -28,6 +28,7 @@ guard CommandLine.arguments.count == 3 else {
 
 let screenshotsDirectory = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
 let outputURL = URL(fileURLWithPath: CommandLine.arguments[2])
+let brandLogoURL = screenshotsDirectory.appendingPathComponent("brand-lockup.png")
 let width = 1280
 let height = 720
 let fps: Int32 = 15
@@ -67,6 +68,25 @@ func makeBaseSlide(for scene: Scene) throws -> CGImage {
   NSColor(calibratedWhite: 0.96, alpha: 1).setFill()
   NSRect(x: 0, y: 0, width: width, height: height).fill()
   sourceImage.draw(in: NSRect(x: 0, y: 0, width: width, height: height), from: .zero, operation: .sourceOver, fraction: 1)
+
+  // The recording screenshots are durable source material. Replace only their
+  // legacy header mark at render time so every exported frame uses the current,
+  // approved InterviewThread lockup without retouching the product UI itself.
+  guard let brandLogo = NSImage(contentsOf: brandLogoURL) else {
+    throw NSError(
+      domain: "InterviewThreadWalkthrough",
+      code: 13,
+      userInfo: [NSLocalizedDescriptionKey: "Cannot read \(brandLogoURL.path)"]
+    )
+  }
+  NSColor(calibratedRed: 0.972, green: 0.969, blue: 0.955, alpha: 1).setFill()
+  NSRect(x: 0, y: 655, width: 255, height: 65).fill()
+  brandLogo.draw(
+    in: NSRect(x: 38, y: 660, width: 184, height: 56),
+    from: .zero,
+    operation: .sourceOver,
+    fraction: 1
+  )
 
   NSGraphicsContext.restoreGraphicsState()
   guard let cgImage = bitmap.cgImage else {

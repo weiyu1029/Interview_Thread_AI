@@ -44,6 +44,20 @@ static CGImageRef createBaseImage(NSURL *directory, WalkthroughScene scene, NSEr
             fromRect:NSZeroRect
            operation:NSCompositingOperationSourceOver
             fraction:1];
+
+  NSURL *brandLogoURL = [directory URLByAppendingPathComponent:@"brand-lockup.png"];
+  NSImage *brandLogo = [[NSImage alloc] initWithContentsOfURL:brandLogoURL];
+  if (!brandLogo) {
+    if (error) *error = [NSError errorWithDomain:@"InterviewThreadWalkthrough" code:13 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Cannot read %@", brandLogoURL.path]}];
+    [NSGraphicsContext restoreGraphicsState];
+    return NULL;
+  }
+  [[NSColor colorWithCalibratedRed:0.972 green:0.969 blue:0.955 alpha:1] setFill];
+  NSRectFill(NSMakeRect(0, 655, 255, 65));
+  [brandLogo drawInRect:NSMakeRect(38, 660, 184, 56)
+               fromRect:NSZeroRect
+              operation:NSCompositingOperationSourceOver
+               fraction:1];
   [NSGraphicsContext restoreGraphicsState];
   return CGImageCreateCopy(bitmap.CGImage);
 }
@@ -133,15 +147,19 @@ int main(int argc, const char *argv[]) {
     [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
 
     NSError *error = nil;
-    AVAssetWriter *writer = [AVAssetWriter assetWriterWithURL:outputURL fileType:AVFileTypeQuickTimeMovie error:&error];
+    AVAssetWriter *writer = [AVAssetWriter assetWriterWithURL:outputURL fileType:AVFileTypeMPEG4 error:&error];
     if (!writer) {
       fprintf(stderr, "%s\n", error.localizedDescription.UTF8String);
       return 3;
     }
     NSDictionary *settings = @{
-      AVVideoCodecKey: AVVideoCodecTypeJPEG,
+      AVVideoCodecKey: AVVideoCodecTypeH264,
       AVVideoWidthKey: @(CanvasWidth),
       AVVideoHeightKey: @(CanvasHeight),
+      AVVideoCompressionPropertiesKey: @{
+        AVVideoAverageBitRateKey: @8000000,
+        AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+      },
     };
     AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:settings];
     input.expectsMediaDataInRealTime = NO;

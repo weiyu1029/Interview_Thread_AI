@@ -4679,7 +4679,7 @@ export default function Home({
               }}
             >
               <source
-                src="/interviewthread-60-second-walkthrough.mp4?v=localized-40"
+                src="/interviewthread-60-second-walkthrough.mp4?v=logo-05c"
                 type="video/mp4"
               />
               <track
