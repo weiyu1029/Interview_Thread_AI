@@ -4457,8 +4457,11 @@ export default function Home({
           </span>
         </a>
         <nav className="topnav" aria-label={detail.product}>
-          <a href="#product">
+          <a href="#how-it-works">
             {locale === "en" ? "How it works" : detail.product}
+          </a>
+          <a href="#product">
+            {locale === "en" ? "Why InterviewThread" : "InterviewThread"}
           </a>
           <a
             href="#workspace"
@@ -4467,10 +4470,9 @@ export default function Home({
               openWorkspace("Analyze");
             }}
           >
-            {locale === "en" ? "Start practicing" : detail.workspace}
+            {landingPrimaryCta}
           </a>
           <a href="#questions">{locale === "en" ? "FAQ" : faq.eyebrow}</a>
-          <a href="#plans">{openSourceLabel}</a>
         </nav>
         <label className="locale-control">
           <span>{copy.language}</span>
@@ -4505,11 +4507,16 @@ export default function Home({
           items={[
             {
               label: locale === "en" ? "How it works" : detail.product,
+              href: "#how-it-works",
+            },
+            {
+              label:
+                locale === "en" ? "Why InterviewThread" : "InterviewThread",
               href: "#product",
             },
             {
               label:
-                locale === "en" ? "Start practicing" : detail.workspace,
+                landingPrimaryCta,
               href: `${localizedPath(locale)}?view=Analyze#workspace`,
             },
             { label: locale === "en" ? "FAQ" : faq.eyebrow, href: "#questions" },
@@ -4517,11 +4524,6 @@ export default function Home({
             {
               label: accountLabels.account,
               href: localizedPath(locale, "account"),
-            },
-            {
-              label: "GitHub",
-              href: "https://github.com/weiyu1029/careerproof-agent",
-              external: true,
             },
           ]}
         />
@@ -4595,7 +4597,11 @@ export default function Home({
               {landingSecondaryCta}
             </button>
           </div>
-          <ol className="journey-strip" aria-label={landingPrimaryCta}>
+          <ol
+            className="journey-strip"
+            id="how-it-works"
+            aria-label={landingPrimaryCta}
+          >
             {proofPackFlow.map((item, index) => (
               <li key={item}>
                 <span>{index + 1}</span>
@@ -7365,12 +7371,20 @@ export default function Home({
             <p className="eyebrow">{accountLabels.account}</p>
             <h2>{accountIntro.title}</h2>
             <p>{accountIntro.description}</p>
-            <a
-              className="button primary"
-              href={signInPath || localizedPath(locale, "account")}
-            >
-              {accountLabels.signIn}
-            </a>
+            <div className="workspace-login-actions">
+              <a
+                className="button primary"
+                href={signInPath || localizedPath(locale, "account")}
+              >
+                {accountLabels.signIn}
+              </a>
+              <a
+                className="button secondary"
+                href={`${localizedPath(locale)}?guest=1#workspace`}
+              >
+                {guestAccess.cta}
+              </a>
+            </div>
           </div>
           <aside>
             <strong>{detail.privateTitle}</strong>
@@ -7388,16 +7402,13 @@ export default function Home({
           <h2>
             {locale === "en"
               ? "Generic AI can write fast. It cannot know what is true about you."
-              : copy.heroTitle}
+              : homepage.heroTitle}
           </h2>
-          {locale === "en" && (
-            <p className="principles-intro">
-              Job descriptions can feel overwhelming, and generic AI drafts often
-              sound inaccurate or unlike you. We help you understand the role,
-              use only your real experience, and practice until you feel ready—
-              especially when interviewing in a second language.
-            </p>
-          )}
+          <p className="principles-intro">
+            {locale === "en"
+              ? "Job descriptions can feel overwhelming, and generic AI drafts often sound inaccurate or unlike you. We help you understand the role, use only your real experience, and practice until you feel ready—especially when interviewing in a second language."
+              : homepage.description}
+          </p>
         </div>
         <div className="principle-grid">
           <article>
@@ -7406,7 +7417,7 @@ export default function Home({
             <p>
               {locale === "en"
                 ? "Turn your real resume into stronger answers without inventing skills, results, or experience."
-                : copy.heroBody}
+                : homepage.trust[2]}
             </p>
           </article>
           <article>
@@ -7415,7 +7426,7 @@ export default function Home({
             <p>
               {locale === "en"
                 ? "Translate a complicated job description into the evidence, gaps, and questions that matter most."
-                : copy.heroBody}
+                : homepage.trust[0]}
             </p>
           </article>
           <article>
@@ -7424,7 +7435,7 @@ export default function Home({
             <p>
               {locale === "en"
                 ? "Rehearse realistic follow-up questions and get feedback grounded in the role and your own story."
-                : interview.subtitle}
+                : homepage.trust[1]}
             </p>
           </article>
         </div>
@@ -7474,12 +7485,22 @@ export default function Home({
               <li>{locale === "en" ? "30-minute preparation plan" : detail.readiness}</li>
               <li>{locale === "en" ? "Evidence-grounded mock interview" : copy.interview}</li>
             </ul>
-            <a
-              className="button primary"
-              href={localizedPath(locale, "account")}
-            >
-              {accountLabels.signIn}
-            </a>
+            <div className="open-source-actions">
+              <a
+                className="button primary"
+                href={localizedPath(locale, "account")}
+              >
+                {accountLabels.signIn}
+              </a>
+              <a
+                className="button secondary"
+                href="https://github.com/weiyu1029/careerproof-agent"
+                target="_blank"
+                rel="noreferrer"
+              >
+                GitHub
+              </a>
+            </div>
           </article>
         </div>
       </section>
