@@ -290,14 +290,15 @@ test("localizes the 60-second walkthrough CTA for every supported language", () 
 test("ships a web-ready 60-second walkthrough with captions and poster", async () => {
   const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   assert.match(pageSource, /interviewthread-60-second-walkthrough\.mp4/i);
-  assert.match(pageSource, /interviewthread-walkthrough-en\.vtt/i);
-  assert.match(pageSource, /interviewthread-walkthrough-zh-TW\.vtt/i);
+  assert.match(pageSource, /LANGUAGES\.filter/);
+  assert.match(pageSource, /walkthroughTrackFor\(code\)/);
   assert.match(pageSource, /interviewthread-walkthrough-poster\.png/i);
   assert.match(pageSource, /aria-modal="true"/i);
   assert.match(pageSource, /walkthroughVideoRef/);
   assert.match(pageSource, /walkthroughChapters/);
   assert.match(pageSource, /video\.currentTime = chapter\.time/);
-  assert.match(pageSource, /Bilingual narration/);
+  assert.match(pageSource, /walkthroughNarrationEnabled/);
+  assert.match(pageSource, /bestSpeechVoice/);
 
   const video = await readFile(
     new URL("../public/interviewthread-60-second-walkthrough.mp4", import.meta.url),
@@ -308,19 +309,22 @@ test("ships a web-ready 60-second walkthrough with captions and poster", async (
     new URL("../public/interviewthread-walkthrough-zh-TW.vtt", import.meta.url),
     "utf8",
   );
-  assert.match(chineseCaptions, /用真實證據準備面試/);
+  assert.match(chineseCaptions, /用真實經歷中的證據準備面試/);
   assert.match(chineseCaptions, /查看具體回饋/);
-  const [builder, narration, validator] = await Promise.all([
+  const [builder, fallbackBuilder, validator, fallbackValidator] = await Promise.all([
     readFile(new URL("../scripts/build-walkthrough.swift", import.meta.url), "utf8"),
-    readFile(new URL("../scripts/build-walkthrough-narration.sh", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/build-walkthrough.m", import.meta.url), "utf8"),
     readFile(new URL("../scripts/validate-walkthrough.swift", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/validate-walkthrough.m", import.meta.url), "utf8"),
   ]);
   assert.match(builder, /makeFrame/);
   assert.match(builder, /rippleTime/);
   assert.match(builder, /scene\.highlight/);
-  assert.match(narration, /Samantha/);
-  assert.match(narration, /Meijia/);
+  assert.match(fallbackBuilder, /createFrame/);
+  assert.match(fallbackBuilder, /silent frames/);
   assert.match(validator, /audio_tracks|audioTracks/);
+  assert.match(validator, /audioTracks\.isEmpty/);
+  assert.match(fallbackValidator, /audioTracks\.count != 0/);
   await access(new URL("../public/interviewthread-walkthrough-poster.png", import.meta.url));
 });
 

@@ -13,6 +13,7 @@ import {
   copyFor,
   detailFor,
   LANGUAGES,
+  localeDisplayName,
   localeFromPath,
   localeToPath,
   LocaleCode,
@@ -67,6 +68,11 @@ import {
   openInterviewQuestionSource,
   questionsForInterviewRole,
 } from "./interview-question-bank";
+import {
+  walkthroughCuesFor,
+  walkthroughNarrationLabelFor,
+  walkthroughTrackFor,
+} from "./walkthrough";
 
 type MatchStatus = "Strong evidence" | "Partial evidence" | "Gap";
 type Match = {
@@ -2498,6 +2504,12 @@ export default function Home({
   const [exampleLoaded, setExampleLoaded] = useState(false);
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [walkthroughChapter, setWalkthroughChapter] = useState(0);
+  const [walkthroughLanguage, setWalkthroughLanguage] = useState<LocaleCode>(
+    initialLocale || "en",
+  );
+  const [walkthroughNarrationEnabled, setWalkthroughNarrationEnabled] =
+    useState(true);
+  const [walkthroughVoiceName, setWalkthroughVoiceName] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
@@ -2609,6 +2621,8 @@ export default function Home({
     PROVIDERS.find((item) => item.id === provider) || PROVIDERS[0];
   const preferencesLoaded = useRef(false);
   const walkthroughVideoRef = useRef<HTMLVideoElement>(null);
+  const walkthroughCueRef = useRef(-1);
+  const walkthroughSpeechTokenRef = useRef(0);
   const speechRecognitionRef = useRef<{
     start: () => void;
     stop: () => void;
@@ -2924,8 +2938,28 @@ export default function Home({
       if (event.key === "Escape") setWalkthroughOpen(false);
     };
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      walkthroughSpeechTokenRef.current += 1;
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
   }, [walkthroughOpen]);
+
+  useEffect(() => {
+    if (!walkthroughOpen) return;
+    const video = walkthroughVideoRef.current;
+    if (!video) return;
+    const updateTracks = () => {
+      for (const track of Array.from(video.textTracks)) {
+        track.mode = track.language.toLowerCase() === walkthroughLanguage.toLowerCase()
+          ? "showing"
+          : "disabled";
+      }
+    };
+    updateTracks();
+    const timer = window.setTimeout(updateTracks, 120);
+    return () => window.clearTimeout(timer);
+  }, [walkthroughLanguage, walkthroughOpen]);
 
   function chooseLocale(nextLocale: LocaleCode) {
     setLocale(nextLocale);
@@ -4237,21 +4271,49 @@ export default function Home({
   const landingPrimaryCta =
     locale === "en" ? "Start my free mock interview" : detail.runMatch;
   const landingSecondaryCta = walkthroughLabelFor(locale);
-  const walkthroughChapters = locale === "zh-TW"
-    ? [
-        { time: 0, label: "先看完整流程" },
-        { time: 10, label: "加入履歷與職缺" },
-        { time: 21, label: "讀懂證據與缺口" },
-        { time: 33, label: "預測面試問題" },
-        { time: 39, label: "進入模擬面試" },
-      ]
-    : [
-        { time: 0, label: "See the full path" },
-        { time: 10, label: "Add resume and job post" },
-        { time: 21, label: "Read proof and gaps" },
-        { time: 33, label: "Predict interview questions" },
-        { time: 39, label: "Enter the mock interview" },
-      ];
+  const walkthroughCues = useMemo(
+    () => walkthroughCuesFor(walkthroughLanguage),
+    [walkthroughLanguage],
+  );
+  const walkthroughChapters = walkthroughCues.map((cue) => ({
+    time: cue.start,
+    label: cue.text,
+  }));
+
+  async function speakWalkthroughAt(time: number) {
+    if (!walkthroughNarrationEnabled || !("speechSynthesis" in window)) return;
+    const cueIndex = walkthroughCues.findIndex(
+      (cue) => time >= cue.start && time < cue.end,
+    );
+    if (cueIndex < 0 || walkthroughCueRef.current === cueIndex) return;
+    walkthroughCueRef.current = cueIndex;
+    const token = ++walkthroughSpeechTokenRef.current;
+    const voices = await availableSpeechVoices();
+    const video = walkthroughVideoRef.current;
+    if (token !== walkthroughSpeechTokenRef.current || !video || video.paused) return;
+    const utterance = new SpeechSynthesisUtterance(walkthroughCues[cueIndex].text);
+    utterance.lang = speechLocaleFor(walkthroughLanguage);
+    utterance.rate = speechRateFor(walkthroughLanguage, false);
+    utterance.pitch = 1;
+    const voice = bestSpeechVoice(voices, walkthroughLanguage);
+    if (voice) utterance.voice = voice;
+    setWalkthroughVoiceName(voice?.name || localeDisplayName(walkthroughLanguage));
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  useEffect(() => {
+    if (!walkthroughOpen || !("speechSynthesis" in window)) return;
+    walkthroughSpeechTokenRef.current += 1;
+    window.speechSynthesis.cancel();
+    walkthroughCueRef.current = -1;
+    const video = walkthroughVideoRef.current;
+    if (!walkthroughNarrationEnabled || !video || video.paused) return;
+    const timer = window.setTimeout(() => void speakWalkthroughAt(video.currentTime), 0);
+    return () => window.clearTimeout(timer);
+    // The function intentionally follows the current localized cue list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walkthroughLanguage, walkthroughNarrationEnabled, walkthroughOpen]);
   const analysisCta =
     locale === "en"
       ? exampleLoaded
@@ -4512,7 +4574,12 @@ export default function Home({
             <button
               className="button secondary"
               type="button"
-              onClick={() => setWalkthroughOpen(true)}
+              onClick={() => {
+                setWalkthroughLanguage(locale);
+                setWalkthroughVoiceName("");
+                walkthroughCueRef.current = -1;
+                setWalkthroughOpen(true);
+              }}
             >
               {landingSecondaryCta}
             </button>
@@ -4578,6 +4645,29 @@ export default function Home({
               playsInline
               preload="metadata"
               poster="/interviewthread-walkthrough-poster.png"
+              onPlay={(event) => {
+                walkthroughCueRef.current = -1;
+                void speakWalkthroughAt(event.currentTarget.currentTime);
+              }}
+              onPause={() => {
+                walkthroughSpeechTokenRef.current += 1;
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+              }}
+              onSeeking={() => {
+                walkthroughSpeechTokenRef.current += 1;
+                walkthroughCueRef.current = -1;
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+              }}
+              onSeeked={(event) => {
+                if (!event.currentTarget.paused) {
+                  void speakWalkthroughAt(event.currentTarget.currentTime);
+                }
+              }}
+              onEnded={() => {
+                walkthroughSpeechTokenRef.current += 1;
+                walkthroughCueRef.current = -1;
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+              }}
               onTimeUpdate={(event) => {
                 const time = event.currentTarget.currentTime;
                 const nextChapter = walkthroughChapters.reduce(
@@ -4585,32 +4675,62 @@ export default function Home({
                   0,
                 );
                 if (nextChapter !== walkthroughChapter) setWalkthroughChapter(nextChapter);
+                void speakWalkthroughAt(time);
               }}
             >
               <source
-                src="/interviewthread-60-second-walkthrough.mp4?v=interactive-bilingual"
+                src="/interviewthread-60-second-walkthrough.mp4?v=localized-40"
                 type="video/mp4"
               />
               <track
                 kind="captions"
-                src="/interviewthread-walkthrough-en.vtt"
+                src={walkthroughTrackFor("en")}
                 srcLang="en"
                 label="English"
-                default={locale !== "zh-TW"}
+                default={walkthroughLanguage === "en"}
               />
-              <track
-                kind="captions"
-                src="/interviewthread-walkthrough-zh-TW.vtt"
-                srcLang="zh-TW"
-                label="繁體中文"
-                default={locale === "zh-TW"}
-              />
+              {LANGUAGES.filter(([code]) => code !== "en").map(([code, languageName]) => (
+                <track
+                  key={code}
+                  kind="captions"
+                  src={walkthroughTrackFor(code)}
+                  srcLang={code}
+                  label={languageName}
+                  default={code === walkthroughLanguage}
+                />
+              ))}
               Your browser does not support HTML video.
             </video>
+            <div className="walkthrough-language-controls">
+              <label>
+                <span>{copy.language}</span>
+                <select
+                  value={walkthroughLanguage}
+                  onChange={(event) => {
+                    setWalkthroughLanguage(event.target.value as LocaleCode);
+                    setWalkthroughVoiceName("");
+                    walkthroughCueRef.current = -1;
+                  }}
+                >
+                  {LANGUAGES.map(([code, languageName]) => (
+                    <option value={code} key={code}>
+                      {languageName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                aria-pressed={walkthroughNarrationEnabled}
+                onClick={() => setWalkthroughNarrationEnabled((enabled) => !enabled)}
+              >
+                <span aria-hidden="true">◉</span>
+                {walkthroughNarrationLabelFor(locale)}
+              </button>
+            </div>
             <p className="walkthrough-audio-note">
-              {locale === "zh-TW"
-                ? "雙語旁白：英文主句＋繁體中文重點。點選下方段落可直接跳到該步驟。"
-                : "Bilingual narration: English guidance with Traditional Chinese reinforcement. Choose a chapter to jump to that step."}
+              {localeDisplayName(walkthroughLanguage)} · {detail.languageCount} ·{" "}
+              {walkthroughVoiceName || walkthroughNarrationLabelFor(locale)}
             </p>
             <ol className="walkthrough-steps walkthrough-chapters" aria-label={landingSecondaryCta}>
               {walkthroughChapters.map((chapter, index) => (
