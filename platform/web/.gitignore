@@ -39,3 +39,7 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# Ignore Finder conflict copies so duplicate migration files cannot enter a release.
+/drizzle/* 2.sql
+/drizzle/meta/* 2.json

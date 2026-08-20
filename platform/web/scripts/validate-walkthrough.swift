@@ -17,8 +17,8 @@ let duration = try await asset.load(.duration)
 let videoTracks = try await asset.loadTracks(withMediaType: .video)
 let audioTracks = try await asset.loadTracks(withMediaType: .audio)
 
-guard playable, let videoTrack = videoTracks.first, !audioTracks.isEmpty else {
-  throw NSError(domain: "InterviewThreadWalkthrough", code: 30, userInfo: [NSLocalizedDescriptionKey: "The final asset must be playable and include video plus audio"])
+guard playable, let videoTrack = videoTracks.first, audioTracks.isEmpty else {
+  throw NSError(domain: "InterviewThreadWalkthrough", code: 30, userInfo: [NSLocalizedDescriptionKey: "The final asset must be playable, include video, and leave narration to the locale-aware browser voice"])
 }
 
 let naturalSize = try await videoTrack.load(.naturalSize)

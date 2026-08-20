@@ -110,10 +110,10 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
   },
   contact: {
     eyebrow: "Contact",
-    title: "Choose the right channel and keep personal data private.",
+    title: "Contact the right inbox—and keep personal data private.",
     description:
-      "Questions, product feedback, privacy requests, security reports, and open-source contributions each have a clear path.",
-    callout: "Never post a resume, interview transcript, OAuth token, API key, or other private information in a public issue.",
+      "Questions, product feedback, partnerships, support, privacy requests, security reports, and open-source contributions each have a clear path.",
+    callout: "Never email or publicly post a password, OAuth token, API key, full resume, or interview transcript. Use sample content for product reports.",
     sections: [
       {
         title: "Product questions and feedback",
@@ -322,9 +322,9 @@ const traditionalChinesePages: Record<InformationPageKey, InformationPageCopy> =
   },
   contact: {
     eyebrow: "聯絡我們",
-    title: "依照問題選擇正確管道，也請把個人資料留在私人管道。",
-    description: "產品問題、意見回饋、資料刪除、安全通報與開源貢獻，都有清楚的處理方式。",
-    callout: "請勿在公開 issue 貼上履歷、面試逐字稿、OAuth token、API key 或其他私人資料。",
+    title: "依照問題選擇正確信箱，也請妥善保護個人資料。",
+    description: "一般問題、產品回饋、合作、客服、資料刪除、安全通報與開源貢獻，都有清楚的處理方式。",
+    callout: "請勿透過電子郵件或公開 issue 傳送密碼、OAuth token、API key、完整履歷或面試逐字稿；產品問題請改用示範內容。",
     sections: [
       { title: "產品問題與意見回饋", paragraphs: ["可透過 GitHub Issues 回報可重現的錯誤、無障礙問題或功能建議。送出前請移除個人資料並改用示範內容。"] },
       { title: "隱私、刪除或安全問題", paragraphs: ["請使用 GitHub 私人安全通報提出隱私問題、帳號資料刪除或資安疑慮。可提供登入服務與大約登入日期，但請勿提供密碼、provider token、API key 或完整履歷。"] },
