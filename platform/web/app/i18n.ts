@@ -175,7 +175,7 @@ export type CoreCopy = {
 };
 
 const en: CoreCopy = {
-  heroTitle: "Turn your resume and the JD into an interview story you can own.",
+  heroTitle: "Turn your resume and the job post into an interview story you can own.",
   heroBody:
     "Map every requirement to evidence, shape truthful stories for each role, and rehearse them with AI interviewers until you can answer with confidence.",
   enter: "Enter global workspace",

@@ -57,7 +57,7 @@ export async function generateMetadata({
           url: "/og-interviewthread.png",
           width: 1200,
           height: 630,
-          alt: "InterviewThread Interview Proof Pack",
+          alt: "InterviewThread AI mock interview practice",
         },
       ],
     },

@@ -259,7 +259,7 @@ const MODE_DISCLOSURES: Partial<
 };
 
 const MODE_CONTEXT: Partial<Record<LocaleCode, string>> = {
-  en: "This setting only controls what happens after you find a suitable role. It does not change your resume–JD analysis.",
+  en: "This setting only controls what happens after you find a suitable role. It does not change your resume and job-post match.",
   "zh-TW": "這項設定只控制找到適合職缺後，系統要協助到哪一步；不會改變履歷與 JD 的分析結果。",
   "zh-CN": "此设置只控制找到合适职位后，系统协助到哪一步；不会改变简历与 JD 的分析结果。",
   ja: "この設定は適した求人を見つけた後の支援範囲だけを決めます。履歴書と求人票の分析結果は変わりません。",
@@ -831,7 +831,7 @@ const EN_INTERVIEW_COPY: InterviewCopy = {
   eyebrow: "Evidence-grounded mock interview",
   title: "Practice the story you will actually tell in the interview",
   subtitle:
-    "Your interviewer follows the resume, the JD, and your proof—not a generic question bank and never invented experience.",
+    "Your interviewer follows your resume, the job post, and your proof—not a generic question bank or invented experience.",
   role: "Interviewer role",
   style: "Practice mode",
   coaching: "Coaching",
@@ -853,7 +853,7 @@ const EN_INTERVIEW_COPY: InterviewCopy = {
   permissionDenied: "Allow microphone access in your browser, or answer by text.",
   unavailable: "Voice input is not supported in this browser. You can still type.",
   scoreTitle: "Answer signals",
-  relevance: "JD relevance",
+  relevance: "Job relevance",
   evidence: "Evidence",
   outcome: "Outcome",
   structure: "Structure",
@@ -1730,12 +1730,12 @@ function scoringGuideFor(locale: LocaleCode) {
     };
   return {
     eyebrow: "Scoring and classification",
-    title: "This estimates evidence coverage—not ATS acceptance or rejection",
+    title: "This shows how much of the job post your resume can support—not whether you will pass an ATS",
     intro: "The score only uses the resume and job description you provide. Missing evidence does not mean missing ability.",
-    overall: "Overall evidence coverage",
+    overall: "Resume support",
     keywordEvidence: "Keyword and resume evidence",
     score: "Score",
-    priority: "JD priority",
+    priority: "Importance in the job post",
     classification: "Classification",
     strong: "Strong evidence",
     partial: "Partial evidence",
@@ -1743,7 +1743,7 @@ function scoringGuideFor(locale: LocaleCode) {
     strongRule: "Directly relevant, with a concrete action or measurable result.",
     partialRule: "A related skill appears, but ownership, context, or results are incomplete.",
     gapRule: "No resume content was found that supports this requirement.",
-    formula: "Per keyword: related term 45–65 points + concrete action 15 + measurable result 20. Overall coverage is weighted by JD priority.",
+    formula: "Each requirement scores up to 100: related experience provides the base score, then clear actions and measurable results add support. More important job requirements count more in the overall result.",
     priorityLabels: { Required: "Required · 1.35×", Core: "Core · 1.0×", Preferred: "Preferred · 0.65×" },
     statusLabels: { "Strong evidence": "Strong evidence", "Partial evidence": "Partial evidence", Gap: "Evidence gap" },
   };
@@ -1785,7 +1785,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
     resources: "Technical-round practice",
     resourcesIntro: "Selected for this interviewer. External sites have their own accounts, pricing, privacy, and terms.",
     vocabulary: "Speech vocabulary boost",
-    vocabularyNote: "Recognition prioritizes terms from your resume, JD, and this round. You can edit the transcript before sending.",
+    vocabularyNote: "Recognition prioritizes terms from your resume, the job post, and this interview type. You can edit the transcript before sending.",
     thinking: "The interviewer is preparing a follow-up…",
   };
 }
@@ -1793,12 +1793,12 @@ function interviewStudioUiFor(locale: LocaleCode) {
 function interviewScheduleUiFor(locale: LocaleCode) {
   if (locale === "zh-TW")
     return {
-      title: "面試時間與時長",
-      intro: "時間與關卡會影響預計題數、追問深度與準備優先順序。",
-      date: "面試日期",
-      time: "開始時間",
-      duration: "預計時長",
-      stage: "面試關卡",
+      title: "補充面試資訊（可略過）",
+      intro: "知道多少填多少；日期、時長與面試類型會讓練習題目更貼近實際情況。",
+      date: "日期",
+      time: "時間",
+      duration: "長度",
+      stage: "面試類型",
       minutes: "分鐘",
       estimated: "預估現場問題",
       prepare: "建議準備問題",
@@ -1810,12 +1810,12 @@ function interviewScheduleUiFor(locale: LocaleCode) {
     };
   if (locale === "zh-CN")
     return {
-      title: "面试时间与时长",
-      intro: "时间与关卡会影响预计题数、追问深度和准备优先级。",
-      date: "面试日期",
-      time: "开始时间",
-      duration: "预计时长",
-      stage: "面试关卡",
+      title: "补充面试信息（可跳过）",
+      intro: "知道多少填多少；日期、时长和面试类型会让练习题目更贴近实际情况。",
+      date: "日期",
+      time: "时间",
+      duration: "时长",
+      stage: "面试类型",
       minutes: "分钟",
       estimated: "预计现场问题",
       prepare: "建议准备问题",
@@ -1826,20 +1826,20 @@ function interviewScheduleUiFor(locale: LocaleCode) {
       methodology: "按面试时长、面试关卡、JD 必要条件、简历证据与缺口排序；这是准备估算，不代表雇主的实际题库。",
     };
   return {
-    title: "Interview date, time, and duration",
-    intro: "Timing and interview stage shape the expected question count, follow-up depth, and preparation priorities.",
-    date: "Interview date",
-    time: "Start time",
-    duration: "Expected duration",
-    stage: "Interview stage",
+    title: "Tell us about the interview (optional)",
+    intro: "Choose the date, length, and interview type. Skip anything you do not know.",
+    date: "Date",
+    time: "Time",
+    duration: "Length",
+    stage: "Interview type",
     minutes: "minutes",
-    estimated: "Estimated live questions",
-    prepare: "Questions to prepare",
+    estimated: "Likely questions in the interview",
+    prepare: "Questions we will prepare",
     likely: "Most likely",
     probable: "Likely follow-up",
     possible: "Extended preparation",
     unscheduled: "Date not scheduled",
-    methodology: "Ranked from interview duration and stage, JD must-haves, resume evidence, and visible gaps. This is a preparation estimate—not the employer’s actual question list.",
+    methodology: "We use the job post, your resume, the interview type, and the time available. This is a practice plan—not the employer’s exact question list.",
   };
 }
 
@@ -3212,10 +3212,10 @@ export default function Home({
   }[] = [
     {
       id: "Analyze",
-      label: locale === "en" ? "Interview Proof Pack" : copy.analyze,
+      label: locale === "en" ? "Interview plan" : copy.analyze,
       description:
         locale === "en"
-          ? "Resume + JD → evidence, gaps, stories, and a prep plan"
+          ? "Resume + job post → proof, gaps, stories, and practice questions"
           : detail.compare,
     },
     {
@@ -3332,13 +3332,19 @@ export default function Home({
   const landingPrimaryCta =
     locale === "en" ? "Start my free mock interview" : detail.runMatch;
   const landingSecondaryCta = walkthroughLabelFor(locale);
+  const analysisCta =
+    locale === "en"
+      ? exampleLoaded
+        ? "Show this example"
+        : "Create my interview plan"
+      : landingPrimaryCta;
   const proofPackFlow =
     locale === "en"
       ? [
           "Upload your resume",
-          "Paste the job description",
-          "Get truthful stories",
-          "Practice the interview",
+          "Add the job post",
+          "Get your interview plan",
+          "Practice with AI",
         ]
       : [
           `${detail.resumeEvidence} + ${detail.jobDescription}`,
@@ -3516,7 +3522,7 @@ export default function Home({
               href: localizedPath(locale, "account"),
             },
             {
-              label: detail.source,
+              label: "GitHub",
               href: "https://github.com/weiyu1029/careerproof-agent",
               external: true,
             },
@@ -3805,14 +3811,14 @@ export default function Home({
                     {locale === "en"
                       ? exampleLoaded
                         ? "See how one resume becomes interview practice"
-                        : "Start with your resume and job description"
+                        : "Add your resume and the job post"
                       : detail.compare}
                   </h2>
                   <p>
                     {locale === "en"
                       ? exampleLoaded
                         ? "This is sample data, not your information. We show what the candidate can prove, what is still missing, and which answer they should practice next."
-                        : "Add your real experience and the role you want. We will never add achievements that are not in your resume."
+                        : "That is all we need. Interview details are optional, and we never add experience you did not provide."
                       : copy.heroBody}
                   </p>
                 </div>
@@ -3820,7 +3826,7 @@ export default function Home({
                   className="button secondary"
                   onClick={() => loadProofPackExample()}
                 >
-                  {detail.sample}
+                  {locale === "en" ? "Try a filled-in example" : detail.sample}
                 </button>
               </div>
               {exampleLoaded && locale === "en" && (
@@ -3886,7 +3892,7 @@ export default function Home({
                       {locale === "en"
                         ? exampleLoaded
                           ? "For example: what this candidate has actually done"
-                          : "Your resume or work experience"
+                          : "Add your resume"
                         : detail.resumeEvidence}
                     </label>
                     {resume.trim() && (
@@ -3903,7 +3909,7 @@ export default function Home({
                     <p className="guided-card-explainer">
                       {exampleLoaded
                         ? "The product only uses experience it can find in this text."
-                        : "Paste or upload the experience you can truthfully discuss."}
+                        : "Upload a file or paste your resume. We only use the experience you provide."}
                     </p>
                   )}
                   <textarea
@@ -3941,7 +3947,7 @@ export default function Home({
                       {locale === "en"
                         ? exampleLoaded
                           ? "For example: what this employer is looking for"
-                          : "The job description you are applying to"
+                          : "Add the job post"
                         : detail.jobDescription}
                     </label>
                     {jd.trim() && (
@@ -3958,7 +3964,7 @@ export default function Home({
                     <p className="guided-card-explainer">
                       {exampleLoaded
                         ? "We turn these requirements into strengths, gaps, stories, and interview questions."
-                        : "Paste the full posting so the questions match the real role."}
+                        : "Upload or paste the full job post so the practice matches this role."}
                     </p>
                   )}
                   <textarea
@@ -4060,15 +4066,13 @@ export default function Home({
                 <div>
                   <span>3</span>
                   <b>
-                    {locale === "en" && exampleLoaded
-                      ? "Show what this example proves"
-                      : landingPrimaryCta}
+                    {analysisCta}
                   </b>
                   <small>
                     {locale === "en"
                       ? exampleLoaded
-                        ? "Supported strengths, real gaps, one truthful story, and likely follow-up questions"
-                        : "Evidence, gaps, stories, follow-ups, and a prep plan"
+                        ? "See the matches, missing proof, practice stories, and likely questions"
+                        : "See what matches, what is missing, and what to practice"
                       : detail.matrix}
                   </small>
                 </div>
@@ -4086,14 +4090,16 @@ export default function Home({
                   disabled={modelRunning || !jd.trim() || !resume.trim()}
                 >
                   {modelRunning
-                    ? "Running…"
-                    : locale === "en" && exampleLoaded
-                      ? "Analyze this example"
-                      : landingPrimaryCta}
+                    ? locale === "en"
+                      ? "Building your plan…"
+                      : "Running…"
+                    : analysisCta}
                 </button>
               </div>
               <details className="advanced-settings">
-                <summary>{detail.aiModel}</summary>
+                <summary>
+                  {locale === "en" ? "Optional: use your own AI model" : detail.aiModel}
+                </summary>
                 <div className="action-row">
                 <div>
                   <label htmlFor="model">{detail.aiModel}</label>
@@ -4109,8 +4115,8 @@ export default function Home({
                     ))}
                   </select>
                   <small className="model-note">
-                    The evidence matrix always runs locally. Optional models add
-                    story coaching through an endpoint you control.
+                    The basic match runs on this device. Connect a model only if
+                    you want extra story coaching.
                   </small>
                 </div>
                 </div>
@@ -4158,7 +4164,12 @@ export default function Home({
                   {modelInsight && <p>{modelInsight}</p>}
                 </div>
               </details>
+              {matches.length > 0 && (
               <div className="results-card" id="analysis-results">
+                <details className="scoring-details">
+                  <summary>
+                    {locale === "en" ? "How this score works" : scoring.eyebrow}
+                  </summary>
                 <section className="scoring-guide" aria-labelledby="scoring-guide-title">
                   <div className="scoring-guide-heading">
                     <div>
@@ -4196,21 +4207,27 @@ export default function Home({
                   </div>
                   <p className="score-formula">{scoring.formula}</p>
                 </section>
+                </details>
                 <div className="results-title">
-                  <h3>{detail.matrix}</h3>
+                  <h3>
+                    {locale === "en"
+                      ? "What the job asks for—and what your resume proves"
+                      : detail.matrix}
+                  </h3>
                   <span>
-                    {matches.length} {detail.signalsReviewed}
+                    {locale === "en"
+                      ? `${matches.length} job requirements checked`
+                      : `${matches.length} ${detail.signalsReviewed}`}
                   </span>
                 </div>
                 <div className="keyword-table">
                   <div className="keyword-table-header" aria-hidden="true">
-                    <span>{scoring.keywordEvidence}</span>
-                    <span>{scoring.score}</span>
-                    <span>{scoring.priority}</span>
-                    <span>{scoring.classification}</span>
+                    <span>{locale === "en" ? "Job requirement and your proof" : scoring.keywordEvidence}</span>
+                    <span>{locale === "en" ? "Match" : scoring.score}</span>
+                    <span>{locale === "en" ? "Importance" : scoring.priority}</span>
+                    <span>{locale === "en" ? "Result" : scoring.classification}</span>
                   </div>
-                  {matches.length ? (
-                    matches.map((item) => (
+                  {matches.map((item) => (
                       <div className="keyword-row detailed" key={item.keyword}>
                         <div>
                           <b>{item.keyword}</b>
@@ -4224,20 +4241,20 @@ export default function Home({
                           {scoring.statusLabels[item.status]}
                         </span>
                       </div>
-                    ))
-                  ) : (
-                    <p className="empty-state">{detail.matrix}</p>
-                  )}
+                    ))}
                 </div>
               </div>
+              )}
               {matches.length > 0 && (
                 <section className="interview-proof-pack" aria-labelledby="proof-pack-title">
                   <div className="proof-pack-result-heading">
                     <div>
                       <p className="eyebrow">
-                        {locale === "en" ? "Your core result" : detail.results}
+                        {locale === "en" ? "Your result" : detail.results}
                       </p>
-                      <h3 id="proof-pack-title">Interview Proof Pack</h3>
+                      <h3 id="proof-pack-title">
+                        {locale === "en" ? "Your interview prep plan" : detail.results}
+                      </h3>
                     </div>
                     <span>{interviewTimingSummary}</span>
                   </div>
@@ -4247,7 +4264,7 @@ export default function Home({
                         <span>01</span>
                         <h4>
                           {locale === "en"
-                            ? "Strongest role-match evidence"
+                            ? "What you can prove"
                             : detail.matchedEvidence}
                         </h4>
                       </div>
@@ -4263,7 +4280,7 @@ export default function Home({
                       ) : (
                         <p className="proof-pack-empty">
                           {locale === "en"
-                            ? "No defensible evidence found yet. Add a more detailed resume rather than inventing a claim."
+                            ? "No supporting experience was found yet. Add more detail to your resume rather than inventing a claim."
                             : detail.evidenceCoverage}
                         </p>
                       )}
@@ -4272,7 +4289,7 @@ export default function Home({
                       <div className="proof-pack-result-label">
                         <span>02</span>
                         <h4>
-                          {locale === "en" ? "Real gaps" : detail.evidenceCoverage}
+                          {locale === "en" ? "What is missing" : detail.evidenceCoverage}
                         </h4>
                       </div>
                       {realGaps.length ? (
@@ -4282,7 +4299,7 @@ export default function Home({
                               <b>{item.keyword}</b>
                               <p>
                                 {locale === "en"
-                                  ? "The JD asks for this, but the resume does not provide supporting evidence."
+                                  ? "The job post asks for this, but the resume does not provide supporting experience."
                                   : detail.sourcePolicy}
                               </p>
                             </li>
@@ -4291,7 +4308,7 @@ export default function Home({
                       ) : (
                         <p className="proof-pack-empty">
                           {locale === "en"
-                            ? "No unsupported requirements were detected in this JD."
+                            ? "Every requirement we found in this job post has some support in the resume."
                             : detail.checked}
                         </p>
                       )}
@@ -4301,7 +4318,7 @@ export default function Home({
                         <span>03</span>
                         <h4>
                           {locale === "en"
-                            ? "Defensible interview stories"
+                            ? "Stories to practice"
                             : detail.bestStory}
                         </h4>
                       </div>
@@ -4377,7 +4394,7 @@ export default function Home({
                   </div>
                   <p className="proof-pack-integrity">
                     {locale === "en"
-                      ? "Every item above comes from your resume and this JD. Missing evidence stays visible as a gap."
+                      ? "Everything above comes from your resume and this job post. Missing proof stays visible instead of being invented."
                       : detail.sourcePolicy}
                   </p>
                 </section>
@@ -5851,10 +5868,10 @@ export default function Home({
             <h3>{openSourceLabel}</h3>
             <p className="price">{accountLabels.noCharge}</p>
             <ul>
-              <li>{locale === "en" ? "Resume-to-JD evidence map" : detail.matrix}</li>
-              <li>{locale === "en" ? "Real gap detection" : detail.evidenceCoverage}</li>
-              <li>{locale === "en" ? "3–5 defensible interview stories" : detail.bestStory}</li>
-              <li>{locale === "en" ? "10 role-specific follow-up questions" : interview.focus}</li>
+              <li>{locale === "en" ? "Resume and job-post match" : detail.matrix}</li>
+              <li>{locale === "en" ? "What is supported and what is missing" : detail.evidenceCoverage}</li>
+              <li>{locale === "en" ? "3–5 stories grounded in your resume" : detail.bestStory}</li>
+              <li>{locale === "en" ? "10 questions tailored to the role" : interview.focus}</li>
               <li>{locale === "en" ? "30-minute preparation plan" : detail.readiness}</li>
               <li>{locale === "en" ? "Evidence-grounded mock interview" : copy.interview}</li>
             </ul>

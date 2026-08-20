@@ -15,8 +15,8 @@ export type FaqCopy = {
 const faqCopy = {
   en: {
     eyebrow: "Frequently asked questions",
-    title: "Clear answers before you build your proof pack.",
-    intro: "What InterviewThread does today, what stays under your control, and where the current limits are.",
+    title: "Simple answers before you start.",
+    intro: "What you need, what InterviewThread does, and what always stays under your control.",
     items: [
       { question: "Will InterviewThread invent achievements for me?", answer: "No. Every suggestion must trace back to evidence you provide. Missing proof stays visible as a real gap." },
       { question: "What do I need to get started?", answer: "One real resume and one real job description are enough. Adding your interview date or application stage makes the preparation plan more useful." },

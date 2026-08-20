@@ -759,39 +759,16 @@ label:focus-within {
 }
 .brand-mark-thread {
   position: absolute;
-  left: 7px;
-  top: 8px;
-  width: 24px;
-  height: 21px;
+  left: 8px;
+  top: 7px;
+  width: 21px;
+  height: 23px;
   z-index: 1;
-  border: 2px solid transparent;
-  border-right-color: #9eb8c8;
-  border-bottom-color: #9eb8c8;
-  border-radius: 45% 55% 55% 45%;
-  transform: rotate(-18deg);
-}
-.brand-mark-letter {
-  position: absolute;
-  z-index: 2;
-  color: #f3f2ed;
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 19px;
-  font-weight: 780;
-  letter-spacing: -0.12em;
-  line-height: 1;
-  text-shadow: 0 1px 8px rgba(189, 208, 220, 0.16);
-}
-.brand-mark-letter-i {
-  left: 9px;
-  top: 10px;
-  color: #dce7ed;
-  transform: rotate(-8deg);
-}
-.brand-mark-letter-t {
-  right: 8px;
-  bottom: 8px;
-  color: #f3f2ed;
-  transform: rotate(8deg);
+  border: 2.4px solid #dce7ed;
+  border-right-color: transparent;
+  border-radius: 50%;
+  filter: drop-shadow(0 1px 5px rgba(189, 208, 220, 0.18));
+  transform: rotate(-30deg);
 }
 .brand-mark-node {
   position: absolute;
@@ -804,11 +781,11 @@ label:focus-within {
   box-shadow: 0 0 0 1px rgba(220, 231, 237, 0.18);
 }
 .brand-mark-node-start {
-  top: 6px;
-  left: 7px;
+  top: 7px;
+  right: 7px;
 }
 .brand-mark-node-end {
-  right: 5px;
+  left: 7px;
   bottom: 6px;
   background: #8eacbd;
 }
@@ -2194,12 +2171,30 @@ input:focus {
   border-top: 1px solid var(--line);
   padding-top: 24px;
 }
-.scoring-guide {
+.scoring-details {
   margin-bottom: 25px;
-  padding: 18px;
   border: 1px solid #cbd6dc;
   border-radius: 14px;
   background: #f5f7f7;
+  overflow: hidden;
+}
+.scoring-details > summary {
+  padding: 14px 18px;
+  cursor: pointer;
+  color: #425866;
+  font-size: 15px;
+  font-weight: 760;
+  list-style-position: inside;
+}
+.scoring-details[open] > summary {
+  border-bottom: 1px solid #d7e0e4;
+}
+.scoring-guide {
+  margin: 0;
+  padding: 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .scoring-guide-heading {
   display: flex;
@@ -4738,7 +4733,7 @@ input:focus {
     margin-right: auto;
   }
   .locale-control select {
-    width: 88px;
+    width: 110px;
   }
   .account-link {
     display: none;
