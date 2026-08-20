@@ -806,6 +806,18 @@ test("server-renders all 40 indexable language home pages", async () => {
   }
 });
 
+test("syncs the document language and direction from every localized path", async () => {
+  const response = await render("/th", true);
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.ok(html.includes("document.documentElement.lang=locale"));
+  assert.ok(html.includes("document.documentElement.dir"));
+  assert.ok(html.includes('"zh-tw":"zh-TW"'));
+  assert.ok(html.includes('"pt-br":"pt-BR"'));
+  assert.ok(html.includes('"th":"th"'));
+  assert.ok(html.includes('"ar"'));
+});
+
 test("localized search pages emit canonical and reciprocal hreflang links", async () => {
   const examples = [
     ["/zh-tw/ai-mock-interview", "AI 模擬面試", "zh-TW"],

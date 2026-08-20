@@ -4,7 +4,7 @@ import {
   Source_Serif_4,
 } from "next/font/google";
 import { headers } from "next/headers";
-import { LANGUAGES } from "./i18n";
+import { LANGUAGES, localeToPath, RTL_LOCALES } from "./i18n";
 import { languageAlternates } from "./intl-routing";
 import "./globals.css";
 
@@ -108,6 +108,11 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const origin = await requestOrigin();
+  const documentLocaleMap = Object.fromEntries(
+    LANGUAGES.map(([locale]) => [localeToPath(locale), locale]),
+  );
+  const rtlLocalePaths = Array.from(RTL_LOCALES, localeToPath);
+  const documentLanguageBootstrap = `(function(){try{var path=(location.pathname.split('/')[1]||'en').toLowerCase();var locales=${JSON.stringify(documentLocaleMap)};var rtl=${JSON.stringify(rtlLocalePaths)};var locale=locales[path]||'en';document.documentElement.lang=locale;document.documentElement.dir=rtl.includes(path)?'rtl':'ltr';}catch(_){}})();`;
   const structuredData = [
     {
       "@context": "https://schema.org",
@@ -159,10 +164,11 @@ export default async function RootLayout({
     },
   ];
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${sourceSerif.variable} ${cormorant.variable}`}
       >
+        <script dangerouslySetInnerHTML={{ __html: documentLanguageBootstrap }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
