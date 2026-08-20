@@ -1171,12 +1171,12 @@ h1 {
 .journey-strip b {
   margin-top: 8px;
   display: block;
-  overflow: hidden;
   color: #596773;
   font-size: 15px;
   font-weight: 680;
   line-height: 1.35;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .principles-intro {
   max-width: 800px;
@@ -1698,13 +1698,15 @@ h2 {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   list-style: none;
 }
 .workspace-progress li {
   position: relative;
   min-width: 0;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
   gap: 8px;
   color: #8a949c;
 }
@@ -1735,14 +1737,15 @@ h2 {
 .workspace-progress li b {
   position: relative;
   z-index: 1;
-  max-width: calc(100% - 52px);
-  padding-right: 7px;
-  overflow: hidden;
+  max-width: none;
+  min-width: 0;
+  padding: 5px 7px 5px 0;
   background: var(--surface);
   font-size: 14px;
   font-weight: 680;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .workspace-progress li.current,
 .workspace-progress li.complete {
@@ -5550,7 +5553,6 @@ input:focus {
   }
   .workspace-progress li {
     align-items: flex-start;
-    flex-direction: column;
     gap: 6px;
   }
   .workspace-progress li:not(:last-child):after {
@@ -5559,7 +5561,7 @@ input:focus {
     right: 4px;
   }
   .workspace-progress li b {
-    max-width: calc(100% - 6px);
+    max-width: none;
     padding-right: 4px;
     font-size: 14px;
     white-space: normal;

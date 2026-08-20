@@ -372,6 +372,15 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(globals, /Yu Mincho/);
   assert.match(globals, /Batang/);
   assert.doesNotMatch(globals, /ui-sans-serif|system-ui|sans-serif|font-geist-mono|monospace/);
+  const progressLabelCss =
+    globals.match(/\.workspace-progress li b\s*\{([^}]*)\}/s)?.[1] ?? "";
+  const journeyLabelCss =
+    globals.match(/\.journey-strip b\s*\{([^}]*)\}/s)?.[1] ?? "";
+  assert.match(progressLabelCss, /white-space:\s*normal/);
+  assert.match(progressLabelCss, /overflow-wrap:\s*anywhere/);
+  assert.doesNotMatch(progressLabelCss, /ellipsis|overflow:\s*hidden/);
+  assert.match(journeyLabelCss, /white-space:\s*normal/);
+  assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(page, /What you can prove/);
   assert.match(page, /What is missing/);
   assert.match(page, /Stories to practice/);
