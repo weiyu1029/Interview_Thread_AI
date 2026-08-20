@@ -806,27 +806,27 @@ test("sitemap publishes every localized product and information page", async () 
   for (const [locale] of LANGUAGES) {
     const pathLocale = localeToPath(locale);
     assert.ok(
-      xml.includes(`<loc>https://interviewthread.com/${pathLocale}</loc>`),
+      xml.includes(`<loc>https://interviewthreadai.com/${pathLocale}</loc>`),
       locale,
     );
     assert.ok(
       xml.includes(
-        `<loc>https://interviewthread.com/${pathLocale}/ai-mock-interview</loc>`,
+        `<loc>https://interviewthreadai.com/${pathLocale}/ai-mock-interview</loc>`,
       ),
       locale,
     );
     assert.ok(
       xml.includes(
-        `<loc>https://interviewthread.com/${pathLocale}/privacy</loc>`,
+        `<loc>https://interviewthreadai.com/${pathLocale}/privacy</loc>`,
       ),
       locale,
     );
     assert.ok(
-      xml.includes(`<loc>https://interviewthread.com/${pathLocale}/beta</loc>`),
+      xml.includes(`<loc>https://interviewthreadai.com/${pathLocale}/beta</loc>`),
       locale,
     );
   }
-  assert.match(xml, /hreflang="x-default" href="https:\/\/interviewthread\.com\/en\/ai-mock-interview"/);
+  assert.match(xml, /hreflang="x-default" href="https:\/\/interviewthreadai\.com\/en\/ai-mock-interview"/);
   assert.doesNotMatch(
     xml,
     /<loc>https:\/\/careerstorymap\.com\/ai-mock-interview<\/loc>/,

@@ -18,7 +18,7 @@ export function SeoLandingPage({
   const core = copyFor(locale);
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://interviewthread.com";
+    "https://interviewthreadai.com";
   const homePath = localizedPath(locale);
   const pagePath = localizedPath(locale, page.path);
   const pageUrl = `${siteUrl}${pagePath}`;

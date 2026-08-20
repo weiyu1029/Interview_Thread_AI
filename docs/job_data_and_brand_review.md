@@ -45,7 +45,7 @@ profiles, and launch materials:
 
 - product: InterviewThread;
 - core result: Interview Proof Pack;
-- domain: [interviewthread.com](https://interviewthread.com);
+- domain: [interviewthreadai.com](https://interviewthreadai.com);
 - source repository: [weiyu1029/careerproof-agent](https://github.com/weiyu1029/careerproof-agent);
 - primary promise: “Turn one job description and your real experience into
   interview stories you can defend.”

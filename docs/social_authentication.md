@@ -33,7 +33,7 @@ Set these runtime values:
 
 ```text
 AUTH_SECRET=<at least 32 cryptographically random characters>
-APP_BASE_URL=https://careerstorymap.com
+APP_BASE_URL=https://interviewthreadai.com
 GOOGLE_CLIENT_ID=<provider value>
 GOOGLE_CLIENT_SECRET=<provider value>
 GITHUB_CLIENT_ID=<provider value>
@@ -45,9 +45,9 @@ LINKEDIN_CLIENT_SECRET=<provider value>
 Register the exact production callback URLs:
 
 ```text
-https://careerstorymap.com/api/auth/callback/google
-https://careerstorymap.com/api/auth/callback/github
-https://careerstorymap.com/api/auth/callback/linkedin
+https://interviewthreadai.com/api/auth/callback/google
+https://interviewthreadai.com/api/auth/callback/github
+https://interviewthreadai.com/api/auth/callback/linkedin
 ```
 
 For local development on port 3001, use the matching callbacks:

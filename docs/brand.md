@@ -7,7 +7,7 @@
 - Primary promise: **Turn one job description and your real experience into
   interview stories you can defend.**
 - Supporting line: **Find the thread. Own the interview.**
-- Domain: [interviewthread.com](https://interviewthread.com)
+- Domain: [interviewthreadai.com](https://interviewthreadai.com)
 - Source: [weiyu1029/careerproof-agent](https://github.com/weiyu1029/careerproof-agent)
 
 ## Public naming rule
