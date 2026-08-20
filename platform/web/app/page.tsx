@@ -2437,22 +2437,6 @@ export default function Home({
           `3 · ${detail.bestStory}`,
           copy.interview,
         ];
-  const proofPackOutputs =
-    locale === "en"
-      ? [
-          "3 strongest role-match proofs",
-          "3 real evidence or capability gaps",
-          "3–5 defensible interview stories",
-          "10 likely follow-up questions",
-          "30-minute interview prep plan",
-        ]
-      : [
-          detail.matchedEvidence,
-          detail.evidenceCoverage,
-          detail.bestStory,
-          copy.interview,
-          detail.readiness,
-        ];
   const strongestProofs = matches
     .filter(
       (item) =>
@@ -2650,31 +2634,6 @@ export default function Home({
               {locale === "en" ? "No invented achievements" : detail.matchedEvidence}
             </span>
           </div>
-        </div>
-        <div className="hero-panel proof-pack-card">
-          <div className="proof-pack-card-heading">
-            <div>
-              <span>{locale === "en" ? "Your outcome" : detail.results}</span>
-              <h2>Interview Proof Pack</h2>
-            </div>
-            <span className="proof-pack-time">
-              {locale === "en" ? "Ready in about 10 min" : detail.readiness}
-            </span>
-          </div>
-          <ol className="proof-pack-list">
-            {proofPackOutputs.map((item, index) => (
-              <li key={item}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <b>{item}</b>
-              </li>
-            ))}
-          </ol>
-          <p className="proof-pack-inputs">
-            <span>{locale === "en" ? "You provide" : detail.compare}</span>
-            {locale === "en"
-              ? "One real resume · One real JD · Interview date or application stage"
-              : `${detail.resumeEvidence} · ${detail.jobDescription}`}
-          </p>
         </div>
       </section>
 

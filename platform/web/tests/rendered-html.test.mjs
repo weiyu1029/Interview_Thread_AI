@@ -107,10 +107,12 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(layout, /\/og-careerstorymap\.png/);
   assert.match(layout, /application\/ld\+json/);
   assert.match(layout, /Build interview stories you can defend/);
-  assert.match(page, /3 strongest role-match proofs/);
-  assert.match(page, /3 real evidence or capability gaps/);
+  assert.match(page, /Strongest role-match evidence/);
+  assert.match(page, /Real gaps/);
+  assert.match(page, /Defensible interview stories/);
   assert.match(page, /10 likely follow-up questions/);
   assert.match(page, /30-minute interview preparation/);
+  assert.doesNotMatch(page, /hero-panel|proof-pack-card/);
   const heroSource = page.match(
     /<section className="hero"[\s\S]*?<\/section>/,
   )?.[0];
