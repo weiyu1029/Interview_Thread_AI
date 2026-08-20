@@ -1,4 +1,6 @@
 import { insertFeedback } from "../../../db";
+import { getAppUser } from "../../auth";
+import { PRODUCT_VERSION } from "../../product-version";
 
 const CATEGORIES = new Set([
   "accuracy",
@@ -8,9 +10,23 @@ const CATEGORIES = new Set([
   "feature",
 ]);
 const PLANS = new Set(["community"]);
+const SURFACES = new Set([
+  "general",
+  "analysis",
+  "interview",
+  "tracker",
+  "recommendations",
+  "market",
+  "account",
+  "beta",
+]);
 
 export async function POST(request: Request) {
   try {
+    const user = await getAppUser();
+    if (!user)
+      return Response.json({ error: "Sign in is required." }, { status: 401 });
+
     const payload = (await request.json()) as {
       category?: string;
       rating?: number;
@@ -18,6 +34,7 @@ export async function POST(request: Request) {
       plan?: string;
       locale?: string;
       website?: string;
+      surface?: string;
     };
     if (payload.website) return new Response(null, { status: 204 });
 
@@ -26,11 +43,14 @@ export async function POST(request: Request) {
     const plan = payload.plan?.trim().toLowerCase() || "community";
     const rating = Number(payload.rating);
     const locale = payload.locale?.trim().slice(0, 16) || "en";
+    const surface = payload.surface?.trim().toLowerCase() || "general";
 
     if (!CATEGORIES.has(category))
       return Response.json({ error: "Invalid category." }, { status: 400 });
     if (!PLANS.has(plan))
       return Response.json({ error: "Invalid plan." }, { status: 400 });
+    if (!SURFACES.has(surface))
+      return Response.json({ error: "Invalid feedback surface." }, { status: 400 });
     if (!Number.isInteger(rating) || rating < 1 || rating > 5)
       return Response.json({ error: "Rating must be 1–5." }, { status: 400 });
     if (message.length < 3 || message.length > 4000)
@@ -43,6 +63,7 @@ export async function POST(request: Request) {
     const id = crypto.randomUUID();
     await insertFeedback({
       id,
+      userId: user.userId,
       category,
       rating,
       message,
@@ -50,6 +71,8 @@ export async function POST(request: Request) {
       priority,
       locale,
       createdAt: new Date().toISOString(),
+      productVersion: PRODUCT_VERSION,
+      surface,
     });
 
     return Response.json({ id, priority }, { status: 201 });

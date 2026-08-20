@@ -149,6 +149,28 @@ export function marketValueFor(locale: LocaleCode, value: string) {
   return catalogs[locale][value as MarketValue] || value;
 }
 
+const workStyleLabels: Record<LocaleCode, readonly [string, string, string]> = {
+  en: ["Remote", "Hybrid", "On-site"], ja: ["リモート", "ハイブリッド", "出社"], ko: ["원격", "하이브리드", "출근"],
+  "zh-CN": ["远程", "混合", "现场"], "zh-TW": ["遠端", "混合", "現場"], es: ["Remoto", "Híbrido", "Presencial"],
+  fr: ["À distance", "Hybride", "Sur site"], de: ["Remote", "Hybrid", "Vor Ort"], "pt-BR": ["Remoto", "Híbrido", "Presencial"],
+  it: ["Da remoto", "Ibrido", "In sede"], nl: ["Op afstand", "Hybride", "Op locatie"], pl: ["Zdalnie", "Hybrydowo", "Na miejscu"],
+  tr: ["Uzaktan", "Hibrit", "Ofiste"], ru: ["Удалённо", "Гибридно", "В офисе"], uk: ["Віддалено", "Гібридно", "В офісі"],
+  ar: ["عن بُعد", "هجين", "في الموقع"], he: ["מרחוק", "היברידי", "באתר"], hi: ["दूरस्थ", "हाइब्रिड", "कार्यालय में"],
+  bn: ["দূরবর্তী", "হাইব্রিড", "কর্মস্থলে"], ur: ["دور سے", "ہائبرڈ", "دفتر میں"], id: ["Jarak jauh", "Hibrida", "Di lokasi"],
+  ms: ["Jarak jauh", "Hibrid", "Di lokasi"], th: ["ทางไกล", "ไฮบริด", "ที่สำนักงาน"], vi: ["Từ xa", "Kết hợp", "Tại văn phòng"],
+  fil: ["Malayuan", "Hybrid", "Sa lugar"], sv: ["På distans", "Hybrid", "På plats"], no: ["Fjernarbeid", "Hybrid", "På stedet"],
+  da: ["Fjernarbejde", "Hybrid", "På stedet"], fi: ["Etätyö", "Hybridi", "Paikan päällä"], cs: ["Na dálku", "Hybridně", "Na pracovišti"],
+  sk: ["Na diaľku", "Hybridne", "Na pracovisku"], hu: ["Távoli", "Hibrid", "Helyszíni"], ro: ["La distanță", "Hibrid", "La sediu"],
+  el: ["Εξ αποστάσεως", "Υβριδικά", "Στον χώρο εργασίας"], bg: ["Дистанционно", "Хибридно", "На място"], hr: ["Na daljinu", "Hibridno", "Na lokaciji"],
+  sr: ["На даљину", "Хибридно", "На локацији"], sl: ["Na daljavo", "Hibridno", "Na lokaciji"], sw: ["Kwa mbali", "Mseto", "Mahali pa kazi"],
+  fa: ["دورکاری", "ترکیبی", "حضوری"],
+};
+
+export function workStyleLabelFor(locale: LocaleCode, value: string) {
+  const index = ["Remote", "Hybrid", "On-site"].indexOf(value);
+  return index >= 0 ? workStyleLabels[locale][index] : value;
+}
+
 export function countryLabelFor(locale: LocaleCode, value: string) {
   const code = countryCodes[value];
   if (!code) return value;

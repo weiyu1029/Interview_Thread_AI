@@ -4,6 +4,7 @@ import { SEO_PAGE_KEYS, SeoPageKey } from "./seo-content";
 import { localizedSeoPage, seoUiFor } from "./seo-localization";
 import { BrandMark } from "./BrandMark";
 import { MobileNav } from "./MobileNav";
+import { SiteFooter } from "./SiteFooter";
 
 export function SeoLandingPage({
   pageKey,
@@ -87,13 +88,13 @@ export function SeoLandingPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="seo-header">
-        <a className="brand" href={homePath} aria-label="InterviewThread home">
+        <a className="brand" href={homePath} aria-label={`InterviewThread · ${ui.openProduct}`}>
           <BrandMark />
           <span>
             InterviewThread <small>{brandTaglineFor(locale)}</small>
           </span>
         </a>
-        <nav aria-label="Page navigation">
+        <nav aria-label={ui.exploreWorkflow}>
           <a href="#how-it-works">{ui.howItWorks}</a>
           <a href="#questions">{ui.questions}</a>
           <a className="button secondary" href={workspaceHref}>
@@ -148,7 +149,7 @@ export function SeoLandingPage({
             </a>
           </div>
         </div>
-        <aside className="seo-map-card" aria-label="InterviewThread evidence flow">
+        <aside className="seo-map-card" aria-label={`${ui.mapTitle} · ${ui.evidenceLinked}`}>
           <div className="seo-map-heading">
             <span>{ui.mapTitle}</span>
             <b>{ui.evidenceLinked}</b>
@@ -171,7 +172,7 @@ export function SeoLandingPage({
         </aside>
       </section>
 
-      <section className="seo-metrics" aria-label="Product highlights">
+      <section className="seo-metrics" aria-label={ui.whyBrand}>
         {page.metrics.map((metric) => (
           <div key={metric.label}>
             <strong>{metric.value}</strong>
@@ -230,7 +231,7 @@ export function SeoLandingPage({
         </div>
       </section>
 
-      <section className="seo-related" aria-label="Explore InterviewThread tools">
+      <section className="seo-related" aria-label={ui.exploreWorkflow}>
         <p className="eyebrow">{ui.exploreWorkflow}</p>
         <h2>{ui.connectedDecisions}</h2>
         <div>
@@ -247,20 +248,16 @@ export function SeoLandingPage({
       </section>
 
       <section className="seo-final-cta">
-        <p className="eyebrow">Map your evidence. Own your story.</p>
+        <p className="eyebrow">
+          {locale === "en" ? "Map your evidence. Own your story." : core.heroTitle}
+        </p>
         <h2>{ui.finalTitle}</h2>
         <a className="button primary" href={workspaceHref}>
           {ui.openProduct}
         </a>
       </section>
 
-      <footer className="seo-footer">
-        <span>InterviewThread</span>
-        <span>{locale === "en" ? "Evidence that travels." : core.heroTitle}</span>
-        <a href="https://github.com/weiyu1029/careerproof-agent">
-          {ui.repository}
-        </a>
-      </footer>
+      <SiteFooter locale={locale} />
     </main>
   );
 }

@@ -10,7 +10,7 @@ follow-up questions without inventing achievements.
 
 > Keywords may be reformulated, never fabricated.
 
-[Try InterviewThread](https://interviewthread.com) · [Product strategy](docs/product_strategy.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Voice interview architecture](docs/voice_interview_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Try InterviewThread](https://interviewthread.com) · [Technical solution](docs/technical_solution.md) · [Product strategy](docs/product_strategy.md) · [Product iteration and closed beta](docs/product_iteration.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Voice interview architecture](docs/voice_interview_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Why InterviewThread exists
 
@@ -39,6 +39,12 @@ current application stage. Within about ten minutes, InterviewThread produces:
 The primary journey is:
 
 `Resume + JD → Evidence Map → 3 Interview Stories → Mock Interview`
+
+Candidate evidence is not limited to one resume. The current web workspace can
+attach any number of LinkedIn, portfolio, GitHub, publication, project, or
+public resume links to candidate-provided text or uploaded files. A URL is
+recorded as provenance and never counts as proof by itself. See the
+[evidence-grounded technical solution](docs/technical_solution.md).
 
 InterviewThread does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
 
@@ -259,6 +265,7 @@ feature incubator.
 ## Community maintenance
 
 - Start with an issue for scoring, data-flow, or architecture changes.
+- Use the [closed-beta and release-gate system](docs/product_iteration.md) for staged, reversible product changes.
 - Use synthetic resumes and job descriptions in tests and reports.
 - Follow the evidence and privacy rules in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Review project decisions in [GOVERNANCE.md](GOVERNANCE.md).

@@ -146,7 +146,7 @@ const PERSONA_LABELS: Partial<
   },
   es: {
     hr: "Filtro de RR. HH.",
-    recruiter: "Recruiter",
+    recruiter: "Reclutador",
     "hiring-manager": "Responsable de contratación",
     "functional-lead": "Responsable del área",
     technical: "Entrevistador técnico",
@@ -195,6 +195,77 @@ const PERSONA_LABELS: Partial<
     case: "Fallstudie",
     panel: "Panel-Interview",
   },
+};
+
+const PERSONA_ORDER: readonly InterviewPersonaId[] = [
+  "hr",
+  "recruiter",
+  "hiring-manager",
+  "functional-lead",
+  "technical",
+  "system-design",
+  "portfolio",
+  "coo",
+  "ceo",
+  "peer",
+  "cross-functional",
+  "customer",
+  "values",
+  "case",
+  "panel",
+];
+
+const PERSONA_LABEL_ROWS: Partial<Record<LocaleCode, readonly string[]>> = {
+  "pt-BR": ["Triagem de RH", "Recrutador", "Gestor contratante", "Liderança funcional", "Entrevistador técnico", "Entrevistador de arquitetura de sistemas", "Avaliador de portfólio", "Diretor de operações", "Diretor executivo", "Futuro colega", "Parceiro multifuncional", "Representante de cliente ou usuário", "Entrevistador de cultura e valores", "Entrevista de caso", "Painel de entrevistas"],
+  it: ["Colloquio con le risorse umane", "Selezionatore", "Responsabile delle assunzioni", "Responsabile di funzione", "Intervistatore tecnico", "Intervistatore di progettazione dei sistemi", "Revisore del portfolio", "Direttore operativo", "Amministratore delegato", "Futuro collega", "Partner interfunzionale", "Rappresentante di clienti o utenti", "Intervistatore su cultura e valori", "Colloquio con caso", "Commissione di colloquio"],
+  nl: ["HR-screening", "Recruiter", "Wervende manager", "Vakinhoudelijk leider", "Technisch interviewer", "Interviewer systeemontwerp", "Portfoliobeoordelaar", "Operationeel directeur", "Algemeen directeur", "Toekomstige collega", "Crossfunctionele partner", "Klant- of gebruikersvertegenwoordiger", "Interviewer cultuur en waarden", "Case-interviewer", "Interviewpanel"],
+  pl: ["Wstępna rozmowa HR", "Rekruter", "Menedżer zatrudniający", "Lider funkcjonalny", "Osoba prowadząca rozmowę techniczną", "Osoba prowadząca rozmowę o projektowaniu systemów", "Recenzent portfolio", "Dyrektor operacyjny", "Dyrektor generalny", "Przyszły współpracownik", "Partner międzyfunkcyjny", "Przedstawiciel klienta lub użytkownika", "Osoba prowadząca rozmowę o kulturze i wartościach", "Rozmowa typu case", "Panel rekrutacyjny"],
+  tr: ["İnsan kaynakları ön görüşmesi", "İşe alım uzmanı", "İşe alım yöneticisi", "Fonksiyon lideri", "Teknik görüşmeci", "Sistem tasarımı görüşmecisi", "Portföy değerlendiricisi", "Operasyon direktörü", "Genel müdür", "Gelecekteki ekip arkadaşı", "Çapraz fonksiyonlu ortak", "Müşteri veya kullanıcı temsilcisi", "Kültür ve değerler görüşmecisi", "Vaka görüşmecisi", "Görüşme paneli"],
+  ru: ["Предварительное интервью с HR", "Рекрутер", "Нанимающий руководитель", "Функциональный руководитель", "Технический интервьюер", "Интервьюер по проектированию систем", "Эксперт по портфолио", "Операционный директор", "Генеральный директор", "Будущий коллега", "Кросс-функциональный партнёр", "Представитель клиента или пользователя", "Интервьюер по культуре и ценностям", "Кейс-интервьюер", "Панель интервьюеров"],
+  uk: ["Попередня співбесіда з HR", "Рекрутер", "Керівник, що наймає", "Функціональний керівник", "Технічний інтерв’юер", "Інтерв’юер із проєктування систем", "Оглядач портфоліо", "Операційний директор", "Генеральний директор", "Майбутній колега", "Кросфункціональний партнер", "Представник клієнта або користувача", "Інтерв’юер із культури та цінностей", "Кейс-інтерв’юер", "Панель інтерв’юерів"],
+  ar: ["المقابلة الأولية مع الموارد البشرية", "مسؤول التوظيف", "مدير التوظيف", "قائد التخصص", "المحاور التقني", "محاور تصميم الأنظمة", "مراجع ملف الأعمال", "مدير العمليات", "الرئيس التنفيذي", "زميل العمل المستقبلي", "شريك متعدد التخصصات", "ممثل العميل أو المستخدم", "محاور الثقافة والقيم", "محاور دراسة الحالة", "لجنة المقابلة"],
+  he: ["סינון משאבי אנוש", "מגייס", "מנהל מגייס", "מוביל מקצועי", "מראיין טכני", "מראיין תכנון מערכות", "בוחן תיק עבודות", "מנהל תפעול", "מנכ״ל", "עמית עתידי", "שותף בין־תחומי", "נציג לקוח או משתמש", "מראיין תרבות וערכים", "מראיין מקרה", "פאנל מראיינים"],
+  hi: ["मानव संसाधन प्रारंभिक साक्षात्कार", "भर्तीकर्ता", "नियुक्ति प्रबंधक", "कार्यात्मक प्रमुख", "तकनीकी साक्षात्कारकर्ता", "सिस्टम डिज़ाइन साक्षात्कारकर्ता", "पोर्टफोलियो समीक्षक", "मुख्य परिचालन अधिकारी", "मुख्य कार्यकारी अधिकारी", "भावी सहकर्मी", "अंतर-विभागीय भागीदार", "ग्राहक या उपयोगकर्ता प्रतिनिधि", "संस्कृति और मूल्यों के साक्षात्कारकर्ता", "केस साक्षात्कारकर्ता", "साक्षात्कार पैनल"],
+  bn: ["মানবসম্পদ প্রাথমিক সাক্ষাৎকার", "নিয়োগকারী", "নিয়োগ ব্যবস্থাপক", "কার্যকরী প্রধান", "প্রযুক্তিগত সাক্ষাৎকারগ্রহণকারী", "সিস্টেম ডিজাইন সাক্ষাৎকারগ্রহণকারী", "পোর্টফোলিও পর্যালোচক", "প্রধান পরিচালন কর্মকর্তা", "প্রধান নির্বাহী কর্মকর্তা", "ভবিষ্যৎ সহকর্মী", "বহুবিভাগীয় অংশীদার", "গ্রাহক বা ব্যবহারকারী প্রতিনিধি", "সংস্কৃতি ও মূল্যবোধ সাক্ষাৎকারগ্রহণকারী", "কেস সাক্ষাৎকারগ্রহণকারী", "সাক্ষাৎকার প্যানেল"],
+  ur: ["انسانی وسائل کی ابتدائی جانچ", "بھرتی کنندہ", "بھرتی مینیجر", "فعلی سربراہ", "تکنیکی انٹرویو لینے والا", "سسٹم ڈیزائن انٹرویو لینے والا", "پورٹ فولیو جائزہ کار", "چیف آپریٹنگ آفیسر", "چیف ایگزیکٹو آفیسر", "مستقبل کا ساتھی", "بین شعبہ جاتی شراکت دار", "صارف یا گاہک کا نمائندہ", "ثقافت اور اقدار کا انٹرویو لینے والا", "کیس انٹرویو لینے والا", "انٹرویو پینل"],
+  id: ["Penyaringan SDM", "Perekrut", "Manajer perekrutan", "Pemimpin fungsi", "Pewawancara teknis", "Pewawancara desain sistem", "Peninjau portofolio", "Direktur operasi", "Direktur utama", "Rekan kerja masa depan", "Mitra lintas fungsi", "Perwakilan pelanggan atau pengguna", "Pewawancara budaya dan nilai", "Pewawancara studi kasus", "Panel wawancara"],
+  ms: ["Saringan sumber manusia", "Perekrut", "Pengurus pengambilan pekerja", "Ketua fungsi", "Penemu duga teknikal", "Penemu duga reka bentuk sistem", "Penilai portfolio", "Ketua pegawai operasi", "Ketua pegawai eksekutif", "Rakan sekerja masa hadapan", "Rakan rentas fungsi", "Wakil pelanggan atau pengguna", "Penemu duga budaya dan nilai", "Penemu duga kajian kes", "Panel temu duga"],
+  th: ["การคัดกรองฝ่ายบุคคล", "ผู้สรรหา", "ผู้จัดการฝ่ายว่าจ้าง", "หัวหน้าสายงาน", "ผู้สัมภาษณ์ด้านเทคนิค", "ผู้สัมภาษณ์ด้านการออกแบบระบบ", "ผู้ประเมินแฟ้มผลงาน", "ประธานเจ้าหน้าที่ฝ่ายปฏิบัติการ", "ประธานเจ้าหน้าที่บริหาร", "เพื่อนร่วมงานในอนาคต", "พันธมิตรข้ามสายงาน", "ตัวแทนลูกค้าหรือผู้ใช้", "ผู้สัมภาษณ์ด้านวัฒนธรรมและค่านิยม", "ผู้สัมภาษณ์กรณีศึกษา", "คณะผู้สัมภาษณ์"],
+  vi: ["Sàng lọc nhân sự", "Chuyên viên tuyển dụng", "Quản lý tuyển dụng", "Trưởng bộ phận chuyên môn", "Người phỏng vấn kỹ thuật", "Người phỏng vấn thiết kế hệ thống", "Người đánh giá hồ sơ năng lực", "Giám đốc vận hành", "Giám đốc điều hành", "Đồng nghiệp tương lai", "Đối tác liên chức năng", "Đại diện khách hàng hoặc người dùng", "Người phỏng vấn văn hóa và giá trị", "Người phỏng vấn tình huống", "Hội đồng phỏng vấn"],
+  fil: ["Paunang pagsusuri ng HR", "Tagapagrekrut", "Tagapamahala sa pagkuha", "Pinuno ng tungkulin", "Teknikal na tagapanayam", "Tagapanayam sa disenyo ng sistema", "Tagasuri ng portfolio", "Punong opisyal ng operasyon", "Punong ehekutibong opisyal", "Hinaharap na kasamahan", "Katuwang na cross-functional", "Kinatawan ng customer o user", "Tagapanayam sa kultura at mga pagpapahalaga", "Tagapanayam sa kaso", "Panel ng panayam"],
+  sv: ["HR-screening", "Rekryterare", "Rekryterande chef", "Funktionschef", "Teknisk intervjuare", "Intervjuare för systemdesign", "Portföljgranskare", "Operativ chef", "Verkställande direktör", "Framtida kollega", "Tvärfunktionell partner", "Kund- eller användarrepresentant", "Intervjuare för kultur och värderingar", "Caseintervjuare", "Intervjupanel"],
+  no: ["HR-screening", "Rekrutterer", "Ansettende leder", "Faglig leder", "Teknisk intervjuer", "Intervjuer for systemdesign", "Porteføljevurderer", "Driftsdirektør", "Administrerende direktør", "Fremtidig kollega", "Tverrfaglig partner", "Kunde- eller brukerrepresentant", "Intervjuer for kultur og verdier", "Caseintervjuer", "Intervjupanel"],
+  da: ["HR-screening", "Rekrutteringsansvarlig", "Ansættende leder", "Faglig leder", "Teknisk interviewer", "Interviewer i systemdesign", "Porteføljebedømmer", "Driftsdirektør", "Administrerende direktør", "Fremtidig kollega", "Tværfunktionel partner", "Kunde- eller brugerrepræsentant", "Interviewer om kultur og værdier", "Caseinterviewer", "Interviewpanel"],
+  fi: ["Henkilöstön esikarsinta", "Rekrytoija", "Rekrytoiva esihenkilö", "Toiminnon johtaja", "Tekninen haastattelija", "Järjestelmäsuunnittelun haastattelija", "Portfolion arvioija", "Operatiivinen johtaja", "Toimitusjohtaja", "Tuleva kollega", "Poikkitoiminnallinen kumppani", "Asiakkaan tai käyttäjän edustaja", "Kulttuuri- ja arvohaastattelija", "Tapaushaastattelija", "Haastattelupaneeli"],
+  cs: ["Úvodní pohovor s personalistou", "Náborář", "Nabírající manažer", "Vedoucí odborné oblasti", "Technický tazatel", "Tazatel pro návrh systémů", "Hodnotitel portfolia", "Provozní ředitel", "Generální ředitel", "Budoucí kolega", "Partner napříč funkcemi", "Zástupce zákazníka nebo uživatele", "Tazatel pro kulturu a hodnoty", "Tazatel případové studie", "Panel tazatelů"],
+  sk: ["Úvodný pohovor s personalistom", "Náborár", "Naberajúci manažér", "Vedúci odbornej oblasti", "Technický anketár", "Anketár pre návrh systémov", "Hodnotiteľ portfólia", "Prevádzkový riaditeľ", "Generálny riaditeľ", "Budúci kolega", "Medzifunkčný partner", "Zástupca zákazníka alebo používateľa", "Anketár pre kultúru a hodnoty", "Anketár prípadovej štúdie", "Panel anketárov"],
+  hu: ["Emberi erőforrás előszűrés", "Toborzó", "Felvételi vezető", "Szakmai vezető", "Technikai interjúztató", "Rendszertervezési interjúztató", "Portfólióbíráló", "Operatív igazgató", "Vezérigazgató", "Leendő munkatárs", "Funkciókon átívelő partner", "Ügyfél- vagy felhasználói képviselő", "Kultúra- és értékinterjúztató", "Esetinterjúztató", "Interjúbizottság"],
+  ro: ["Interviu preliminar cu resursele umane", "Recrutor", "Manager de angajare", "Lider funcțional", "Intervievator tehnic", "Intervievator pentru proiectarea sistemelor", "Evaluator de portofoliu", "Director operațional", "Director general", "Viitor coleg", "Partener interfuncțional", "Reprezentant al clientului sau utilizatorului", "Intervievator pentru cultură și valori", "Intervievator pentru studiu de caz", "Comisie de interviu"],
+  el: ["Αρχική συνέντευξη ανθρώπινου δυναμικού", "Υπεύθυνος προσλήψεων", "Διευθυντής πρόσληψης", "Επικεφαλής λειτουργίας", "Τεχνικός συνεντευκτής", "Συνεντευκτής σχεδιασμού συστημάτων", "Αξιολογητής χαρτοφυλακίου", "Διευθυντής λειτουργιών", "Διευθύνων σύμβουλος", "Μελλοντικός συνάδελφος", "Διαλειτουργικός συνεργάτης", "Εκπρόσωπος πελάτη ή χρήστη", "Συνεντευκτής κουλτούρας και αξιών", "Συνεντευκτής μελέτης περίπτωσης", "Επιτροπή συνέντευξης"],
+  bg: ["Предварително интервю с човешки ресурси", "Специалист по подбор", "Наемащ ръководител", "Функционален ръководител", "Технически интервюиращ", "Интервюиращ по системен дизайн", "Оценител на портфолио", "Оперативен директор", "Главен изпълнителен директор", "Бъдещ колега", "Междуфункционален партньор", "Представител на клиент или потребител", "Интервюиращ за култура и ценности", "Интервюиращ за казус", "Интервю панел"],
+  hr: ["Početni razgovor s ljudskim resursima", "Regruter", "Voditelj zapošljavanja", "Funkcionalni voditelj", "Tehnički ispitivač", "Ispitivač za dizajn sustava", "Ocjenjivač portfelja", "Direktor operacija", "Glavni izvršni direktor", "Budući kolega", "Međufunkcionalni partner", "Predstavnik klijenta ili korisnika", "Ispitivač kulture i vrijednosti", "Ispitivač studije slučaja", "Panel za razgovor"],
+  sr: ["Почетни разговор са људским ресурсима", "Регрутер", "Менаџер запошљавања", "Функционални руководилац", "Технички испитивач", "Испитивач за дизајн система", "Оцењивач портфолија", "Директор операција", "Главни извршни директор", "Будући колега", "Међуфункционални партнер", "Представник клијента или корисника", "Испитивач културе и вредности", "Испитивач студије случаја", "Панел за разговор"],
+  sl: ["Uvodni razgovor s kadrovsko službo", "Kadrovalec", "Vodja zaposlovanja", "Funkcijski vodja", "Tehnični izpraševalec", "Izpraševalec za načrtovanje sistemov", "Ocenjevalec portfelja", "Direktor poslovanja", "Glavni izvršni direktor", "Bodoči sodelavec", "Medfunkcijski partner", "Predstavnik stranke ali uporabnika", "Izpraševalec za kulturo in vrednote", "Izpraševalec študije primera", "Intervjujska komisija"],
+  sw: ["Uchunguzi wa awali wa rasilimali watu", "Mwajiri", "Meneja wa kuajiri", "Kiongozi wa taaluma", "Mhoji wa kiufundi", "Mhoji wa usanifu wa mifumo", "Mkaguzi wa jalada la kazi", "Mkurugenzi wa uendeshaji", "Mkurugenzi mkuu", "Mfanyakazi mwenzako wa baadaye", "Mshirika wa idara mbalimbali", "Mwakilishi wa mteja au mtumiaji", "Mhoji wa utamaduni na maadili", "Mhoji wa uchambuzi wa kesi", "Jopo la usaili"],
+  fa: ["غربالگری منابع انسانی", "استخدام‌کننده", "مدیر استخدام", "رهبر تخصصی", "مصاحبه‌گر فنی", "مصاحبه‌گر طراحی سیستم", "ارزیاب نمونه‌کار", "مدیر عملیات", "مدیرعامل", "همکار آینده", "شریک میان‌وظیفه‌ای", "نماینده مشتری یا کاربر", "مصاحبه‌گر فرهنگ و ارزش‌ها", "مصاحبه‌گر مطالعه موردی", "پنل مصاحبه"],
+};
+
+const PERSONA_STAGE_EMPHASIS: Record<InterviewPersonaId, readonly number[]> = {
+  hr: [0, 1, 4],
+  recruiter: [0, 1, 3],
+  "hiring-manager": [1, 2, 3],
+  "functional-lead": [2, 3, 4],
+  technical: [1, 2, 3],
+  "system-design": [0, 2, 3],
+  portfolio: [0, 2, 3],
+  coo: [1, 2, 3],
+  ceo: [0, 2, 3],
+  peer: [0, 1, 4],
+  "cross-functional": [0, 1, 2],
+  customer: [0, 2, 4],
+  values: [1, 2, 4],
+  case: [0, 2, 3],
+  panel: [0, 1, 2, 3, 4],
 };
 
 const GENERIC_QUESTIONS: Record<LocaleCode, [string, string, string]> = {
@@ -538,7 +609,47 @@ export function localizedPersonaLabel(
   persona: InterviewPersonaId,
   englishLabel: string,
 ) {
-  return PERSONA_LABELS[locale]?.[persona] || englishLabel;
+  const reviewedLabel = PERSONA_LABELS[locale]?.[persona];
+  if (reviewedLabel) return reviewedLabel;
+  const row = PERSONA_LABEL_ROWS[locale];
+  const index = PERSONA_ORDER.indexOf(persona);
+  return row?.[index] || englishLabel;
+}
+
+type LocalizablePersona = {
+  id: InterviewPersonaId;
+  label: string;
+  round: string;
+  focus: string;
+  pressure: string;
+  decision: string;
+  answerPattern: string;
+  redFlags: string;
+  prepChecklist: string[];
+};
+
+export function localizedPersonaDetails<T extends LocalizablePersona>(
+  locale: LocaleCode,
+  persona: T,
+): T {
+  if (locale === "en") return persona;
+  const flow = INTERVIEW_FLOW_COPY[locale];
+  const emphasis = PERSONA_STAGE_EMPHASIS[persona.id];
+  const focusTerms = emphasis.map((index) => flow.stages[index]);
+  const label = localizedPersonaLabel(locale, persona.id, persona.label);
+  const proof = focusTerms[0] || flow.stages[0];
+  const gap = focusTerms.at(-1) || flow.stages[4];
+  return {
+    ...persona,
+    label,
+    round: `${label} · ${focusTerms.join(" · ")}`,
+    focus: focusTerms.join(" · "),
+    pressure: `${flow.nextQuestion}: ${localizedInterviewQuestion(locale, 1, proof, gap)}`,
+    decision: `${label} · ${flow.stages[2]} · ${flow.stages[3]}`,
+    answerPattern: flow.stages.join(" → "),
+    redFlags: `${flow.stages[1]} · ${flow.stages[2]} · ${flow.stages[4]}`,
+    prepChecklist: [...new Set([...focusTerms, ...flow.stages])],
+  };
 }
 
 export function localizedInterviewQuestion(

@@ -6,12 +6,13 @@ import {
   openSourceLabelFor,
 } from "../../account-copy";
 import { BrandMark } from "../../BrandMark";
+import { AccountActivity } from "../../AccountActivity";
 import { MobileNav } from "../../MobileNav";
-import {
-  chatGPTSignInPath,
-  chatGPTSignOutPath,
-  getChatGPTUser,
-} from "../../chatgpt-auth";
+import { SiteFooter } from "../../SiteFooter";
+import { getAppUser } from "../../auth";
+import { safeReturnPath, signOutPath, oauthStartPath } from "../../auth-paths";
+import { authCopyFor } from "../../auth-copy";
+import { chatGPTSignOutPath } from "../../chatgpt-auth";
 import {
   brandTaglineFor,
   copyFor,
@@ -26,6 +27,11 @@ export const dynamic = "force-dynamic";
 
 type AccountPageProps = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{
+    auth_error?: string;
+    provider?: string;
+    return_to?: string;
+  }>;
 };
 
 export async function generateMetadata({
@@ -45,10 +51,12 @@ export async function generateMetadata({
 
 export default async function AccountPage({
   params,
+  searchParams,
 }: AccountPageProps) {
-  const [{ locale: pathLocale }, user] = await Promise.all([
+  const [{ locale: pathLocale }, query, user] = await Promise.all([
     params,
-    getChatGPTUser(),
+    searchParams,
+    getAppUser(),
   ]);
   const locale = localeFromPath(pathLocale);
   if (!locale) notFound();
@@ -57,10 +65,22 @@ export default async function AccountPage({
   const detail = detailFor(locale);
   const labels = accountCopyFor(locale);
   const intro = accountIntroCopyFor(locale);
+  const authCopy = authCopyFor(locale);
   const openSourceLabel = openSourceLabelFor(locale);
   const accountPath = localizedPath(locale, "account");
   const workspacePath = `${localizedPath(locale)}#workspace`;
+  const returnTo = safeReturnPath(query.return_to || workspacePath);
   const savedWork = [detail.matrix, core.interview, core.tracker];
+  const signOutHref =
+    user?.provider === "sites"
+      ? chatGPTSignOutPath(accountPath)
+      : signOutPath(accountPath);
+  const providerLabel = user ? providerName(user.provider) : null;
+  const authError = query.auth_error
+    ? query.auth_error === "provider_not_configured"
+      ? `${providerName(query.provider)}: ${authCopy.setupNeeded}`
+      : authCopy.signInFailed
+    : null;
 
   return (
     <main
@@ -81,7 +101,7 @@ export default async function AccountPage({
             { label: labels.account, href: "#account-card" },
             { label: core.enter, href: workspacePath },
             ...(user
-              ? [{ label: labels.signOut, href: chatGPTSignOutPath(accountPath) }]
+              ? [{ label: labels.signOut, href: signOutHref }]
               : []),
           ]}
         />
@@ -100,6 +120,21 @@ export default async function AccountPage({
               </div>
             ))}
           </div>
+          {user && (
+            <AccountActivity
+              locale={locale}
+              title={intro.title}
+              labels={{
+                analysis_completed: detail.matrix,
+                interview_started: core.interview,
+                interview_answered: core.interview,
+                tracker_updated: core.tracker,
+                feedback_submitted: core.feedback,
+                beta_application_submitted: betaLabel(locale),
+                beta_application_withdrawn: betaLabel(locale),
+              }}
+            />
+          )}
         </div>
         <aside className="account-action-card" id="account-card" aria-label={labels.account}>
           <div className="account-card-topline">
@@ -109,38 +144,95 @@ export default async function AccountPage({
 
           {user ? (
             <div className="account-user">
-              <small>InterviewThread ID</small>
+              <small>{providerLabel} · InterviewThread</small>
               <strong>{user.displayName}</strong>
-              <span>{user.email}</span>
+              {user.email && <span>{user.email}</span>}
+              {user.providerUsername && <span>@{user.providerUsername}</span>}
+              {user.providerProfileUrl && (
+                <a
+                  className="account-profile-link"
+                  href={user.providerProfileUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {providerLabel} · {user.providerUsername ? `@${user.providerUsername}` : user.providerProfileUrl}
+                </a>
+              )}
             </div>
           ) : (
             <div className="account-choice">
               <strong>{labels.signIn}</strong>
-              <p>{labels.noCharge}</p>
+              <p>{authCopy.identityNotice}</p>
             </div>
           )}
 
-          <div className="account-actions">
-            <a
-              className="button primary"
-              href={user ? workspacePath : chatGPTSignInPath(accountPath)}
-            >
-              {user ? core.enter : labels.signIn}
-            </a>
-            <a
-              className="button secondary"
-              href={user ? chatGPTSignOutPath(accountPath) : workspacePath}
-            >
-              {user ? labels.signOut : intro.skipSignIn}
-            </a>
-          </div>
+          {authError && (
+            <p className="account-auth-error" role="alert">
+              {authError}
+            </p>
+          )}
+
+          {user ? (
+            <div className="account-actions">
+              <a className="button primary" href={workspacePath}>
+                {core.enter}
+              </a>
+              <a
+                className="button secondary"
+                href={signOutHref}
+              >
+                {labels.signOut}
+              </a>
+              <a className="button secondary" href={localizedPath(locale, "beta")}>
+                {betaLabel(locale)}
+              </a>
+            </div>
+          ) : (
+            <div className="oauth-provider-list" aria-label={labels.signIn}>
+              {(["google", "github", "linkedin"] as const).map((provider) => (
+                <a
+                  className="oauth-provider-button"
+                  data-provider={provider}
+                  href={oauthStartPath(provider, returnTo, locale)}
+                  key={provider}
+                >
+                  <span className="oauth-provider-mark" aria-hidden="true">
+                    {providerMark(provider)}
+                  </span>
+                  <strong>{labels.signIn} · {providerName(provider)}</strong>
+                </a>
+              ))}
+            </div>
+          )}
 
           <div className="account-assurances">
             <p>{labels.noCharge}</p>
             <p>{labels.privacy}</p>
+            <p>{authCopy.evidenceNotice}</p>
           </div>
         </aside>
       </section>
+      <SiteFooter locale={locale} />
     </main>
   );
+}
+
+function providerName(value: string | undefined) {
+  if (value === "google") return "Google";
+  if (value === "github") return "GitHub";
+  if (value === "linkedin") return "LinkedIn";
+  if (value === "sites") return "InterviewThread workspace";
+  return "Account";
+}
+
+function providerMark(provider: "google" | "github" | "linkedin") {
+  if (provider === "google") return "G";
+  if (provider === "github") return "GH";
+  return "in";
+}
+
+function betaLabel(locale: string) {
+  if (locale === "zh-TW") return "封閉測試";
+  if (locale === "zh-CN") return "封闭测试";
+  return "Closed beta";
 }

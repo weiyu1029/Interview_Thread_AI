@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Home from "../page";
+import { getAppUser } from "../auth";
+import { accountSignInPath } from "../auth-paths";
 import {
   copyFor,
   LANGUAGES,
@@ -14,6 +16,8 @@ import {
 } from "../intl-routing";
 
 type LocalizedHomeProps = { params: Promise<{ locale: string }> };
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return LANGUAGES.map(([locale]) => ({ locale: locale.toLowerCase() }));
@@ -71,7 +75,10 @@ export async function generateMetadata({
 }
 
 export default async function LocalizedHome({ params }: LocalizedHomeProps) {
-  const { locale: pathLocale } = await params;
+  const [{ locale: pathLocale }, user] = await Promise.all([
+    params,
+    getAppUser(),
+  ]);
   const locale = localeFromPath(pathLocale);
   if (!locale) notFound();
   const copy = copyFor(locale);
@@ -103,7 +110,11 @@ export default async function LocalizedHome({ params }: LocalizedHomeProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <Home initialLocale={locale} />
+      <Home
+        initialLocale={locale}
+        authenticated={Boolean(user)}
+        signInPath={accountSignInPath(locale, `${localizedPath(locale)}#workspace`)}
+      />
     </div>
   );
 }
