@@ -4495,6 +4495,12 @@ export default function Home({
         </a>
         <MobileNav
           label={detail.product}
+          language={{
+            label: copy.language,
+            value: locale,
+            options: LANGUAGES,
+            onChange: (nextLocale) => chooseLocale(nextLocale as LocaleCode),
+          }}
           items={[
             {
               label: locale === "en" ? "How it works" : detail.product,
