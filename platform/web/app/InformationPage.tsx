@@ -1,5 +1,6 @@
 import { accountCopyFor } from "./account-copy";
 import { BrandMark } from "./BrandMark";
+import { ContactInboxForms } from "./ContactInboxForms";
 import { MobileNav } from "./MobileNav";
 import { SiteFooter } from "./SiteFooter";
 import {
@@ -166,18 +167,21 @@ export function InformationPage({
         )}
 
         {pageKey === "contact" && (
-          <section
-            className="contact-channels"
-            aria-label={locale === "zh-TW" ? "官方聯絡信箱" : "Official contact inboxes"}
-          >
-            {contactChannels.map((channel) => (
-              <a key={channel.email} href={`mailto:${channel.email}`}>
-                <span>{channel.label}</span>
-                <strong>{channel.email}</strong>
-                <p>{channel.description}</p>
-              </a>
-            ))}
-          </section>
+          <>
+            <section
+              className="contact-channels"
+              aria-label={locale === "zh-TW" ? "官方聯絡信箱" : "Official contact inboxes"}
+            >
+              {contactChannels.map((channel) => (
+                <a key={channel.email} href={`mailto:${channel.email}`}>
+                  <span>{channel.label}</span>
+                  <strong>{channel.email}</strong>
+                  <p>{channel.description}</p>
+                </a>
+              ))}
+            </section>
+            <ContactInboxForms locale={locale} />
+          </>
         )}
 
         <div className="information-sections">
