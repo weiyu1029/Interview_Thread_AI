@@ -11,3 +11,10 @@ GITHUB_CLIENT_SECRET=
 
 LINKEDIN_CLIENT_ID=
 LINKEDIN_CLIENT_SECRET=
+
+# Transactional website email. Keep the API key secret and verify the sender
+# domain with the provider before using the production address.
+RESEND_API_KEY=
+EMAIL_FROM=InterviewThread Website <notifications@send.interviewthreadai.com>
+EMAIL_FEEDBACK_TO=feedback@interviewthreadai.com
+EMAIL_PARTNERSHIPS_TO=partnerships@interviewthreadai.com

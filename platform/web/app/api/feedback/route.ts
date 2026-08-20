@@ -1,6 +1,7 @@
 import { insertFeedback } from "../../../db";
 import { getAppUser } from "../../auth";
 import { PRODUCT_VERSION } from "../../product-version";
+import { deliverInboxMessage } from "../../email-delivery.ts";
 
 const CATEGORIES = new Set([
   "accuracy",
@@ -75,7 +76,31 @@ export async function POST(request: Request) {
       surface,
     });
 
-    return Response.json({ id, priority }, { status: 201 });
+    const notification = await deliverInboxMessage(
+      {
+        kind: "feedback",
+        name: user.displayName,
+        replyTo: user.email || undefined,
+        topic: `${category} · ${rating}/5`,
+        message,
+        locale,
+        metadata: {
+          "Product version": PRODUCT_VERSION,
+          Surface: surface,
+          Plan: plan,
+          "Submission ID": id,
+        },
+      },
+      `feedback-${id}`,
+    );
+    if (!notification.delivered) {
+      console.error("Feedback was stored but its inbox notification was not delivered");
+    }
+
+    return Response.json(
+      { id, priority, inboxNotified: notification.delivered },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("Feedback submission failed", error);
     return Response.json(
