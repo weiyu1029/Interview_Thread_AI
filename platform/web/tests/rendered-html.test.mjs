@@ -6,7 +6,11 @@ import {
   LANGUAGES,
   localeToPath,
 } from "../app/i18n.ts";
-import { accountCopyFor, openSourceLabelFor } from "../app/account-copy.ts";
+import {
+  accountCopyFor,
+  accountIntroCopyFor,
+  openSourceLabelFor,
+} from "../app/account-copy.ts";
 import {
   countryLabelFor,
   marketValueFor,
@@ -196,13 +200,17 @@ test("renders a localized registration page for free open-source access", async 
     const response = await render(path);
     assert.equal(response.status, 200, path);
     const html = await response.text();
+    const intro = accountIntroCopyFor(path.includes("zh-tw") ? "zh-TW" : path.includes("ja") ? "ja" : "en");
     assert.ok(html.includes(labels.account), path);
     assert.ok(html.includes(labels.signIn), path);
+    assert.ok(html.includes(intro.title), path);
+    assert.ok(html.includes(intro.skipSignIn), path);
     assert.ok(html.includes(labels.noCharge), path);
     assert.ok(html.includes(labels.privacy), path);
     assert.ok(html.includes(plan), path);
     assert.match(html, /\/signin-with-chatgpt\?return_to=/, path);
     assert.match(html, /name="robots" content="noindex, nofollow"/, path);
+    assert.doesNotMatch(html, /account-steps|account-plan-grid|account-plans/, path);
     assert.doesNotMatch(html, /type="password"|card number|A-number|US\$|>Pro<|>Team</i, path);
   }
 });
@@ -220,6 +228,9 @@ test("provides complete account safety copy in every supported language", () => 
     assert.ok(labels.noCharge, locale);
     assert.ok(labels.privacy, locale);
     assert.doesNotMatch(labels.signIn, /ChatGPT/i, locale);
+    assert.ok(accountIntroCopyFor(locale).title, locale);
+    assert.ok(accountIntroCopyFor(locale).description, locale);
+    assert.ok(accountIntroCopyFor(locale).skipSignIn, locale);
     assert.ok(openSourceLabelFor(locale), locale);
   }
 });

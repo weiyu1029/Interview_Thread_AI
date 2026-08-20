@@ -9,6 +9,12 @@ export type AccountCopy = {
   privacy: string;
 };
 
+export type AccountIntroCopy = {
+  title: string;
+  description: string;
+  skipSignIn: string;
+};
+
 const accountCopy = {
   en: { account: "Account", signIn: "Continue securely", signOut: "Sign out", selected: "Selected plan", noCharge: "Billing is not enabled. No charge today.", privacy: "No immigration documents or payment details are requested." },
   ja: { account: "アカウント", signIn: "安全に続ける", signOut: "ログアウト", selected: "選択したプラン", noCharge: "請求はまだ有効ではありません。本日の請求はありません。", privacy: "移民関連書類や支払い情報は求めません。" },
@@ -51,6 +57,49 @@ const accountCopy = {
   sw: { account: "Akaunti", signIn: "Endelea kwa usalama", signOut: "Ondoka", selected: "Mpango uliochaguliwa", noCharge: "Malipo hayajawashwa. Hakuna ada leo.", privacy: "Hatuombi hati za uhamiaji au maelezo ya malipo." },
   fa: { account: "حساب", signIn: "ادامه امن", signOut: "خروج", selected: "طرح انتخاب‌شده", noCharge: "صورتحساب فعال نیست. امروز هزینه‌ای دریافت نمی‌شود.", privacy: "ما مدارک مهاجرت یا اطلاعات پرداخت درخواست نمی‌کنیم." },
 } satisfies Record<LocaleCode, AccountCopy>;
+
+const accountIntroCopy = {
+  en: { title: "Keep your interview preparation in one place.", description: "Sign in to save your evidence map, interview stories, and practice progress. Or continue without an account.", skipSignIn: "Try it without signing in" },
+  ja: { title: "面接準備をひとつの場所にまとめましょう。", description: "サインインすると、証拠マップ、面接ストーリー、練習の進捗を保存できます。アカウントなしでも続けられます。", skipSignIn: "サインインせずに試す" },
+  ko: { title: "면접 준비를 한곳에서 관리하세요.", description: "로그인하면 증거 맵, 면접 스토리, 연습 진행 상황을 저장할 수 있습니다. 계정 없이도 계속할 수 있습니다.", skipSignIn: "로그인 없이 체험하기" },
+  "zh-CN": { title: "把面试准备集中在一个地方。", description: "登录后可保存证据地图、面试故事和练习进度。也可以不登录直接继续。", skipSignIn: "不登录，直接试用" },
+  "zh-TW": { title: "將面試準備集中在同一個地方。", description: "登入後可保存證據地圖、面試故事與練習進度；也可以不登入直接繼續。", skipSignIn: "不登入，直接試用" },
+  es: { title: "Mantén tu preparación para entrevistas en un solo lugar.", description: "Inicia sesión para guardar tu mapa de evidencias, tus historias y tu progreso. También puedes continuar sin una cuenta.", skipSignIn: "Probar sin iniciar sesión" },
+  fr: { title: "Regroupez votre préparation aux entretiens au même endroit.", description: "Connectez-vous pour enregistrer votre carte de preuves, vos récits et vos progrès. Vous pouvez aussi continuer sans compte.", skipSignIn: "Essayer sans se connecter" },
+  de: { title: "Halte deine Interviewvorbereitung an einem Ort zusammen.", description: "Melde dich an, um Evidenzkarte, Interviewgeschichten und Übungsfortschritt zu speichern. Du kannst auch ohne Konto fortfahren.", skipSignIn: "Ohne Anmeldung ausprobieren" },
+  "pt-BR": { title: "Mantenha sua preparação para entrevistas em um só lugar.", description: "Entre para salvar seu mapa de evidências, suas histórias e seu progresso. Você também pode continuar sem uma conta.", skipSignIn: "Experimentar sem entrar" },
+  it: { title: "Tieni la preparazione ai colloqui in un unico posto.", description: "Accedi per salvare la mappa delle prove, le storie e i progressi. Puoi anche continuare senza account.", skipSignIn: "Prova senza accedere" },
+  nl: { title: "Houd je sollicitatievoorbereiding op één plek.", description: "Log in om je bewijskaart, verhalen en oefenvoortgang te bewaren. Je kunt ook zonder account doorgaan.", skipSignIn: "Proberen zonder inloggen" },
+  pl: { title: "Przygotowanie do rozmowy w jednym miejscu.", description: "Zaloguj się, aby zapisać mapę dowodów, historie i postępy w ćwiczeniach. Możesz też kontynuować bez konta.", skipSignIn: "Wypróbuj bez logowania" },
+  tr: { title: "Mülakat hazırlığını tek yerde tut.", description: "Kanıt haritanı, hikâyelerini ve pratik ilerlemeni kaydetmek için giriş yap. Hesap olmadan da devam edebilirsin.", skipSignIn: "Giriş yapmadan dene" },
+  ru: { title: "Храните всю подготовку к собеседованию в одном месте.", description: "Войдите, чтобы сохранять карту доказательств, истории и прогресс подготовки. Можно продолжить и без аккаунта.", skipSignIn: "Попробовать без входа" },
+  uk: { title: "Зберігайте всю підготовку до співбесіди в одному місці.", description: "Увійдіть, щоб зберігати карту доказів, історії та прогрес. Можна продовжити й без облікового запису.", skipSignIn: "Спробувати без входу" },
+  ar: { title: "اجمع تحضيرك للمقابلة في مكان واحد.", description: "سجّل الدخول لحفظ خريطة الأدلة وقصص المقابلة وتقدم التدريب. أو تابع من دون حساب.", skipSignIn: "التجربة دون تسجيل الدخول" },
+  he: { title: "שמרו את ההכנה לראיון במקום אחד.", description: "התחברו כדי לשמור את מפת הראיות, הסיפורים והתקדמות התרגול. אפשר גם להמשיך ללא חשבון.", skipSignIn: "נסו ללא התחברות" },
+  hi: { title: "अपनी इंटरव्यू तैयारी एक ही जगह रखें।", description: "अपने एविडेंस मैप, कहानियाँ और अभ्यास की प्रगति सेव करने के लिए साइन इन करें। आप बिना खाते के भी जारी रख सकते हैं।", skipSignIn: "बिना साइन इन किए आज़माएँ" },
+  bn: { title: "আপনার সাক্ষাৎকারের প্রস্তুতি এক জায়গায় রাখুন।", description: "প্রমাণের মানচিত্র, গল্প ও অনুশীলনের অগ্রগতি সংরক্ষণ করতে সাইন ইন করুন। অ্যাকাউন্ট ছাড়াও চালিয়ে যেতে পারেন।", skipSignIn: "সাইন ইন ছাড়া চেষ্টা করুন" },
+  ur: { title: "اپنی انٹرویو تیاری ایک جگہ رکھیں۔", description: "اپنا ثبوتی نقشہ، کہانیاں اور مشق کی پیش رفت محفوظ کرنے کے لیے سائن ان کریں۔ اکاؤنٹ کے بغیر بھی جاری رہ سکتے ہیں۔", skipSignIn: "سائن ان کیے بغیر آزمائیں" },
+  id: { title: "Simpan persiapan wawancara di satu tempat.", description: "Masuk untuk menyimpan peta bukti, cerita, dan progres latihan. Anda juga dapat melanjutkan tanpa akun.", skipSignIn: "Coba tanpa masuk" },
+  ms: { title: "Simpan persediaan temu duga anda di satu tempat.", description: "Log masuk untuk menyimpan peta bukti, cerita dan kemajuan latihan. Anda juga boleh meneruskan tanpa akaun.", skipSignIn: "Cuba tanpa log masuk" },
+  th: { title: "เก็บการเตรียมสัมภาษณ์ไว้ในที่เดียว", description: "ลงชื่อเข้าใช้เพื่อบันทึกแผนที่หลักฐาน เรื่องราว และความคืบหน้าในการฝึก หรือใช้งานต่อโดยไม่ต้องมีบัญชี", skipSignIn: "ทดลองโดยไม่ลงชื่อเข้าใช้" },
+  vi: { title: "Giữ mọi nội dung chuẩn bị phỏng vấn ở một nơi.", description: "Đăng nhập để lưu bản đồ bằng chứng, câu chuyện và tiến độ luyện tập. Bạn cũng có thể tiếp tục mà không cần tài khoản.", skipSignIn: "Dùng thử không cần đăng nhập" },
+  fil: { title: "Panatilihin sa iisang lugar ang paghahanda mo sa interview.", description: "Mag-sign in para i-save ang evidence map, mga kuwento, at progreso sa practice. Maaari ka ring magpatuloy nang walang account.", skipSignIn: "Subukan nang hindi nagsa-sign in" },
+  sv: { title: "Samla dina intervjuförberedelser på ett ställe.", description: "Logga in för att spara din beviskarta, dina berättelser och dina framsteg. Du kan också fortsätta utan konto.", skipSignIn: "Prova utan att logga in" },
+  no: { title: "Samle intervjuforberedelsene på ett sted.", description: "Logg inn for å lagre beviskartet, historiene og fremdriften. Du kan også fortsette uten konto.", skipSignIn: "Prøv uten å logge inn" },
+  da: { title: "Saml din interviewforberedelse ét sted.", description: "Log ind for at gemme dit evidenskort, dine historier og din fremgang. Du kan også fortsætte uden en konto.", skipSignIn: "Prøv uden at logge ind" },
+  fi: { title: "Pidä haastatteluun valmistautuminen yhdessä paikassa.", description: "Kirjaudu sisään tallentaaksesi näyttökartan, tarinat ja harjoittelun edistymisen. Voit jatkaa myös ilman tiliä.", skipSignIn: "Kokeile kirjautumatta" },
+  cs: { title: "Mějte přípravu na pohovor na jednom místě.", description: "Přihlaste se a uložte si mapu důkazů, příběhy a pokrok v procvičování. Můžete pokračovat i bez účtu.", skipSignIn: "Vyzkoušet bez přihlášení" },
+  sk: { title: "Majte prípravu na pohovor na jednom mieste.", description: "Prihláste sa a uložte si mapu dôkazov, príbehy a pokrok v precvičovaní. Môžete pokračovať aj bez účtu.", skipSignIn: "Vyskúšať bez prihlásenia" },
+  hu: { title: "Tartsd egy helyen az interjúfelkészülésedet.", description: "Jelentkezz be a bizonyítéktérkép, a történetek és a gyakorlási eredmények mentéséhez. Fiók nélkül is folytathatod.", skipSignIn: "Kipróbálás bejelentkezés nélkül" },
+  ro: { title: "Păstrează pregătirea pentru interviu într-un singur loc.", description: "Conectează-te pentru a salva harta dovezilor, poveștile și progresul. Poți continua și fără cont.", skipSignIn: "Încearcă fără autentificare" },
+  el: { title: "Κρατήστε την προετοιμασία για τη συνέντευξη σε ένα μέρος.", description: "Συνδεθείτε για να αποθηκεύσετε τον χάρτη τεκμηρίων, τις ιστορίες και την πρόοδό σας. Μπορείτε να συνεχίσετε και χωρίς λογαριασμό.", skipSignIn: "Δοκιμή χωρίς σύνδεση" },
+  bg: { title: "Поддържайте подготовката си за интервю на едно място.", description: "Влезте, за да запазите картата на доказателствата, историите и напредъка си. Можете да продължите и без профил.", skipSignIn: "Опитайте без вход" },
+  hr: { title: "Držite pripremu za razgovor na jednom mjestu.", description: "Prijavite se kako biste spremili kartu dokaza, priče i napredak. Možete nastaviti i bez računa.", skipSignIn: "Isprobaj bez prijave" },
+  sr: { title: "Држите припрему за интервју на једном месту.", description: "Пријавите се да сачувате мапу доказа, приче и напредак. Можете наставити и без налога.", skipSignIn: "Испробај без пријаве" },
+  sl: { title: "Pripravo na razgovor imejte na enem mestu.", description: "Prijavite se, da shranite zemljevid dokazov, zgodbe in napredek. Nadaljujete lahko tudi brez računa.", skipSignIn: "Preizkusi brez prijave" },
+  sw: { title: "Weka maandalizi yako ya usaili mahali pamoja.", description: "Ingia ili kuhifadhi ramani ya ushahidi, hadithi na maendeleo ya mazoezi. Unaweza pia kuendelea bila akaunti.", skipSignIn: "Jaribu bila kuingia" },
+  fa: { title: "آمادگی مصاحبه را در یک جا نگه دارید.", description: "برای ذخیره نقشه شواهد، داستان‌ها و روند تمرین وارد شوید. بدون حساب هم می‌توانید ادامه دهید.", skipSignIn: "امتحان بدون ورود" },
+} satisfies Record<LocaleCode, AccountIntroCopy>;
 
 const freeAccessNotice = {
   en: "All features are free and open source.",
@@ -113,6 +162,10 @@ const openSourceLabel = {
 
 export function accountCopyFor(locale: LocaleCode): AccountCopy {
   return { ...accountCopy[locale], noCharge: freeAccessNotice[locale] };
+}
+
+export function accountIntroCopyFor(locale: LocaleCode): AccountIntroCopy {
+  return accountIntroCopy[locale];
 }
 
 export function openSourceLabelFor(locale: LocaleCode) {

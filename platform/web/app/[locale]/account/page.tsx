@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { accountCopyFor, openSourceLabelFor } from "../../account-copy";
+import {
+  accountCopyFor,
+  accountIntroCopyFor,
+  openSourceLabelFor,
+} from "../../account-copy";
 import { BrandMark } from "../../BrandMark";
 import { MobileNav } from "../../MobileNav";
 import {
@@ -30,9 +34,10 @@ export async function generateMetadata({
   const locale = localeFromPath(pathLocale);
   if (!locale) return {};
   const labels = accountCopyFor(locale);
+  const intro = accountIntroCopyFor(locale);
   return {
-    title: labels.account,
-    description: copyFor(locale).heroBody,
+    title: `${labels.account} · CareerStoryMap`,
+    description: intro.description,
     robots: { index: false, follow: false },
   };
 }
@@ -50,26 +55,11 @@ export default async function AccountPage({
   const core = copyFor(locale);
   const detail = detailFor(locale);
   const labels = accountCopyFor(locale);
+  const intro = accountIntroCopyFor(locale);
   const openSourceLabel = openSourceLabelFor(locale);
   const accountPath = localizedPath(locale, "account");
   const workspacePath = `${localizedPath(locale)}#workspace`;
-  const plans = [
-    {
-      id: "community" as const,
-      name: openSourceLabel,
-      price: labels.noCharge,
-      note: detail.openCore,
-      features: [
-        detail.matrix,
-        core.recommendations,
-        detail.assistantTitle,
-        `${core.manual} · ${core.hybrid} · ${core.automatic}`,
-        core.tracker,
-        core.market,
-        core.feedback,
-      ],
-    },
-  ];
+  const savedWork = [detail.matrix, core.interview, core.tracker];
 
   return (
     <main
@@ -87,7 +77,7 @@ export default async function AccountPage({
           label={labels.account}
           items={[
             { label: "CareerStoryMap", href: localizedPath(locale) },
-            { label: openSourceLabel, href: "#account-plans" },
+            { label: labels.account, href: "#account-card" },
             { label: core.enter, href: workspacePath },
             ...(user
               ? [{ label: labels.signOut, href: chatGPTSignOutPath(accountPath) }]
@@ -96,89 +86,60 @@ export default async function AccountPage({
         />
       </header>
 
-      <ol className="account-steps" aria-label={labels.account}>
-        <li className="active">
-          <span>1</span>
-          <b>{openSourceLabel}</b>
-        </li>
-        <li className={user ? "complete" : ""}>
-          <span>2</span>
-          <b>{labels.signIn}</b>
-        </li>
-        <li>
-          <span>3</span>
-          <b>{core.enter}</b>
-        </li>
-      </ol>
-
-      <section className="account-hero">
-        <div>
+      <section className="account-simple">
+        <div className="account-intro">
           <p className="eyebrow">CareerStoryMap · {labels.account}</p>
-          <h1>{core.heroTitle}</h1>
-          <p>{core.heroBody}</p>
+          <h1>{intro.title}</h1>
+          <p className="account-intro-copy">{intro.description}</p>
+          <div className="account-saved-work" aria-label={intro.title}>
+            {savedWork.map((item, index) => (
+              <div key={item}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{item}</strong>
+              </div>
+            ))}
+          </div>
         </div>
-        {user ? (
-          <aside className="identity-card" aria-label={labels.account}>
-            <span>CareerStoryMap ID</span>
-            <strong>{user.displayName}</strong>
-            <small>{user.email}</small>
-          </aside>
-        ) : (
-          <aside className="identity-card">
+        <aside className="account-action-card" id="account-card" aria-label={labels.account}>
+          <div className="account-card-topline">
             <span>{labels.account}</span>
-            <strong>{labels.signIn}</strong>
-            <small>{labels.privacy}</small>
-          </aside>
-        )}
-      </section>
+            <b>{openSourceLabel}</b>
+          </div>
 
-      <section
-        className="account-plans"
-        id="account-plans"
-        aria-label={openSourceLabel}
-      >
-        <div className="account-section-heading">
-          <p className="eyebrow">{openSourceLabel}</p>
-          <h2>{plans[0].name}</h2>
-          <p>{labels.noCharge}</p>
-        </div>
-        <div className="account-plan-grid">
-          {plans.map((item) => {
-            const href = user ? workspacePath : chatGPTSignInPath(accountPath);
-            const actionLabel = user ? core.enter : labels.signIn;
-            return (
-              <article className="selected" key={item.id}>
-                <div className="account-plan-title">
-                  <div>
-                    <span>{item.note}</span>
-                    <h3>{item.name}</h3>
-                  </div>
-                  <b>{openSourceLabel}</b>
-                </div>
-                <p className="account-price">{item.price}</p>
-                <ul>
-                  {item.features.map((feature) => <li key={feature}>{feature}</li>)}
-                </ul>
-                <a className="button primary" href={href}>
-                  {actionLabel}
-                </a>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <footer className="account-footer">
-        <p>{labels.privacy} {labels.noCharge}</p>
-        <div>
-          <a className="button primary" href={workspacePath}>{core.enter}</a>
-          {user && (
-            <a className="button secondary" href={chatGPTSignOutPath(accountPath)}>
-              {labels.signOut}
-            </a>
+          {user ? (
+            <div className="account-user">
+              <small>CareerStoryMap ID</small>
+              <strong>{user.displayName}</strong>
+              <span>{user.email}</span>
+            </div>
+          ) : (
+            <div className="account-choice">
+              <strong>{labels.signIn}</strong>
+              <p>{labels.noCharge}</p>
+            </div>
           )}
-        </div>
-      </footer>
+
+          <div className="account-actions">
+            <a
+              className="button primary"
+              href={user ? workspacePath : chatGPTSignInPath(accountPath)}
+            >
+              {user ? core.enter : labels.signIn}
+            </a>
+            <a
+              className="button secondary"
+              href={user ? chatGPTSignOutPath(accountPath) : workspacePath}
+            >
+              {user ? labels.signOut : intro.skipSignIn}
+            </a>
+          </div>
+
+          <div className="account-assurances">
+            <p>{labels.noCharge}</p>
+            <p>{labels.privacy}</p>
+          </div>
+        </aside>
+      </section>
     </main>
   );
 }
