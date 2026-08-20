@@ -1,29 +1,35 @@
 # InterviewThread
 
-![InterviewThread](platform/web/public/og-interviewthread.png)
+![InterviewThread — Evidence you can defend](assets/interviewthread-readme-hero-v2.png)
 
-**InterviewThread turns one job description and your real experience into
-interview stories you can defend.** It is an open-source, evidence-grounded
-interview preparation product that links every suggestion to candidate evidence,
-keeps unsupported requirements visible as gaps, and rehearses role-specific
-follow-up questions without inventing achievements.
+**A real resume. A real job description. Interview stories you can defend.**
 
-> Keywords may be reformulated, never fabricated.
+InterviewThread is open-source, evidence-grounded interview intelligence. It
+maps role requirements to candidate-provided proof, keeps genuine gaps visible,
+and turns verified evidence into story prompts and realistic follow-up
+questions—without inventing an achievement.
 
-[Try InterviewThread](https://interviewthread.com) · [Technical solution](docs/technical_solution.md) · [Product strategy](docs/product_strategy.md) · [Product iteration and closed beta](docs/product_iteration.md) · [Brand guide](docs/brand.md) · [Platform architecture](docs/platform_architecture.md) · [Voice interview architecture](docs/voice_interview_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+> **Evidence rule:** no source, no claim. Partial proof stays qualified. Missing
+> proof stays visible.
 
-## Why InterviewThread exists
+[Try the live product](https://careerstorymap.com/en) · [Technical design](docs/technical_solution.md) · [Closed beta](docs/product_iteration.md) · [Product strategy](docs/product_strategy.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-Generic keyword tools reward repetition. Generic AI tools can produce fluent but unsupported claims. InterviewThread uses a different sequence:
+## Most career AI writes first. InterviewThread verifies first.
 
-1. decode the role and industry;
-2. extract required, core, and preferred concepts;
-3. match aliases with token boundaries;
-4. map each match to a candidate-provided source sentence;
-5. separate safe wording changes from real skill gaps;
-6. optionally use Gemini to improve framing without changing the canonical evidence result.
+Fluent answers are not useful when a candidate cannot defend them. InterviewThread
+starts with evidence, then builds the preparation workflow around what is true:
 
-The result is useful for resume tailoring and interview preparation while remaining understandable and reviewable by a human.
+1. **Resume + JD** — identify the experience supplied by the candidate and the
+   decisions the employer needs to make.
+2. **Evidence Map** — separate strong proof, partial proof, contradictions, and
+   genuine gaps with traceable source context.
+3. **Story Builder** — shape only supported actions and outcomes into concise,
+   defensible interview narratives.
+4. **Mock Interview** — rehearse with role-specific follow-ups that probe the
+   weakest evidence without coaching the answer in realistic mode.
+
+The result is a preparation system a candidate can inspect, correct, and trust—not
+a polished story they cannot substantiate.
 
 ## Interview Proof Pack
 
