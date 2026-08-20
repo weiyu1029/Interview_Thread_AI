@@ -18,6 +18,14 @@ const REPOSITORY_URL = "https://github.com/weiyu1029/careerproof-agent";
 const ISSUE_URL = `${REPOSITORY_URL}/issues/new/choose`;
 const PRIVATE_REPORT_URL = `${REPOSITORY_URL}/security/advisories/new`;
 
+const CONTACT_EMAILS = {
+  general: "contact@interviewthreadai.com",
+  feedback: "feedback@interviewthreadai.com",
+  partnerships: "partnerships@interviewthreadai.com",
+  support: "support@interviewthreadai.com",
+  privacy: "privacy@interviewthreadai.com",
+} as const;
+
 export function InformationPage({
   locale,
   pageKey,
@@ -47,6 +55,62 @@ export function InformationPage({
           chooseContact: "Choose a contact channel",
           guidance: "Official guidance consulted",
         };
+  const contactChannels =
+    locale === "zh-TW"
+      ? [
+          {
+            label: "一般聯絡",
+            description: "不確定該找誰時，先從這裡開始。",
+            email: CONTACT_EMAILS.general,
+          },
+          {
+            label: "產品意見回饋",
+            description: "分享功能建議、操作問題或使用心得。",
+            email: CONTACT_EMAILS.feedback,
+          },
+          {
+            label: "合作洽詢",
+            description: "開源合作、社群、研究與機構合作。",
+            email: CONTACT_EMAILS.partnerships,
+          },
+          {
+            label: "使用者支援",
+            description: "帳號、登入或產品使用協助。",
+            email: CONTACT_EMAILS.support,
+          },
+          {
+            label: "隱私與資料請求",
+            description: "資料存取、更正、匯出或刪除請求。",
+            email: CONTACT_EMAILS.privacy,
+          },
+        ]
+      : [
+          {
+            label: "General contact",
+            description: "Start here when you are not sure which channel fits.",
+            email: CONTACT_EMAILS.general,
+          },
+          {
+            label: "Product feedback",
+            description: "Share feature ideas, usability issues, or your experience.",
+            email: CONTACT_EMAILS.feedback,
+          },
+          {
+            label: "Partnerships",
+            description: "Open-source, community, research, and institutional collaboration.",
+            email: CONTACT_EMAILS.partnerships,
+          },
+          {
+            label: "User support",
+            description: "Get help with your account, sign-in, or product use.",
+            email: CONTACT_EMAILS.support,
+          },
+          {
+            label: "Privacy and data requests",
+            description: "Request access, correction, export, or deletion of your data.",
+            email: CONTACT_EMAILS.privacy,
+          },
+        ];
 
   return (
     <main
@@ -99,6 +163,21 @@ export function InformationPage({
 
         {page.callout && (
           <aside className="information-callout">{page.callout}</aside>
+        )}
+
+        {pageKey === "contact" && (
+          <section
+            className="contact-channels"
+            aria-label={locale === "zh-TW" ? "官方聯絡信箱" : "Official contact inboxes"}
+          >
+            {contactChannels.map((channel) => (
+              <a key={channel.email} href={`mailto:${channel.email}`}>
+                <span>{channel.label}</span>
+                <strong>{channel.email}</strong>
+                <p>{channel.description}</p>
+              </a>
+            ))}
+          </section>
         )}
 
         <div className="information-sections">
