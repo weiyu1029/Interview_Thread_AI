@@ -1,6 +1,6 @@
-# CareerStoryMap Web
+# InterviewThread Web
 
-This is the professional guest-first interface for CareerStoryMap. It provides a
+This is the professional guest-first interface for InterviewThread. It provides a
 working deterministic evidence match, device-local application tracker,
 evidence-aware copilot, public feedback form, Story Signal Radar, and clear
 model-provider selection.
@@ -40,21 +40,28 @@ build is Cloudflare Worker-compatible.
 
 ## Public accounts
 
-`/[locale]/account` provides registration and sign-in for Community, Pro, and
-Team visitors through the Sites-managed Sign in with ChatGPT flow. The app reads
-the authenticated identity only from dispatcher-injected headers; it does not
-store passwords or implement a parallel OAuth callback. Always validate
-authorization again in server-side APIs before adding account-owned data.
+`/[locale]/account` provides free account sign-in with Google, GitHub, and
+LinkedIn. Each provider uses Authorization Code flow with PKCE, signed state,
+an HttpOnly session cookie, and a D1-backed session whose raw token is never
+stored. Existing Sites workspace identity headers remain supported for hosted
+workspace sessions, but the public account interface is provider-neutral and
+does not send local users to a Sites-owned login route.
 
-The current account screen records a plan choice in the return URL only. Billing
-is intentionally disabled, and no payment or immigration details are requested.
+Sign-in requests identity-only scopes. Career data is never imported merely
+because a user signed in; LinkedIn, GitHub, portfolio, and resume sources remain
+separate, explicit evidence choices. Provider access tokens are discarded
+after identity lookup. See `../../docs/social_authentication.md` for callback
+URLs, required secrets, exact scopes, and local setup.
+
+All public features are free and open source. There are no paid tiers, checkout
+flows, or payment details, and no immigration documents are requested.
 Account-backed tracker persistence can be connected to the FastAPI/Postgres
 service in `../api` after authorization, privacy, retention, and commercial
 requirements are approved. Set `NEXT_PUBLIC_CAREERPROOF_API_URL` when integrating
 those authenticated routes.
 
 Resume text, job descriptions, tracker items, and Story Signal alert settings
-remain on the device in the public guest preview. Submitted product feedback is
-stored in the Sites D1 database; Community and Pro use the open queue, while
-Team and Enterprise receive priority handling. Binary formats are parsed by the
-API in the self-hosted stack.
+remain on the device until an authenticated persistence feature explicitly
+says otherwise. Submitted product feedback is stored in the Sites D1 database
+and every submission has equal priority. Binary formats are parsed by the API
+in the self-hosted stack.

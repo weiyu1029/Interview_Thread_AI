@@ -1,6 +1,6 @@
 # Model Provider Strategy
 
-CareerProof supports model runtimes rather than promising a permanently current
+InterviewThread supports model runtimes rather than promising a permanently current
 list of every model name. Model catalogs, licenses, hardware requirements, and
 host availability change continuously. Runtime discovery is more accurate and
 more maintainable than a hard-coded list.
@@ -9,17 +9,17 @@ more maintainable than a hard-coded list.
 
 | Provider | Typical use | Model coverage |
 |---|---|---|
-| CareerProof Evidence Engine | No-key baseline | Deterministic analysis only |
+| InterviewThread Evidence Engine | No-key baseline | Deterministic analysis only |
 | Ollama | Local desktop or self-hosted | Any installed chat model |
 | LM Studio | Local desktop | Any loaded compatible chat model |
 | vLLM | Production self-hosting | Any model served by the configured instance |
 | llama.cpp | Local GGUF inference | Any compatible server-loaded chat model |
 | LocalAI | Self-hosted multi-backend runtime | Any configured compatible model |
 | Hugging Face Inference Providers | Hosted open/open-weight models | Models returned by the provider catalog |
-| Gemini | Existing optional CareerProof workflow | Configured Gemini models |
+| Gemini | Existing optional InterviewThread workflow | Configured Gemini models |
 
 Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and Hugging Face provide
-OpenAI-compatible chat interfaces, so CareerProof uses one reviewed adapter for
+OpenAI-compatible chat interfaces, so InterviewThread uses one reviewed adapter for
 the common request and response contract:
 
 - [Ollama OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility)
@@ -42,7 +42,7 @@ not marked "open source" solely because its weights can be downloaded; the
 project should display the upstream license and usage terms before recommending
 a model for commercial use.
 
-CareerProof quality depends more on behavior than brand. Production models
+InterviewThread quality depends more on behavior than brand. Production models
 should be evaluated for:
 
 - evidence precision and unsupported-claim rate;

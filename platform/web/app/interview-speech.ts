@@ -1,12 +1,34 @@
-import { LocaleCode } from "./i18n";
+import type { LocaleCode } from "./i18n";
 
 export type InterviewPersonaId =
   | "hr"
+  | "recruiter"
   | "hiring-manager"
+  | "functional-lead"
+  | "technical"
+  | "system-design"
+  | "portfolio"
   | "coo"
   | "ceo"
   | "peer"
-  | "case";
+  | "cross-functional"
+  | "customer"
+  | "values"
+  | "case"
+  | "panel";
+
+export const INTERVIEW_DEPTH_COUNT = 5;
+
+export type InterviewFlowCopy = {
+  stages: readonly [string, string, string, string, string];
+  nextQuestion: string;
+  newTopic: string;
+  topic: string;
+  step: string;
+  you: string;
+  autoRead: string;
+  languageLocked: string;
+};
 
 export const SPEECH_LOCALES: Record<LocaleCode, string> = {
   en: "en-US",
@@ -56,60 +78,194 @@ const PERSONA_LABELS: Partial<
 > = {
   "zh-TW": {
     hr: "人資初談",
+    recruiter: "招募顧問",
     "hiring-manager": "用人主管",
+    "functional-lead": "職能主管",
+    technical: "技術面試官",
+    "system-design": "系統設計面試官",
+    portfolio: "作品集評審",
     coo: "營運長",
     ceo: "執行長",
     peer: "未來同事",
+    "cross-functional": "跨部門合作夥伴",
+    customer: "客戶與使用者代表",
+    values: "文化與價值觀面試官",
     case: "案例拆解",
+    panel: "綜合面試小組",
   },
   "zh-CN": {
     hr: "人力资源初筛",
+    recruiter: "招聘顾问",
     "hiring-manager": "招聘经理",
+    "functional-lead": "职能负责人",
+    technical: "技术面试官",
+    "system-design": "系统设计面试官",
+    portfolio: "作品集评审",
     coo: "首席运营官",
     ceo: "首席执行官",
     peer: "未来同事",
+    "cross-functional": "跨职能合作伙伴",
+    customer: "客户与用户代表",
+    values: "文化与价值观面试官",
     case: "案例分析",
+    panel: "综合面试小组",
   },
   ja: {
     hr: "人事スクリーニング",
+    recruiter: "採用担当者",
     "hiring-manager": "採用責任者",
+    "functional-lead": "部門責任者",
+    technical: "技術面接官",
+    "system-design": "システム設計面接官",
+    portfolio: "ポートフォリオ審査",
     coo: "COO",
     ceo: "CEO",
     peer: "将来の同僚",
+    "cross-functional": "他部門パートナー",
+    customer: "顧客・ユーザー代表",
+    values: "カルチャー・価値観面接官",
     case: "ケース面接",
+    panel: "パネル面接",
   },
   ko: {
     hr: "HR 스크리닝",
+    recruiter: "채용 담당자",
     "hiring-manager": "채용 관리자",
+    "functional-lead": "직무 책임자",
+    technical: "기술 면접관",
+    "system-design": "시스템 설계 면접관",
+    portfolio: "포트폴리오 리뷰어",
     coo: "COO",
     ceo: "CEO",
     peer: "미래 동료",
+    "cross-functional": "협업 부서 파트너",
+    customer: "고객·사용자 대표",
+    values: "문화·가치관 면접관",
     case: "케이스 분석",
+    panel: "패널 면접",
   },
   es: {
     hr: "Filtro de RR. HH.",
+    recruiter: "Reclutador",
     "hiring-manager": "Responsable de contratación",
+    "functional-lead": "Responsable del área",
+    technical: "Entrevistador técnico",
+    "system-design": "Entrevista de diseño de sistemas",
+    portfolio: "Revisión de portafolio",
     coo: "Dirección de operaciones",
     ceo: "Dirección general",
     peer: "Futuro compañero",
+    "cross-functional": "Socio interfuncional",
+    customer: "Representante de clientes",
+    values: "Entrevista de cultura y valores",
     case: "Resolución de caso",
+    panel: "Panel de entrevistas",
   },
   fr: {
     hr: "Présélection RH",
+    recruiter: "Recruteur",
     "hiring-manager": "Responsable du recrutement",
+    "functional-lead": "Responsable métier",
+    technical: "Entretien technique",
+    "system-design": "Entretien de conception système",
+    portfolio: "Revue de portfolio",
     coo: "Direction des opérations",
     ceo: "Direction générale",
     peer: "Futur collègue",
+    "cross-functional": "Partenaire transverse",
+    customer: "Représentant client",
+    values: "Entretien culture et valeurs",
     case: "Étude de cas",
+    panel: "Panel d’entretien",
   },
   de: {
     hr: "HR-Vorgespräch",
+    recruiter: "Recruiting-Gespräch",
     "hiring-manager": "Einstellende Führungskraft",
+    "functional-lead": "Fachbereichsleitung",
+    technical: "Technisches Interview",
+    "system-design": "Systemdesign-Interview",
+    portfolio: "Portfolio-Review",
     coo: "Betriebsleitung",
     ceo: "Geschäftsführung",
     peer: "Künftige Kollegin oder künftiger Kollege",
+    "cross-functional": "Bereichsübergreifende Partnerschaft",
+    customer: "Kundenvertretung",
+    values: "Kultur- und Werteinterview",
     case: "Fallstudie",
+    panel: "Panel-Interview",
   },
+};
+
+const PERSONA_ORDER: readonly InterviewPersonaId[] = [
+  "hr",
+  "recruiter",
+  "hiring-manager",
+  "functional-lead",
+  "technical",
+  "system-design",
+  "portfolio",
+  "coo",
+  "ceo",
+  "peer",
+  "cross-functional",
+  "customer",
+  "values",
+  "case",
+  "panel",
+];
+
+const PERSONA_LABEL_ROWS: Partial<Record<LocaleCode, readonly string[]>> = {
+  "pt-BR": ["Triagem de RH", "Recrutador", "Gestor contratante", "Liderança funcional", "Entrevistador técnico", "Entrevistador de arquitetura de sistemas", "Avaliador de portfólio", "Diretor de operações", "Diretor executivo", "Futuro colega", "Parceiro multifuncional", "Representante de cliente ou usuário", "Entrevistador de cultura e valores", "Entrevista de caso", "Painel de entrevistas"],
+  it: ["Colloquio con le risorse umane", "Selezionatore", "Responsabile delle assunzioni", "Responsabile di funzione", "Intervistatore tecnico", "Intervistatore di progettazione dei sistemi", "Revisore del portfolio", "Direttore operativo", "Amministratore delegato", "Futuro collega", "Partner interfunzionale", "Rappresentante di clienti o utenti", "Intervistatore su cultura e valori", "Colloquio con caso", "Commissione di colloquio"],
+  nl: ["HR-screening", "Recruiter", "Wervende manager", "Vakinhoudelijk leider", "Technisch interviewer", "Interviewer systeemontwerp", "Portfoliobeoordelaar", "Operationeel directeur", "Algemeen directeur", "Toekomstige collega", "Crossfunctionele partner", "Klant- of gebruikersvertegenwoordiger", "Interviewer cultuur en waarden", "Case-interviewer", "Interviewpanel"],
+  pl: ["Wstępna rozmowa HR", "Rekruter", "Menedżer zatrudniający", "Lider funkcjonalny", "Osoba prowadząca rozmowę techniczną", "Osoba prowadząca rozmowę o projektowaniu systemów", "Recenzent portfolio", "Dyrektor operacyjny", "Dyrektor generalny", "Przyszły współpracownik", "Partner międzyfunkcyjny", "Przedstawiciel klienta lub użytkownika", "Osoba prowadząca rozmowę o kulturze i wartościach", "Rozmowa typu case", "Panel rekrutacyjny"],
+  tr: ["İnsan kaynakları ön görüşmesi", "İşe alım uzmanı", "İşe alım yöneticisi", "Fonksiyon lideri", "Teknik görüşmeci", "Sistem tasarımı görüşmecisi", "Portföy değerlendiricisi", "Operasyon direktörü", "Genel müdür", "Gelecekteki ekip arkadaşı", "Çapraz fonksiyonlu ortak", "Müşteri veya kullanıcı temsilcisi", "Kültür ve değerler görüşmecisi", "Vaka görüşmecisi", "Görüşme paneli"],
+  ru: ["Предварительное интервью с HR", "Рекрутер", "Нанимающий руководитель", "Функциональный руководитель", "Технический интервьюер", "Интервьюер по проектированию систем", "Эксперт по портфолио", "Операционный директор", "Генеральный директор", "Будущий коллега", "Кросс-функциональный партнёр", "Представитель клиента или пользователя", "Интервьюер по культуре и ценностям", "Кейс-интервьюер", "Панель интервьюеров"],
+  uk: ["Попередня співбесіда з HR", "Рекрутер", "Керівник, що наймає", "Функціональний керівник", "Технічний інтерв’юер", "Інтерв’юер із проєктування систем", "Оглядач портфоліо", "Операційний директор", "Генеральний директор", "Майбутній колега", "Кросфункціональний партнер", "Представник клієнта або користувача", "Інтерв’юер із культури та цінностей", "Кейс-інтерв’юер", "Панель інтерв’юерів"],
+  ar: ["المقابلة الأولية مع الموارد البشرية", "مسؤول التوظيف", "مدير التوظيف", "قائد التخصص", "المحاور التقني", "محاور تصميم الأنظمة", "مراجع ملف الأعمال", "مدير العمليات", "الرئيس التنفيذي", "زميل العمل المستقبلي", "شريك متعدد التخصصات", "ممثل العميل أو المستخدم", "محاور الثقافة والقيم", "محاور دراسة الحالة", "لجنة المقابلة"],
+  he: ["סינון משאבי אנוש", "מגייס", "מנהל מגייס", "מוביל מקצועי", "מראיין טכני", "מראיין תכנון מערכות", "בוחן תיק עבודות", "מנהל תפעול", "מנכ״ל", "עמית עתידי", "שותף בין־תחומי", "נציג לקוח או משתמש", "מראיין תרבות וערכים", "מראיין מקרה", "פאנל מראיינים"],
+  hi: ["मानव संसाधन प्रारंभिक साक्षात्कार", "भर्तीकर्ता", "नियुक्ति प्रबंधक", "कार्यात्मक प्रमुख", "तकनीकी साक्षात्कारकर्ता", "सिस्टम डिज़ाइन साक्षात्कारकर्ता", "पोर्टफोलियो समीक्षक", "मुख्य परिचालन अधिकारी", "मुख्य कार्यकारी अधिकारी", "भावी सहकर्मी", "अंतर-विभागीय भागीदार", "ग्राहक या उपयोगकर्ता प्रतिनिधि", "संस्कृति और मूल्यों के साक्षात्कारकर्ता", "केस साक्षात्कारकर्ता", "साक्षात्कार पैनल"],
+  bn: ["মানবসম্পদ প্রাথমিক সাক্ষাৎকার", "নিয়োগকারী", "নিয়োগ ব্যবস্থাপক", "কার্যকরী প্রধান", "প্রযুক্তিগত সাক্ষাৎকারগ্রহণকারী", "সিস্টেম ডিজাইন সাক্ষাৎকারগ্রহণকারী", "পোর্টফোলিও পর্যালোচক", "প্রধান পরিচালন কর্মকর্তা", "প্রধান নির্বাহী কর্মকর্তা", "ভবিষ্যৎ সহকর্মী", "বহুবিভাগীয় অংশীদার", "গ্রাহক বা ব্যবহারকারী প্রতিনিধি", "সংস্কৃতি ও মূল্যবোধ সাক্ষাৎকারগ্রহণকারী", "কেস সাক্ষাৎকারগ্রহণকারী", "সাক্ষাৎকার প্যানেল"],
+  ur: ["انسانی وسائل کی ابتدائی جانچ", "بھرتی کنندہ", "بھرتی مینیجر", "فعلی سربراہ", "تکنیکی انٹرویو لینے والا", "سسٹم ڈیزائن انٹرویو لینے والا", "پورٹ فولیو جائزہ کار", "چیف آپریٹنگ آفیسر", "چیف ایگزیکٹو آفیسر", "مستقبل کا ساتھی", "بین شعبہ جاتی شراکت دار", "صارف یا گاہک کا نمائندہ", "ثقافت اور اقدار کا انٹرویو لینے والا", "کیس انٹرویو لینے والا", "انٹرویو پینل"],
+  id: ["Penyaringan SDM", "Perekrut", "Manajer perekrutan", "Pemimpin fungsi", "Pewawancara teknis", "Pewawancara desain sistem", "Peninjau portofolio", "Direktur operasi", "Direktur utama", "Rekan kerja masa depan", "Mitra lintas fungsi", "Perwakilan pelanggan atau pengguna", "Pewawancara budaya dan nilai", "Pewawancara studi kasus", "Panel wawancara"],
+  ms: ["Saringan sumber manusia", "Perekrut", "Pengurus pengambilan pekerja", "Ketua fungsi", "Penemu duga teknikal", "Penemu duga reka bentuk sistem", "Penilai portfolio", "Ketua pegawai operasi", "Ketua pegawai eksekutif", "Rakan sekerja masa hadapan", "Rakan rentas fungsi", "Wakil pelanggan atau pengguna", "Penemu duga budaya dan nilai", "Penemu duga kajian kes", "Panel temu duga"],
+  th: ["การคัดกรองฝ่ายบุคคล", "ผู้สรรหา", "ผู้จัดการฝ่ายว่าจ้าง", "หัวหน้าสายงาน", "ผู้สัมภาษณ์ด้านเทคนิค", "ผู้สัมภาษณ์ด้านการออกแบบระบบ", "ผู้ประเมินแฟ้มผลงาน", "ประธานเจ้าหน้าที่ฝ่ายปฏิบัติการ", "ประธานเจ้าหน้าที่บริหาร", "เพื่อนร่วมงานในอนาคต", "พันธมิตรข้ามสายงาน", "ตัวแทนลูกค้าหรือผู้ใช้", "ผู้สัมภาษณ์ด้านวัฒนธรรมและค่านิยม", "ผู้สัมภาษณ์กรณีศึกษา", "คณะผู้สัมภาษณ์"],
+  vi: ["Sàng lọc nhân sự", "Chuyên viên tuyển dụng", "Quản lý tuyển dụng", "Trưởng bộ phận chuyên môn", "Người phỏng vấn kỹ thuật", "Người phỏng vấn thiết kế hệ thống", "Người đánh giá hồ sơ năng lực", "Giám đốc vận hành", "Giám đốc điều hành", "Đồng nghiệp tương lai", "Đối tác liên chức năng", "Đại diện khách hàng hoặc người dùng", "Người phỏng vấn văn hóa và giá trị", "Người phỏng vấn tình huống", "Hội đồng phỏng vấn"],
+  fil: ["Paunang pagsusuri ng HR", "Tagapagrekrut", "Tagapamahala sa pagkuha", "Pinuno ng tungkulin", "Teknikal na tagapanayam", "Tagapanayam sa disenyo ng sistema", "Tagasuri ng portfolio", "Punong opisyal ng operasyon", "Punong ehekutibong opisyal", "Hinaharap na kasamahan", "Katuwang na cross-functional", "Kinatawan ng customer o user", "Tagapanayam sa kultura at mga pagpapahalaga", "Tagapanayam sa kaso", "Panel ng panayam"],
+  sv: ["HR-screening", "Rekryterare", "Rekryterande chef", "Funktionschef", "Teknisk intervjuare", "Intervjuare för systemdesign", "Portföljgranskare", "Operativ chef", "Verkställande direktör", "Framtida kollega", "Tvärfunktionell partner", "Kund- eller användarrepresentant", "Intervjuare för kultur och värderingar", "Caseintervjuare", "Intervjupanel"],
+  no: ["HR-screening", "Rekrutterer", "Ansettende leder", "Faglig leder", "Teknisk intervjuer", "Intervjuer for systemdesign", "Porteføljevurderer", "Driftsdirektør", "Administrerende direktør", "Fremtidig kollega", "Tverrfaglig partner", "Kunde- eller brukerrepresentant", "Intervjuer for kultur og verdier", "Caseintervjuer", "Intervjupanel"],
+  da: ["HR-screening", "Rekrutteringsansvarlig", "Ansættende leder", "Faglig leder", "Teknisk interviewer", "Interviewer i systemdesign", "Porteføljebedømmer", "Driftsdirektør", "Administrerende direktør", "Fremtidig kollega", "Tværfunktionel partner", "Kunde- eller brugerrepræsentant", "Interviewer om kultur og værdier", "Caseinterviewer", "Interviewpanel"],
+  fi: ["Henkilöstön esikarsinta", "Rekrytoija", "Rekrytoiva esihenkilö", "Toiminnon johtaja", "Tekninen haastattelija", "Järjestelmäsuunnittelun haastattelija", "Portfolion arvioija", "Operatiivinen johtaja", "Toimitusjohtaja", "Tuleva kollega", "Poikkitoiminnallinen kumppani", "Asiakkaan tai käyttäjän edustaja", "Kulttuuri- ja arvohaastattelija", "Tapaushaastattelija", "Haastattelupaneeli"],
+  cs: ["Úvodní pohovor s personalistou", "Náborář", "Nabírající manažer", "Vedoucí odborné oblasti", "Technický tazatel", "Tazatel pro návrh systémů", "Hodnotitel portfolia", "Provozní ředitel", "Generální ředitel", "Budoucí kolega", "Partner napříč funkcemi", "Zástupce zákazníka nebo uživatele", "Tazatel pro kulturu a hodnoty", "Tazatel případové studie", "Panel tazatelů"],
+  sk: ["Úvodný pohovor s personalistom", "Náborár", "Naberajúci manažér", "Vedúci odbornej oblasti", "Technický anketár", "Anketár pre návrh systémov", "Hodnotiteľ portfólia", "Prevádzkový riaditeľ", "Generálny riaditeľ", "Budúci kolega", "Medzifunkčný partner", "Zástupca zákazníka alebo používateľa", "Anketár pre kultúru a hodnoty", "Anketár prípadovej štúdie", "Panel anketárov"],
+  hu: ["Emberi erőforrás előszűrés", "Toborzó", "Felvételi vezető", "Szakmai vezető", "Technikai interjúztató", "Rendszertervezési interjúztató", "Portfólióbíráló", "Operatív igazgató", "Vezérigazgató", "Leendő munkatárs", "Funkciókon átívelő partner", "Ügyfél- vagy felhasználói képviselő", "Kultúra- és értékinterjúztató", "Esetinterjúztató", "Interjúbizottság"],
+  ro: ["Interviu preliminar cu resursele umane", "Recrutor", "Manager de angajare", "Lider funcțional", "Intervievator tehnic", "Intervievator pentru proiectarea sistemelor", "Evaluator de portofoliu", "Director operațional", "Director general", "Viitor coleg", "Partener interfuncțional", "Reprezentant al clientului sau utilizatorului", "Intervievator pentru cultură și valori", "Intervievator pentru studiu de caz", "Comisie de interviu"],
+  el: ["Αρχική συνέντευξη ανθρώπινου δυναμικού", "Υπεύθυνος προσλήψεων", "Διευθυντής πρόσληψης", "Επικεφαλής λειτουργίας", "Τεχνικός συνεντευκτής", "Συνεντευκτής σχεδιασμού συστημάτων", "Αξιολογητής χαρτοφυλακίου", "Διευθυντής λειτουργιών", "Διευθύνων σύμβουλος", "Μελλοντικός συνάδελφος", "Διαλειτουργικός συνεργάτης", "Εκπρόσωπος πελάτη ή χρήστη", "Συνεντευκτής κουλτούρας και αξιών", "Συνεντευκτής μελέτης περίπτωσης", "Επιτροπή συνέντευξης"],
+  bg: ["Предварително интервю с човешки ресурси", "Специалист по подбор", "Наемащ ръководител", "Функционален ръководител", "Технически интервюиращ", "Интервюиращ по системен дизайн", "Оценител на портфолио", "Оперативен директор", "Главен изпълнителен директор", "Бъдещ колега", "Междуфункционален партньор", "Представител на клиент или потребител", "Интервюиращ за култура и ценности", "Интервюиращ за казус", "Интервю панел"],
+  hr: ["Početni razgovor s ljudskim resursima", "Regruter", "Voditelj zapošljavanja", "Funkcionalni voditelj", "Tehnički ispitivač", "Ispitivač za dizajn sustava", "Ocjenjivač portfelja", "Direktor operacija", "Glavni izvršni direktor", "Budući kolega", "Međufunkcionalni partner", "Predstavnik klijenta ili korisnika", "Ispitivač kulture i vrijednosti", "Ispitivač studije slučaja", "Panel za razgovor"],
+  sr: ["Почетни разговор са људским ресурсима", "Регрутер", "Менаџер запошљавања", "Функционални руководилац", "Технички испитивач", "Испитивач за дизајн система", "Оцењивач портфолија", "Директор операција", "Главни извршни директор", "Будући колега", "Међуфункционални партнер", "Представник клијента или корисника", "Испитивач културе и вредности", "Испитивач студије случаја", "Панел за разговор"],
+  sl: ["Uvodni razgovor s kadrovsko službo", "Kadrovalec", "Vodja zaposlovanja", "Funkcijski vodja", "Tehnični izpraševalec", "Izpraševalec za načrtovanje sistemov", "Ocenjevalec portfelja", "Direktor poslovanja", "Glavni izvršni direktor", "Bodoči sodelavec", "Medfunkcijski partner", "Predstavnik stranke ali uporabnika", "Izpraševalec za kulturo in vrednote", "Izpraševalec študije primera", "Intervjujska komisija"],
+  sw: ["Uchunguzi wa awali wa rasilimali watu", "Mwajiri", "Meneja wa kuajiri", "Kiongozi wa taaluma", "Mhoji wa kiufundi", "Mhoji wa usanifu wa mifumo", "Mkaguzi wa jalada la kazi", "Mkurugenzi wa uendeshaji", "Mkurugenzi mkuu", "Mfanyakazi mwenzako wa baadaye", "Mshirika wa idara mbalimbali", "Mwakilishi wa mteja au mtumiaji", "Mhoji wa utamaduni na maadili", "Mhoji wa uchambuzi wa kesi", "Jopo la usaili"],
+  fa: ["غربالگری منابع انسانی", "استخدام‌کننده", "مدیر استخدام", "رهبر تخصصی", "مصاحبه‌گر فنی", "مصاحبه‌گر طراحی سیستم", "ارزیاب نمونه‌کار", "مدیر عملیات", "مدیرعامل", "همکار آینده", "شریک میان‌وظیفه‌ای", "نماینده مشتری یا کاربر", "مصاحبه‌گر فرهنگ و ارزش‌ها", "مصاحبه‌گر مطالعه موردی", "پنل مصاحبه"],
+};
+
+const PERSONA_STAGE_EMPHASIS: Record<InterviewPersonaId, readonly number[]> = {
+  hr: [0, 1, 4],
+  recruiter: [0, 1, 3],
+  "hiring-manager": [1, 2, 3],
+  "functional-lead": [2, 3, 4],
+  technical: [1, 2, 3],
+  "system-design": [0, 2, 3],
+  portfolio: [0, 2, 3],
+  coo: [1, 2, 3],
+  ceo: [0, 2, 3],
+  peer: [0, 1, 4],
+  "cross-functional": [0, 1, 2],
+  customer: [0, 2, 4],
+  values: [1, 2, 4],
+  case: [0, 2, 3],
+  panel: [0, 1, 2, 3, 4],
 };
 
 const GENERIC_QUESTIONS: Record<LocaleCode, [string, string, string]> = {
@@ -315,6 +471,135 @@ const GENERIC_QUESTIONS: Record<LocaleCode, [string, string, string]> = {
   ],
 };
 
+const OWNERSHIP_QUESTIONS: Record<LocaleCode, string> = {
+  en: "Which part of that result was directly yours, who else contributed, and where did your responsibility begin and end?",
+  ja: "その成果のうち、あなたが直接担った部分はどこですか。ほかに誰が貢献し、あなたの責任範囲はどこまででしたか？",
+  ko: "그 성과 중 직접 맡은 부분은 무엇이었고, 누가 함께 기여했으며, 본인의 책임 범위는 어디까지였나요?",
+  "zh-CN": "这项成果中，哪些部分由你直接负责？还有谁参与，你的责任边界在哪里？",
+  "zh-TW": "這項成果中，哪些部分由你直接負責？還有誰參與，你的責任邊界在哪裡？",
+  es: "¿Qué parte del resultado fue directamente tuya, quién más contribuyó y dónde empezaba y terminaba tu responsabilidad?",
+  fr: "Quelle part du résultat relevait directement de vous, qui d’autre a contribué et où commençait et finissait votre responsabilité ?",
+  de: "Welcher Teil des Ergebnisses lag direkt bei Ihnen, wer trug noch dazu bei und wo begann und endete Ihre Verantwortung?",
+  "pt-BR": "Qual parte do resultado foi diretamente sua, quem mais contribuiu e onde começava e terminava sua responsabilidade?",
+  it: "Quale parte del risultato dipendeva direttamente da te, chi altro ha contribuito e dove iniziava e finiva la tua responsabilità?",
+  nl: "Welk deel van het resultaat was rechtstreeks van jou, wie droeg nog meer bij en waar begon en eindigde jouw verantwoordelijkheid?",
+  pl: "Która część wyniku należała bezpośrednio do Ciebie, kto jeszcze miał wkład i gdzie zaczynała się oraz kończyła Twoja odpowiedzialność?",
+  tr: "Sonucun hangi kısmı doğrudan size aitti, başka kim katkıda bulundu ve sorumluluğunuz nerede başlayıp bitiyordu?",
+  ru: "Какая часть результата зависела непосредственно от вас, кто ещё участвовал и где проходили границы вашей ответственности?",
+  uk: "Яка частина результату залежала безпосередньо від вас, хто ще долучався і де проходили межі вашої відповідальності?",
+  ar: "أي جزء من النتيجة كان من مسؤوليتك المباشرة، ومن ساهم أيضًا، وأين بدأت مسؤوليتك وانتهت؟",
+  he: "איזה חלק מהתוצאה היה באחריותכם הישירה, מי עוד תרם והיכן התחילה והסתיימה האחריות שלכם?",
+  hi: "उस परिणाम का कौन-सा हिस्सा सीधे आपकी ज़िम्मेदारी था, और किसने योगदान दिया, तथा आपकी ज़िम्मेदारी की सीमा कहाँ थी?",
+  bn: "ফলাফলের কোন অংশটি সরাসরি আপনার ছিল, আর কে অবদান রেখেছিলেন এবং আপনার দায়িত্বের সীমা কোথায় ছিল?",
+  ur: "نتیجے کا کون سا حصہ براہ راست آپ کی ذمہ داری تھا، اور کس نے تعاون کیا، اور آپ کی ذمہ داری کی حد کہاں تھی؟",
+  id: "Bagian mana dari hasil itu yang langsung menjadi tanggung jawab Anda, siapa lagi yang berkontribusi, dan di mana batas tanggung jawab Anda?",
+  ms: "Bahagian manakah daripada hasil itu yang menjadi tanggungjawab langsung anda, siapa lagi yang menyumbang, dan di manakah batas tanggungjawab anda?",
+  th: "ผลลัพธ์ส่วนใดเป็นความรับผิดชอบโดยตรงของคุณ ใครมีส่วนร่วมอีก และขอบเขตความรับผิดชอบของคุณอยู่ตรงไหน?",
+  vi: "Phần nào của kết quả do bạn trực tiếp chịu trách nhiệm, ai khác đã đóng góp và phạm vi trách nhiệm của bạn bắt đầu và kết thúc ở đâu?",
+  fil: "Aling bahagi ng resulta ang direktang pananagutan mo, sino pa ang tumulong, at saan nagsimula at nagtapos ang responsibilidad mo?",
+  sv: "Vilken del av resultatet var direkt ditt ansvar, vilka andra bidrog och var började och slutade ditt ansvar?",
+  no: "Hvilken del av resultatet var direkte ditt ansvar, hvem andre bidro, og hvor begynte og sluttet ansvaret ditt?",
+  da: "Hvilken del af resultatet var direkte dit ansvar, hvem bidrog ellers, og hvor begyndte og sluttede dit ansvar?",
+  fi: "Mikä osa tuloksesta oli suoraan sinun vastuullasi, ketkä muut osallistuivat ja mihin vastuusi rajautui?",
+  cs: "Která část výsledku byla přímo vaše, kdo další přispěl a kde začínala a končila vaše odpovědnost?",
+  sk: "Ktorá časť výsledku bola priamo vaša, kto ďalší prispel a kde sa začínala a končila vaša zodpovednosť?",
+  hu: "Az eredmény mely része volt közvetlenül az Ön felelőssége, kik járultak még hozzá, és hol húzódtak a felelőssége határai?",
+  ro: "Ce parte a rezultatului v-a aparținut direct, cine a mai contribuit și unde începea și se termina responsabilitatea dumneavoastră?",
+  el: "Ποιο μέρος του αποτελέσματος ήταν άμεσα δικό σας, ποιοι άλλοι συνέβαλαν και πού άρχιζε και τελείωνε η ευθύνη σας;",
+  bg: "Коя част от резултата беше пряко ваша, кой друг допринесе и къде започваше и свършваше отговорността ви?",
+  hr: "Koji je dio rezultata bio izravno vaš, tko je još pridonio i gdje je počinjala i završavala vaša odgovornost?",
+  sr: "Који део резултата је био директно ваш, ко је још допринео и где је почињала и завршавала ваша одговорност?",
+  sl: "Kateri del rezultata je bil neposredno vaš, kdo je še prispeval in kje se je začela ter končala vaša odgovornost?",
+  sw: "Ni sehemu gani ya matokeo iliyokuwa jukumu lako moja kwa moja, nani mwingine alichangia, na mipaka ya jukumu lako ilikuwa wapi?",
+  fa: "کدام بخش از نتیجه مستقیماً بر عهده شما بود، چه کسانی دیگر مشارکت داشتند و مرز مسئولیت شما کجا بود؟",
+};
+
+const OUTCOME_QUESTIONS: Record<LocaleCode, string> = {
+  en: "How did you measure the outcome, what changed because of your work, and which claim could a former colleague verify?",
+  ja: "成果をどのように測定し、あなたの仕事によって何が変わりましたか。また、元同僚が確認できる主張はどれですか？",
+  ko: "성과를 어떻게 측정했고, 본인의 업무로 무엇이 달라졌으며, 이전 동료가 확인해 줄 수 있는 주장은 무엇인가요?",
+  "zh-CN": "你如何衡量结果？你的工作带来了什么变化？其中哪项说法可以由前同事验证？",
+  "zh-TW": "你如何衡量結果？你的工作帶來了什麼改變？其中哪項說法可以由前同事驗證？",
+  es: "¿Cómo mediste el resultado, qué cambió gracias a tu trabajo y qué afirmación podría verificar un antiguo compañero?",
+  fr: "Comment avez-vous mesuré le résultat, qu’est-ce qui a changé grâce à votre travail et quelle affirmation un ancien collègue pourrait-il confirmer ?",
+  de: "Wie haben Sie das Ergebnis gemessen, was hat sich durch Ihre Arbeit verändert und welche Aussage könnte eine frühere Kollegin oder ein früherer Kollege bestätigen?",
+  "pt-BR": "Como você mediu o resultado, o que mudou por causa do seu trabalho e qual afirmação um ex-colega poderia confirmar?",
+  it: "Come hai misurato il risultato, cosa è cambiato grazie al tuo lavoro e quale affermazione potrebbe verificare un ex collega?",
+  nl: "Hoe heb je het resultaat gemeten, wat veranderde door jouw werk en welke bewering zou een voormalige collega kunnen bevestigen?",
+  pl: "Jak zmierzyłeś wynik, co zmieniło się dzięki Twojej pracy i które stwierdzenie mógłby potwierdzić były współpracownik?",
+  tr: "Sonucu nasıl ölçtünüz, çalışmanız sayesinde ne değişti ve eski bir çalışma arkadaşınız hangi iddiayı doğrulayabilir?",
+  ru: "Как вы измерили результат, что изменилось благодаря вашей работе и какое утверждение мог бы подтвердить бывший коллега?",
+  uk: "Як ви виміряли результат, що змінилося завдяки вашій роботі та яке твердження міг би підтвердити колишній колега?",
+  ar: "كيف قست النتيجة، وما الذي تغيّر بسبب عملك، وما الادعاء الذي يستطيع زميل سابق التحقق منه؟",
+  he: "כיצד מדדתם את התוצאה, מה השתנה בזכות עבודתכם ואיזו טענה עמית לשעבר יכול לאמת?",
+  hi: "आपने परिणाम कैसे मापा, आपके काम से क्या बदला और किस दावे की पुष्टि कोई पूर्व सहकर्मी कर सकता है?",
+  bn: "আপনি ফলাফল কীভাবে মেপেছিলেন, আপনার কাজের কারণে কী বদলেছিল এবং কোন দাবিটি একজন সাবেক সহকর্মী যাচাই করতে পারবেন?",
+  ur: "آپ نے نتیجہ کیسے ناپا، آپ کے کام سے کیا بدلا، اور کس دعوے کی سابق ساتھی تصدیق کر سکتا ہے؟",
+  id: "Bagaimana Anda mengukur hasilnya, apa yang berubah karena pekerjaan Anda, dan klaim mana yang dapat diverifikasi oleh mantan rekan kerja?",
+  ms: "Bagaimanakah anda mengukur hasilnya, apakah yang berubah kerana kerja anda, dan dakwaan manakah yang boleh disahkan oleh bekas rakan sekerja?",
+  th: "คุณวัดผลลัพธ์อย่างไร งานของคุณทำให้เกิดการเปลี่ยนแปลงอะไร และข้อใดที่อดีตเพื่อนร่วมงานสามารถยืนยันได้?",
+  vi: "Bạn đo lường kết quả như thế nào, điều gì thay đổi nhờ công việc của bạn và nhận định nào có thể được đồng nghiệp cũ xác minh?",
+  fil: "Paano mo sinukat ang resulta, ano ang nagbago dahil sa trabaho mo, at aling pahayag ang mapatutunayan ng dati mong katrabaho?",
+  sv: "Hur mätte du resultatet, vad förändrades tack vare ditt arbete och vilket påstående skulle en tidigare kollega kunna bekräfta?",
+  no: "Hvordan målte du resultatet, hva endret seg på grunn av arbeidet ditt, og hvilken påstand kunne en tidligere kollega bekrefte?",
+  da: "Hvordan målte du resultatet, hvad ændrede sig på grund af dit arbejde, og hvilken påstand kunne en tidligere kollega bekræfte?",
+  fi: "Miten mittasit tuloksen, mikä muuttui työsi ansiosta ja minkä väitteen entinen kollega voisi vahvistaa?",
+  cs: "Jak jste výsledek měřili, co se díky vaší práci změnilo a které tvrzení by mohl potvrdit bývalý kolega?",
+  sk: "Ako ste výsledok merali, čo sa vďaka vašej práci zmenilo a ktoré tvrdenie by mohol potvrdiť bývalý kolega?",
+  hu: "Hogyan mérte az eredményt, mi változott a munkája hatására, és mely állítást tudná egy korábbi kollégája igazolni?",
+  ro: "Cum ați măsurat rezultatul, ce s-a schimbat datorită muncii dumneavoastră și ce afirmație ar putea verifica un fost coleg?",
+  el: "Πώς μετρήσατε το αποτέλεσμα, τι άλλαξε χάρη στη δουλειά σας και ποιον ισχυρισμό θα μπορούσε να επιβεβαιώσει ένας πρώην συνάδελφος;",
+  bg: "Как измерихте резултата, какво се промени благодарение на работата ви и кое твърдение би могъл да потвърди бивш колега?",
+  hr: "Kako ste mjerili rezultat, što se promijenilo zahvaljujući vašem radu i koju bi tvrdnju mogao potvrditi bivši kolega?",
+  sr: "Како сте мерили резултат, шта се променило захваљујући вашем раду и коју би тврдњу могао да потврди бивши колега?",
+  sl: "Kako ste izmerili rezultat, kaj se je spremenilo zaradi vašega dela in katero trditev bi lahko potrdil nekdanji sodelavec?",
+  sw: "Ulipimaje matokeo, ni nini kilibadilika kwa sababu ya kazi yako, na ni dai gani ambalo mfanyakazi mwenzako wa zamani anaweza kuthibitisha?",
+  fa: "نتیجه را چگونه سنجیدید، به‌دلیل کار شما چه چیزی تغییر کرد و کدام ادعا را یک همکار سابق می‌تواند تأیید کند؟",
+};
+
+const INTERVIEW_FLOW_COPY: Record<LocaleCode, InterviewFlowCopy> = {
+  en: { stages: ["Context", "Ownership", "Decision", "Outcome", "Reflection"], nextQuestion: "Next follow-up", newTopic: "Start a new topic", topic: "Topic", step: "Question", you: "You", autoRead: "Read each new question aloud", languageLocked: "Question and voice are locked to English." },
+  ja: { stages: ["背景", "責任", "判断", "成果", "振り返り"], nextQuestion: "次の質問", newTopic: "新しいテーマ", topic: "テーマ", step: "質問", you: "あなた", autoRead: "新しい質問を自動で読み上げる", languageLocked: "質問と音声は日本語に固定されています。" },
+  ko: { stages: ["배경", "책임", "판단", "성과", "회고"], nextQuestion: "다음 후속 질문", newTopic: "새 주제 시작", topic: "주제", step: "질문", you: "나", autoRead: "새 질문 자동 읽기", languageLocked: "질문과 음성이 한국어로 고정되었습니다." },
+  "zh-CN": { stages: ["背景", "责任", "判断", "结果", "复盘"], nextQuestion: "下一个追问", newTopic: "开始新主题", topic: "主题", step: "问题", you: "你", autoRead: "自动朗读每个新问题", languageLocked: "问题与语音已锁定为简体中文。" },
+  "zh-TW": { stages: ["背景", "責任", "判斷", "成果", "反思"], nextQuestion: "下一個追問", newTopic: "開始新主題", topic: "主題", step: "問題", you: "你", autoRead: "自動朗讀每個新問題", languageLocked: "問題與語音已鎖定為繁體中文。" },
+  es: { stages: ["Contexto", "Responsabilidad", "Decisión", "Resultado", "Reflexión"], nextQuestion: "Siguiente pregunta", newTopic: "Iniciar otro tema", topic: "Tema", step: "Pregunta", you: "Tú", autoRead: "Leer cada pregunta nueva", languageLocked: "Las preguntas y la voz están configuradas en español." },
+  fr: { stages: ["Contexte", "Responsabilité", "Décision", "Résultat", "Réflexion"], nextQuestion: "Question suivante", newTopic: "Nouveau sujet", topic: "Sujet", step: "Question", you: "Vous", autoRead: "Lire chaque nouvelle question", languageLocked: "Les questions et la voix sont réglées en français." },
+  de: { stages: ["Kontext", "Verantwortung", "Entscheidung", "Ergebnis", "Reflexion"], nextQuestion: "Nächste Nachfrage", newTopic: "Neues Thema", topic: "Thema", step: "Frage", you: "Sie", autoRead: "Jede neue Frage vorlesen", languageLocked: "Fragen und Stimme sind auf Deutsch eingestellt." },
+  "pt-BR": { stages: ["Contexto", "Responsabilidade", "Decisão", "Resultado", "Reflexão"], nextQuestion: "Próxima pergunta", newTopic: "Novo tema", topic: "Tema", step: "Pergunta", you: "Você", autoRead: "Ler cada nova pergunta", languageLocked: "Perguntas e voz estão configuradas em português." },
+  it: { stages: ["Contesto", "Responsabilità", "Decisione", "Risultato", "Riflessione"], nextQuestion: "Domanda successiva", newTopic: "Nuovo argomento", topic: "Argomento", step: "Domanda", you: "Tu", autoRead: "Leggi ogni nuova domanda", languageLocked: "Domande e voce sono impostate in italiano." },
+  nl: { stages: ["Context", "Eigenaarschap", "Besluit", "Resultaat", "Reflectie"], nextQuestion: "Volgende vraag", newTopic: "Nieuw onderwerp", topic: "Onderwerp", step: "Vraag", you: "Jij", autoRead: "Lees elke nieuwe vraag voor", languageLocked: "Vragen en stem zijn ingesteld op Nederlands." },
+  pl: { stages: ["Kontekst", "Odpowiedzialność", "Decyzja", "Wynik", "Refleksja"], nextQuestion: "Następne pytanie", newTopic: "Nowy temat", topic: "Temat", step: "Pytanie", you: "Ty", autoRead: "Czytaj każde nowe pytanie", languageLocked: "Pytania i głos są ustawione na język polski." },
+  tr: { stages: ["Bağlam", "Sorumluluk", "Karar", "Sonuç", "Değerlendirme"], nextQuestion: "Sonraki soru", newTopic: "Yeni konu", topic: "Konu", step: "Soru", you: "Siz", autoRead: "Her yeni soruyu seslendir", languageLocked: "Sorular ve ses Türkçe olarak ayarlandı." },
+  ru: { stages: ["Контекст", "Ответственность", "Решение", "Результат", "Выводы"], nextQuestion: "Следующий вопрос", newTopic: "Новая тема", topic: "Тема", step: "Вопрос", you: "Вы", autoRead: "Озвучивать каждый новый вопрос", languageLocked: "Вопросы и голос настроены на русский язык." },
+  uk: { stages: ["Контекст", "Відповідальність", "Рішення", "Результат", "Висновки"], nextQuestion: "Наступне питання", newTopic: "Нова тема", topic: "Тема", step: "Питання", you: "Ви", autoRead: "Озвучувати кожне нове питання", languageLocked: "Питання й голос налаштовано українською." },
+  ar: { stages: ["السياق", "المسؤولية", "القرار", "النتيجة", "التأمل"], nextQuestion: "سؤال المتابعة التالي", newTopic: "موضوع جديد", topic: "الموضوع", step: "السؤال", you: "أنت", autoRead: "قراءة كل سؤال جديد", languageLocked: "تم ضبط الأسئلة والصوت على العربية." },
+  he: { stages: ["הקשר", "אחריות", "החלטה", "תוצאה", "למידה"], nextQuestion: "שאלת ההמשך הבאה", newTopic: "נושא חדש", topic: "נושא", step: "שאלה", you: "אתם", autoRead: "להקריא כל שאלה חדשה", languageLocked: "השאלות והקול מוגדרים לעברית." },
+  hi: { stages: ["संदर्भ", "ज़िम्मेदारी", "निर्णय", "परिणाम", "चिंतन"], nextQuestion: "अगला प्रश्न", newTopic: "नया विषय", topic: "विषय", step: "प्रश्न", you: "आप", autoRead: "हर नया प्रश्न पढ़ें", languageLocked: "प्रश्न और आवाज़ हिंदी पर सेट हैं।" },
+  bn: { stages: ["প্রেক্ষাপট", "দায়িত্ব", "সিদ্ধান্ত", "ফলাফল", "পর্যালোচনা"], nextQuestion: "পরবর্তী প্রশ্ন", newTopic: "নতুন বিষয়", topic: "বিষয়", step: "প্রশ্ন", you: "আপনি", autoRead: "প্রতিটি নতুন প্রশ্ন পড়ুন", languageLocked: "প্রশ্ন ও কণ্ঠ বাংলা ভাষায় নির্ধারিত।" },
+  ur: { stages: ["پس منظر", "ذمہ داری", "فیصلہ", "نتیجہ", "غور"], nextQuestion: "اگلا سوال", newTopic: "نیا موضوع", topic: "موضوع", step: "سوال", you: "آپ", autoRead: "ہر نیا سوال پڑھیں", languageLocked: "سوال اور آواز اردو پر مقرر ہیں۔" },
+  id: { stages: ["Konteks", "Tanggung jawab", "Keputusan", "Hasil", "Refleksi"], nextQuestion: "Pertanyaan berikutnya", newTopic: "Topik baru", topic: "Topik", step: "Pertanyaan", you: "Anda", autoRead: "Bacakan setiap pertanyaan baru", languageLocked: "Pertanyaan dan suara diatur ke bahasa Indonesia." },
+  ms: { stages: ["Konteks", "Tanggungjawab", "Keputusan", "Hasil", "Refleksi"], nextQuestion: "Soalan seterusnya", newTopic: "Topik baharu", topic: "Topik", step: "Soalan", you: "Anda", autoRead: "Bacakan setiap soalan baharu", languageLocked: "Soalan dan suara ditetapkan kepada bahasa Melayu." },
+  th: { stages: ["บริบท", "ความรับผิดชอบ", "การตัดสินใจ", "ผลลัพธ์", "การทบทวน"], nextQuestion: "คำถามถัดไป", newTopic: "หัวข้อใหม่", topic: "หัวข้อ", step: "คำถาม", you: "คุณ", autoRead: "อ่านทุกคำถามใหม่", languageLocked: "ตั้งคำถามและเสียงเป็นภาษาไทยแล้ว" },
+  vi: { stages: ["Bối cảnh", "Trách nhiệm", "Quyết định", "Kết quả", "Suy ngẫm"], nextQuestion: "Câu hỏi tiếp theo", newTopic: "Chủ đề mới", topic: "Chủ đề", step: "Câu hỏi", you: "Bạn", autoRead: "Đọc mỗi câu hỏi mới", languageLocked: "Câu hỏi và giọng nói được đặt thành tiếng Việt." },
+  fil: { stages: ["Konteksto", "Pananagutan", "Desisyon", "Resulta", "Pagninilay"], nextQuestion: "Susunod na tanong", newTopic: "Bagong paksa", topic: "Paksa", step: "Tanong", you: "Ikaw", autoRead: "Basahin ang bawat bagong tanong", languageLocked: "Nakatakda sa Filipino ang mga tanong at boses." },
+  sv: { stages: ["Kontext", "Ansvar", "Beslut", "Resultat", "Reflektion"], nextQuestion: "Nästa följdfråga", newTopic: "Nytt ämne", topic: "Ämne", step: "Fråga", you: "Du", autoRead: "Läs upp varje ny fråga", languageLocked: "Frågor och röst är inställda på svenska." },
+  no: { stages: ["Kontekst", "Ansvar", "Beslutning", "Resultat", "Refleksjon"], nextQuestion: "Neste spørsmål", newTopic: "Nytt tema", topic: "Tema", step: "Spørsmål", you: "Du", autoRead: "Les opp hvert nytt spørsmål", languageLocked: "Spørsmål og stemme er satt til norsk." },
+  da: { stages: ["Kontekst", "Ansvar", "Beslutning", "Resultat", "Refleksion"], nextQuestion: "Næste spørgsmål", newTopic: "Nyt emne", topic: "Emne", step: "Spørgsmål", you: "Du", autoRead: "Læs hvert nyt spørgsmål op", languageLocked: "Spørgsmål og stemme er indstillet til dansk." },
+  fi: { stages: ["Konteksti", "Vastuu", "Päätös", "Tulos", "Pohdinta"], nextQuestion: "Seuraava kysymys", newTopic: "Uusi aihe", topic: "Aihe", step: "Kysymys", you: "Sinä", autoRead: "Lue jokainen uusi kysymys", languageLocked: "Kysymykset ja ääni ovat suomeksi." },
+  cs: { stages: ["Kontext", "Odpovědnost", "Rozhodnutí", "Výsledek", "Reflexe"], nextQuestion: "Další otázka", newTopic: "Nové téma", topic: "Téma", step: "Otázka", you: "Vy", autoRead: "Přečíst každou novou otázku", languageLocked: "Otázky a hlas jsou nastaveny na češtinu." },
+  sk: { stages: ["Kontext", "Zodpovednosť", "Rozhodnutie", "Výsledok", "Reflexia"], nextQuestion: "Ďalšia otázka", newTopic: "Nová téma", topic: "Téma", step: "Otázka", you: "Vy", autoRead: "Prečítať každú novú otázku", languageLocked: "Otázky a hlas sú nastavené na slovenčinu." },
+  hu: { stages: ["Kontextus", "Felelősség", "Döntés", "Eredmény", "Reflexió"], nextQuestion: "Következő kérdés", newTopic: "Új téma", topic: "Téma", step: "Kérdés", you: "Ön", autoRead: "Minden új kérdés felolvasása", languageLocked: "A kérdések és a hang magyar nyelvűek." },
+  ro: { stages: ["Context", "Responsabilitate", "Decizie", "Rezultat", "Reflecție"], nextQuestion: "Următoarea întrebare", newTopic: "Subiect nou", topic: "Subiect", step: "Întrebare", you: "Dumneavoastră", autoRead: "Citește fiecare întrebare nouă", languageLocked: "Întrebările și vocea sunt setate în română." },
+  el: { stages: ["Πλαίσιο", "Ευθύνη", "Απόφαση", "Αποτέλεσμα", "Αναστοχασμός"], nextQuestion: "Επόμενη ερώτηση", newTopic: "Νέο θέμα", topic: "Θέμα", step: "Ερώτηση", you: "Εσείς", autoRead: "Ανάγνωση κάθε νέας ερώτησης", languageLocked: "Οι ερωτήσεις και η φωνή έχουν οριστεί στα ελληνικά." },
+  bg: { stages: ["Контекст", "Отговорност", "Решение", "Резултат", "Равносметка"], nextQuestion: "Следващ въпрос", newTopic: "Нова тема", topic: "Тема", step: "Въпрос", you: "Вие", autoRead: "Прочитай всеки нов въпрос", languageLocked: "Въпросите и гласът са зададени на български." },
+  hr: { stages: ["Kontekst", "Odgovornost", "Odluka", "Rezultat", "Osvrt"], nextQuestion: "Sljedeće pitanje", newTopic: "Nova tema", topic: "Tema", step: "Pitanje", you: "Vi", autoRead: "Pročitaj svako novo pitanje", languageLocked: "Pitanja i glas postavljeni su na hrvatski." },
+  sr: { stages: ["Контекст", "Одговорност", "Одлука", "Резултат", "Осврт"], nextQuestion: "Следеће питање", newTopic: "Нова тема", topic: "Тема", step: "Питање", you: "Ви", autoRead: "Прочитај свако ново питање", languageLocked: "Питања и глас су подешени на српски." },
+  sl: { stages: ["Kontekst", "Odgovornost", "Odločitev", "Rezultat", "Razmislek"], nextQuestion: "Naslednje vprašanje", newTopic: "Nova tema", topic: "Tema", step: "Vprašanje", you: "Vi", autoRead: "Preberi vsako novo vprašanje", languageLocked: "Vprašanja in glas so nastavljeni na slovenščino." },
+  sw: { stages: ["Muktadha", "Wajibu", "Uamuzi", "Matokeo", "Tafakari"], nextQuestion: "Swali linalofuata", newTopic: "Mada mpya", topic: "Mada", step: "Swali", you: "Wewe", autoRead: "Soma kila swali jipya", languageLocked: "Maswali na sauti vimewekwa kwa Kiswahili." },
+  fa: { stages: ["زمینه", "مسئولیت", "تصمیم", "نتیجه", "بازنگری"], nextQuestion: "پرسش بعدی", newTopic: "موضوع جدید", topic: "موضوع", step: "پرسش", you: "شما", autoRead: "خواندن هر پرسش جدید", languageLocked: "پرسش‌ها و صدا روی فارسی تنظیم شده‌اند." },
+};
+
 export function speechLocaleFor(locale: LocaleCode) {
   return SPEECH_LOCALES[locale];
 }
@@ -324,7 +609,47 @@ export function localizedPersonaLabel(
   persona: InterviewPersonaId,
   englishLabel: string,
 ) {
-  return PERSONA_LABELS[locale]?.[persona] || englishLabel;
+  const reviewedLabel = PERSONA_LABELS[locale]?.[persona];
+  if (reviewedLabel) return reviewedLabel;
+  const row = PERSONA_LABEL_ROWS[locale];
+  const index = PERSONA_ORDER.indexOf(persona);
+  return row?.[index] || englishLabel;
+}
+
+type LocalizablePersona = {
+  id: InterviewPersonaId;
+  label: string;
+  round: string;
+  focus: string;
+  pressure: string;
+  decision: string;
+  answerPattern: string;
+  redFlags: string;
+  prepChecklist: string[];
+};
+
+export function localizedPersonaDetails<T extends LocalizablePersona>(
+  locale: LocaleCode,
+  persona: T,
+): T {
+  if (locale === "en") return persona;
+  const flow = INTERVIEW_FLOW_COPY[locale];
+  const emphasis = PERSONA_STAGE_EMPHASIS[persona.id];
+  const focusTerms = emphasis.map((index) => flow.stages[index]);
+  const label = localizedPersonaLabel(locale, persona.id, persona.label);
+  const proof = focusTerms[0] || flow.stages[0];
+  const gap = focusTerms.at(-1) || flow.stages[4];
+  return {
+    ...persona,
+    label,
+    round: `${label} · ${focusTerms.join(" · ")}`,
+    focus: focusTerms.join(" · "),
+    pressure: `${flow.nextQuestion}: ${localizedInterviewQuestion(locale, 1, proof, gap)}`,
+    decision: `${label} · ${flow.stages[2]} · ${flow.stages[3]}`,
+    answerPattern: flow.stages.join(" → "),
+    redFlags: `${flow.stages[1]} · ${flow.stages[2]} · ${flow.stages[4]}`,
+    prepChecklist: [...new Set([...focusTerms, ...flow.stages])],
+  };
 }
 
 export function localizedInterviewQuestion(
@@ -333,11 +658,51 @@ export function localizedInterviewQuestion(
   proofLabel: string,
   gapLabel: string,
 ) {
-  const template =
-    GENERIC_QUESTIONS[locale][Math.min(turn, GENERIC_QUESTIONS[locale].length - 1)];
+  const base = GENERIC_QUESTIONS[locale];
+  const templates = [
+    base[0],
+    OWNERSHIP_QUESTIONS[locale],
+    base[1],
+    OUTCOME_QUESTIONS[locale],
+    base[2],
+  ];
+  const template = templates[Math.min(Math.max(turn, 0), INTERVIEW_DEPTH_COUNT - 1)];
   return template
     .replaceAll("{proof}", proofLabel)
     .replaceAll("{gap}", gapLabel);
+}
+
+export function interviewFlowCopyFor(locale: LocaleCode) {
+  return INTERVIEW_FLOW_COPY[locale];
+}
+
+export function questionOnly(content: string) {
+  const blocks = content
+    .replaceAll("\r\n", "\n")
+    .split(/\n\s*\n+/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  return (blocks.at(-1) || content).trim();
+}
+
+export function pronunciationTextFor(content: string, locale: LocaleCode) {
+  const question = questionOnly(content)
+    .replace(/[*_`#]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const replacements: Array<[RegExp, string]> = [
+    [/\bSQL\b/giu, "S Q L"],
+    [/\bAPI\b/giu, "A P I"],
+    [/\bKPI\b/giu, "K P I"],
+    [/\bCEO\b/giu, "C E O"],
+    [/\bCOO\b/giu, "C O O"],
+    [/\bHR\b/giu, "H R"],
+    [/\bJD\b/giu, locale === "en" ? "job description" : "J D"],
+  ];
+  return replacements.reduce(
+    (spoken, [pattern, replacement]) => spoken.replace(pattern, replacement),
+    question,
+  );
 }
 
 export function bestSpeechVoice(

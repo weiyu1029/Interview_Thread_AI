@@ -1,8 +1,10 @@
-import { copyFor, LocaleCode, RTL_LOCALES } from "./i18n";
+import { brandTaglineFor, copyFor, LocaleCode, RTL_LOCALES } from "./i18n";
 import { localizedPath } from "./intl-routing";
 import { SEO_PAGE_KEYS, SeoPageKey } from "./seo-content";
 import { localizedSeoPage, seoUiFor } from "./seo-localization";
 import { BrandMark } from "./BrandMark";
+import { MobileNav } from "./MobileNav";
+import { SiteFooter } from "./SiteFooter";
 
 export function SeoLandingPage({
   pageKey,
@@ -16,10 +18,17 @@ export function SeoLandingPage({
   const core = copyFor(locale);
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://careerstorymap.com";
+    "https://interviewthread.com";
   const homePath = localizedPath(locale);
   const pagePath = localizedPath(locale, page.path);
   const pageUrl = `${siteUrl}${pagePath}`;
+  const workspaceHref = `${homePath}?view=${encodeURIComponent(page.workspaceView)}#workspace`;
+  const workflow = [
+    { view: "Analyze", label: core.analyze },
+    { view: "Recommendations", label: core.recommendations },
+    { view: "Tracker", label: core.tracker },
+    { view: "Interview Studio", label: core.interview },
+  ];
   const related = SEO_PAGE_KEYS.map((key) => localizedSeoPage(key, locale)).filter(
     (candidate) => candidate.path !== page.path,
   );
@@ -34,7 +43,7 @@ export function SeoLandingPage({
       inLanguage: locale,
       isPartOf: {
         "@type": "WebSite",
-        name: "CareerStoryMap",
+        name: "InterviewThread",
         url: siteUrl,
       },
       about: page.keywords,
@@ -46,7 +55,7 @@ export function SeoLandingPage({
         {
           "@type": "ListItem",
           position: 1,
-          name: "CareerStoryMap",
+          name: "InterviewThread",
           item: siteUrl,
         },
         {
@@ -79,25 +88,51 @@ export function SeoLandingPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="seo-header">
-        <a className="brand" href={homePath} aria-label="CareerStoryMap home">
+        <a className="brand" href={homePath} aria-label={`InterviewThread · ${ui.openProduct}`}>
           <BrandMark />
           <span>
-            CareerStoryMap <small>Evidence to opportunity</small>
+            InterviewThread <small>{brandTaglineFor(locale)}</small>
           </span>
         </a>
-        <nav aria-label="Page navigation">
+        <nav aria-label={ui.exploreWorkflow}>
           <a href="#how-it-works">{ui.howItWorks}</a>
           <a href="#questions">{ui.questions}</a>
-          <a className="button secondary" href={`${homePath}#workspace`}>
+          <a className="button secondary" href={workspaceHref}>
             {ui.openWorkspace}
           </a>
         </nav>
+        <MobileNav
+          label={ui.exploreWorkflow}
+          items={[
+            { label: "InterviewThread", href: homePath },
+            { label: ui.openWorkspace, href: workspaceHref },
+            { label: ui.howItWorks, href: "#how-it-works" },
+            { label: ui.questions, href: "#questions" },
+            {
+              label: core.enter,
+              href: `${localizedPath(locale, "account")}?plan=community`,
+            },
+          ]}
+        />
       </header>
+
+      <nav className="seo-workflow-nav" aria-label={ui.exploreWorkflow}>
+        {workflow.map((step, index) => (
+          <a
+            className={page.workspaceView === step.view ? "active" : ""}
+            href={`${homePath}?view=${encodeURIComponent(step.view)}#workspace`}
+            key={step.view}
+          >
+            <span>{index + 1}</span>
+            {step.label}
+          </a>
+        ))}
+      </nav>
 
       <section className="seo-hero">
         <div>
           <a className="seo-backlink" href={homePath}>
-            CareerStoryMap / {page.navLabel}
+            InterviewThread / {page.navLabel}
           </a>
           <p className="eyebrow">{page.eyebrow}</p>
           <h1>{page.title}</h1>
@@ -105,7 +140,7 @@ export function SeoLandingPage({
           <div className="hero-actions">
             <a
               className="button primary"
-              href={`${homePath}?view=${encodeURIComponent(page.workspaceView)}#workspace`}
+              href={workspaceHref}
             >
               {page.primaryCta}
             </a>
@@ -114,7 +149,7 @@ export function SeoLandingPage({
             </a>
           </div>
         </div>
-        <aside className="seo-map-card" aria-label="CareerStoryMap evidence flow">
+        <aside className="seo-map-card" aria-label={`${ui.mapTitle} · ${ui.evidenceLinked}`}>
           <div className="seo-map-heading">
             <span>{ui.mapTitle}</span>
             <b>{ui.evidenceLinked}</b>
@@ -137,7 +172,7 @@ export function SeoLandingPage({
         </aside>
       </section>
 
-      <section className="seo-metrics" aria-label="Product highlights">
+      <section className="seo-metrics" aria-label={ui.whyBrand}>
         {page.metrics.map((metric) => (
           <div key={metric.label}>
             <strong>{metric.value}</strong>
@@ -196,7 +231,7 @@ export function SeoLandingPage({
         </div>
       </section>
 
-      <section className="seo-related" aria-label="Explore CareerStoryMap tools">
+      <section className="seo-related" aria-label={ui.exploreWorkflow}>
         <p className="eyebrow">{ui.exploreWorkflow}</p>
         <h2>{ui.connectedDecisions}</h2>
         <div>
@@ -213,20 +248,16 @@ export function SeoLandingPage({
       </section>
 
       <section className="seo-final-cta">
-        <p className="eyebrow">Map your evidence. Own your story.</p>
+        <p className="eyebrow">
+          {locale === "en" ? "Map your evidence. Own your story." : core.heroTitle}
+        </p>
         <h2>{ui.finalTitle}</h2>
-        <a className="button primary" href={`${homePath}#workspace`}>
+        <a className="button primary" href={workspaceHref}>
           {ui.openProduct}
         </a>
       </section>
 
-      <footer className="seo-footer">
-        <span>CareerStoryMap</span>
-        <span>{locale === "en" ? "Evidence that travels." : core.heroTitle}</span>
-        <a href="https://github.com/weiyu1029/CareerStoryMap-agent">
-          {ui.repository}
-        </a>
-      </footer>
+      <SiteFooter locale={locale} />
     </main>
   );
 }

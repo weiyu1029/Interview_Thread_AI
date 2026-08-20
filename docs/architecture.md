@@ -2,7 +2,7 @@
 
 ## Design goal
 
-CareerProof separates evidence decisions from language generation. The deterministic engine decides whether candidate proof exists; optional AI can improve framing but cannot silently upgrade a gap.
+InterviewThread separates evidence decisions from language generation. The deterministic engine decides whether candidate proof exists; optional AI can improve framing but cannot silently upgrade a gap.
 
 ## Request flow
 

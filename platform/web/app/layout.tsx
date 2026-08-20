@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Source_Serif_4,
+} from "next/font/google";
 import { headers } from "next/headers";
 import { LANGUAGES } from "./i18n";
 import { languageAlternates } from "./intl-routing";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
   subsets: ["latin"],
 });
-
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
 async function requestOrigin() {
   const requestHeaders = await headers();
   const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
@@ -27,17 +33,17 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const title = "CareerStoryMap — Map your evidence. Own your story.";
+  const title = "InterviewThread — Free AI mock interview practice";
   const description =
-    "Match your resume to any job description, build credible career stories, practice AI interviews, and discover stronger-fit roles worldwide.";
-  const image = new URL("/og-careerstorymap.png", origin).toString();
+    "Upload your resume and a job description to practice realistic interview questions with truthful, role-specific AI feedback.";
+  const image = new URL("/og-interviewthread.png", origin).toString();
   const englishHome = new URL("/en", origin).toString();
 
   return {
     metadataBase: new URL(origin),
     title: {
       default: title,
-      template: "%s | CareerStoryMap",
+      template: "%s | InterviewThread",
     },
     description,
     alternates: {
@@ -45,18 +51,18 @@ export async function generateMetadata(): Promise<Metadata> {
       languages: languageAlternates(),
     },
     keywords: [
-      "career evidence",
-      "AI job matching",
-      "career intelligence",
-      "resume analysis",
-      "resume keyword analysis",
       "AI mock interview",
-      "interview story coaching",
-      "global jobs",
-      "multilingual job search",
-      "open source career tools",
+      "free mock interview",
+      "mock interview practice",
+      "job interview practice",
+      "interview question predictor",
+      "interview questions from resume and job description",
+      "behavioral interview practice",
+      "voice mock interview",
+      "interview answer feedback",
+      "resume job description match",
     ],
-    applicationName: "CareerStoryMap",
+    applicationName: "InterviewThread",
     category: "career technology",
     manifest: "/site.webmanifest",
     icons: {
@@ -75,7 +81,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      siteName: "CareerStoryMap",
+      siteName: "InterviewThread",
       url: englishHome,
       title,
       description,
@@ -83,9 +89,9 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [
         {
           url: image,
-          width: 1536,
-          height: 1024,
-          alt: "CareerStoryMap — Map your evidence. Own your story.",
+          width: 1200,
+          height: 630,
+          alt: "InterviewThread AI mock interview practice",
         },
       ],
     },
@@ -106,26 +112,27 @@ export default async function RootLayout({
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "CareerStoryMap",
-      slogan: "Map your evidence. Own your story.",
+      name: "InterviewThread",
+      slogan: "Find the thread. Own the interview.",
       url: origin,
-      sameAs: ["https://github.com/weiyu1029/CareerStoryMap-agent"],
+      sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
     },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "CareerStoryMap",
+      name: "InterviewThread",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Evidence-grounded resume and job analysis, interview story development, multi-persona AI mock interviews, global job matching, market insights, and application tracking.",
+        "Upload a real resume and job description to practice realistic interview questions with truthful, role-specific feedback.",
       featureList: [
-        "Evidence-grounded resume and job description analysis",
-        "Global job recommendations from approved employer sources",
-        "Market insight by geography and role",
-        "Multilingual interface across 40 languages",
-        "Voice and text mock interviews for HR, hiring manager, executive, peer, and case scenarios",
-        "Application tracker and career copilot",
+        "Resume-to-job-description evidence map",
+        "Three strongest role-match proofs",
+        "Three real capability or evidence gaps",
+        "Three to five defensible interview stories",
+        "Ten likely follow-up questions",
+        "Thirty-minute interview preparation plan",
+        "Evidence-grounded voice and text mock interviews",
       ],
       url: origin,
       inLanguage: LANGUAGES.map(([code]) => code),
@@ -133,68 +140,29 @@ export default async function RootLayout({
       offers: [
         {
           "@type": "Offer",
-          name: "Community",
+          name: "Open-source edition",
           price: "0",
           priceCurrency: "USD",
         },
-        {
-          "@type": "Offer",
-          name: "Pro",
-          price: "15",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1M",
-          },
-        },
-        {
-          "@type": "Offer",
-          name: "Pro annual",
-          price: "150",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1Y",
-          },
-        },
-        {
-          "@type": "Offer",
-          name: "Team",
-          price: "35",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1M",
-            unitText: "seat",
-          },
-        },
-        {
-          "@type": "Offer",
-          name: "Enterprise",
-          price: "15000",
-          priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            billingDuration: "P1Y",
-          },
-        },
       ],
-      license: "https://github.com/weiyu1029/CareerStoryMap-agent/blob/main/LICENSE",
+      license: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
     },
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: "CareerStoryMap",
-      alternateName: "Career Story Map",
+      name: "InterviewThread",
+      alternateName: ["Interview Thread", "InterviewThread AI"],
       url: origin,
       description:
-        "Open-source global career intelligence grounded in the evidence a candidate can support.",
+        "Open-source interview preparation grounded in evidence a candidate can defend.",
       inLanguage: LANGUAGES.map(([code]) => code),
     },
   ];
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        className={`${sourceSerif.variable} ${cormorant.variable}`}
+      >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

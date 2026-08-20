@@ -1,4 +1,4 @@
-# Contributing to CareerProof Agent
+# Contributing to CareerStoryMap Agent
 
 Thank you for helping make evidence-grounded career tools available to more people.
 

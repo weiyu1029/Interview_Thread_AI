@@ -51,14 +51,14 @@ Verify these paths before release:
 ## Docker deployment
 
 ```bash
-docker build -t careerproof-agent .
-docker run --rm -p 8501:8501 careerproof-agent
+docker build -t careerstorymap-agent .
+docker run --rm -p 8501:8501 careerstorymap-agent
 ```
 
 Pass a server key only when the deployment has appropriate controls:
 
 ```bash
-docker run --rm -p 8501:8501 -e GOOGLE_API_KEY careerproof-agent
+docker run --rm -p 8501:8501 -e GOOGLE_API_KEY careerstorymap-agent
 ```
 
 ## Privacy and operations checklist

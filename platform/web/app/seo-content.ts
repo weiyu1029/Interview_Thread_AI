@@ -40,7 +40,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
     description:
       "Compare your resume with any job description, separate required from preferred keywords, and connect every match to evidence you can defend in an interview.",
     summary:
-      "CareerStoryMap turns a vague match score into an evidence map: what the role asks for, where your resume proves it, and which gaps need an honest plan.",
+      "InterviewThread turns a vague match score into an evidence map: what the role asks for, where your resume proves it, and which gaps need an honest plan.",
     primaryCta: "Match resume to JD",
     workspaceView: "Analyze",
     metrics: [
@@ -52,7 +52,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
       {
         number: "01",
         title: "Add the job description",
-        body: "Paste the JD or import a document. CareerStoryMap identifies must-haves, core responsibilities, and useful context.",
+        body: "Paste the JD or import a document. InterviewThread identifies must-haves, core responsibilities, and useful context.",
       },
       {
         number: "02",
@@ -83,10 +83,10 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
       {
         question: "What is resume-to-job-description matching?",
         answer:
-          "It is a structured comparison between the skills and responsibilities in a job description and the evidence present in a resume. CareerStoryMap also separates required and preferred signals.",
+          "It is a structured comparison between the skills and responsibilities in a job description and the evidence present in a resume. InterviewThread also separates required and preferred signals.",
       },
       {
-        question: "Does CareerStoryMap rewrite my experience?",
+        question: "Does InterviewThread rewrite my experience?",
         answer:
           "No. It can help you phrase supported experience more clearly, but it keeps gaps visible and does not create achievements you cannot prove.",
       },
@@ -107,7 +107,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
     description:
       "Turn resume achievements into concise, role-specific interview stories with a clear situation, decision, action, and measurable result.",
     summary:
-      "CareerStoryMap helps you find the strongest story for a role—not the most polished story in isolation—then keeps every claim traceable to your source material.",
+      "InterviewThread helps you find the strongest story for a role—not the most polished story in isolation—then keeps every claim traceable to your source material.",
     primaryCta: "Build my career story",
     workspaceView: "Analyze",
     metrics: [
@@ -155,7 +155,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
       {
         question: "Can I build different stories for the same experience?",
         answer:
-          "Yes. CareerStoryMap can surface different truthful angles while keeping the underlying action and outcome consistent.",
+          "Yes. InterviewThread can surface different truthful angles while keeping the underlying action and outcome consistent.",
       },
     ],
     keywords: [
@@ -174,7 +174,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
     description:
       "Rehearse with evidence-grounded AI interviewers for HR screening, hiring manager, executive, peer, and case interview scenarios.",
     summary:
-      "CareerStoryMap changes the interviewer, pressure, and follow-up style while checking whether your answer remains relevant, specific, structured, and supportable.",
+      "InterviewThread changes the interviewer, pressure, and follow-up style while checking whether your answer remains relevant, specific, structured, and supportable.",
     primaryCta: "Start a mock interview",
     workspaceView: "Interview Studio",
     metrics: [
@@ -241,7 +241,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
     description:
       "Analyze required, core, and preferred job keywords, find supported synonyms, and see the exact resume evidence behind every match.",
     summary:
-      "CareerStoryMap treats keywords as signals inside a role, not a checklist to stuff into a resume. You see priority, coverage, and proof in one matrix.",
+      "InterviewThread treats keywords as signals inside a role, not a checklist to stuff into a resume. You see priority, coverage, and proof in one matrix.",
     primaryCta: "Analyze resume keywords",
     workspaceView: "Analyze",
     metrics: [
@@ -308,7 +308,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
     description:
       "Find roles worldwide using skills, must-have coverage, proof strength, location, work style, and the interview story your evidence can carry.",
     summary:
-      "CareerStoryMap's Story Signal goes beyond title similarity. It recommends a role only when your evidence supports a credible reason to apply and clearly labels the remaining gaps.",
+      "InterviewThread's Story Signal goes beyond title similarity. It recommends a role only when your evidence supports a credible reason to apply and clearly labels the remaining gaps.",
     primaryCta: "Find stronger-fit roles",
     workspaceView: "Recommendations",
     metrics: [
@@ -351,7 +351,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
       {
         question: "How are job recommendations different from a job board?",
         answer:
-          "A job board primarily retrieves listings. CareerStoryMap ranks eligible roles by whether your verified experience can support the requirements and a credible interview story.",
+          "A job board primarily retrieves listings. InterviewThread ranks eligible roles by whether your verified experience can support the requirements and a credible interview story.",
       },
       {
         question: "Can I receive alerts for matching roles?",
@@ -375,7 +375,7 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
     description:
       "Explore job openings, momentum, regional share, and changing demand across locations, role families, industries, and time periods.",
     summary:
-      "CareerStoryMap connects market movement with your own evidence profile, helping you decide where to search, which story to lead with, and what capability to build next.",
+      "InterviewThread connects market movement with your own evidence profile, helping you decide where to search, which story to lead with, and what capability to build next.",
     primaryCta: "Explore market insights",
     workspaceView: "Market Insights",
     metrics: [
@@ -446,13 +446,13 @@ export function metadataFor(key: SeoPageKey): Metadata {
     openGraph: {
       type: "website",
       url: page.path,
-      title: `${page.navLabel} | CareerStoryMap`,
+      title: `${page.navLabel} | InterviewThread`,
       description: page.description,
       images: [],
     },
     twitter: {
       card: "summary",
-      title: `${page.navLabel} | CareerStoryMap`,
+      title: `${page.navLabel} | InterviewThread`,
       description: page.description,
       images: [],
     },

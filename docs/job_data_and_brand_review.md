@@ -5,7 +5,7 @@ terms and obtain counsel before a commercial launch.
 
 ## Approved discovery paths
 
-CareerProof can ingest jobs from sources that explicitly permit programmatic
+InterviewThread can ingest jobs from sources that explicitly permit programmatic
 access, including:
 
 - employer-owned feeds supplied under contract;
@@ -39,22 +39,26 @@ retries, revocation, and an emergency stop.
 
 ## Brand and domain gate
 
-The working name should not be treated as cleared for a paid launch. Active
-career products already use CareerProof at
-[careerproof.app](https://careerproof.app/),
-[careerproof.ai](https://careerproof.ai/), and
-[careerproof.org](https://www.careerproof.org/about/). The exact slogan
-“Evidence that travels.” did not show an obvious competing career product in a
-preliminary web check, but that is not a trademark clearance.
+The canonical public brand is **InterviewThread**. Use the following identity
+consistently in the product, documentation, repository metadata, social
+profiles, and launch materials:
 
-Before buying or attaching a custom domain:
+- product: InterviewThread;
+- core result: Interview Proof Pack;
+- domain: [interviewthread.com](https://interviewthread.com);
+- source repository: [weiyu1029/careerproof-agent](https://github.com/weiyu1029/careerproof-agent);
+- primary promise: “Turn one job description and your real experience into
+  interview stories you can defend.”
 
-1. choose a commercially safer final name;
-2. search the [USPTO Trademark Search](https://tmsearch.uspto.gov/) and
-   [WIPO Global Brand Database](https://branddb.wipo.int/);
-3. obtain legal review in launch markets;
-4. register and provide an owned hostname;
-5. attach DNS, then submit the domain and sitemap through Google Search Console.
+Do not reintroduce retired working names into public copy, screenshots,
+download filenames, social accounts, or contributor-facing documents. Legacy
+environment-variable and module identifiers may remain temporarily as
+compatibility surfaces for existing self-hosted installations.
+
+Domain ownership and a preliminary search are not trademark clearance. Before
+a paid launch, search the [USPTO Trademark Search](https://tmsearch.uspto.gov/)
+and [WIPO Global Brand Database](https://branddb.wipo.int/), then obtain legal
+review in the launch markets.
 
 The app already emits canonical metadata, structured data, robots directives,
 and a sitemap. Search indexing still depends on a verified production domain,

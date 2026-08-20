@@ -2,7 +2,7 @@
 
 ## 1. Unzip the package
 
-Unzip `CareerProof-Agent-GitHub-Package.zip`.
+Unzip `InterviewThread-Agent-GitHub-Package.zip`.
 
 ## 2. Check secrets
 
@@ -19,7 +19,7 @@ If a `.env` file exists, delete it or confirm it contains no real key.
 ```bash
 git init
 git add .
-git commit -m "feat: add CareerProof Agent capstone project"
+git commit -m "feat: add InterviewThread Agent capstone project"
 ```
 
 ## 4. Create GitHub repo
@@ -27,7 +27,7 @@ git commit -m "feat: add CareerProof Agent capstone project"
 Create a public GitHub repo named:
 
 ```text
-careerproof-agent
+InterviewThread-agent
 ```
 
 Do not initialize it with a README, because this package already includes one.
@@ -36,7 +36,7 @@ Do not initialize it with a README, because this package already includes one.
 
 ```bash
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/careerproof-agent.git
+git remote add origin https://github.com/YOUR_USERNAME/InterviewThread-agent.git
 git push -u origin main
 ```
 

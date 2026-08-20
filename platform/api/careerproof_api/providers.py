@@ -23,7 +23,7 @@ class ProviderDefinition:
 
 DEFAULT_PROVIDERS = (
     ProviderDefinition(
-        "deterministic", "CareerProof Evidence Engine", "deterministic", None, False, True, False,
+        "deterministic", "CareerStoryMap Evidence Engine", "deterministic", None, False, True, False,
         ("evidence-engine-v1",), "Transparent scoring and story scaffolds without an external model.",
     ),
     ProviderDefinition(
@@ -52,7 +52,7 @@ DEFAULT_PROVIDERS = (
     ),
     ProviderDefinition(
         "gemini", "Google Gemini", "gemini", None, True, False, False,
-        ("gemini-2.5-flash",), "Optional hosted provider retained for existing CareerProof users.",
+        ("gemini-2.5-flash",), "Optional hosted provider retained for existing CareerStoryMap users.",
     ),
 )
 

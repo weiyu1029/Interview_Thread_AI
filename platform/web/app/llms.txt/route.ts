@@ -1,18 +1,18 @@
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  "https://careerstorymap.com";
+  "https://interviewthread.com";
 
 export function GET() {
-  const body = `# CareerStoryMap
+  const body = `# InterviewThread
 
-> Map your evidence. Own your story.
+> Find the thread. Own the interview.
 
-CareerStoryMap is an open-source, evidence-grounded career intelligence platform. It helps people compare resume evidence with job descriptions, find stronger-fit roles from approved employer sources, understand market movement, prepare credible career stories, and track applications.
+InterviewThread is a free, open-source AI mock interview product. Upload a real resume and job description to get truthful stories, realistic questions, and role-specific feedback without invented achievements.
 
 ## Primary pages
 - Product: ${siteUrl}/en/#product
 - Workspace: ${siteUrl}/en/#workspace
-- Plans: ${siteUrl}/en/#plans
+- Free and open-source access: ${siteUrl}/en/#plans
 - Resume and job-description matching: ${siteUrl}/en/resume-job-description-match
 - Career story builder: ${siteUrl}/en/career-story-builder
 - AI mock interview: ${siteUrl}/en/ai-mock-interview
@@ -26,23 +26,26 @@ Every public page has an indexable, canonical language URL and reciprocal hrefla
 /en, /ja, /ko, /zh-cn, /zh-tw, /es, /fr, /de, /pt-br, /it, /nl, /pl, /tr, /ru, /uk, /ar, /he, /hi, /bn, /ur, /id, /ms, /th, /vi, /fil, /sv, /no, /da, /fi, /cs, /sk, /hu, /ro, /el, /bg, /hr, /sr, /sl, /sw, and /fa.
 
 ## Core capabilities
-- Resume and job-description keyword evidence analysis
-- Global job recommendations with visible source provenance
-- Proof-to-Role Radar alerts based on evidence, must-have coverage, and quantified outcome strength
-- One-click or automatic tracking of proof-qualified roles with the best defensible story attached
-- Geographic and role-based market insight
-- 40-language interface
-- Manual, hybrid, and governed automatic application modes
-- Public feedback for every plan, with priority handling for Team and Enterprise
+- Three strongest role-match proofs linked to source evidence
+- Three real evidence or capability gaps
+- Three to five defensible interview stories
+- Ten likely role-specific follow-up questions
+- One focused 30-minute interview preparation plan
+- Evidence-grounded voice and text mock interviews
 
-## Plans
-- Community: free and open-source core
-- Pro: US$15 per month or US$150 per year base price, with transparent regional currency options
-- Team: US$35 per seat per month, or US$29 per seat per month billed annually, with a five-seat minimum
-- Enterprise: custom annual agreement starting at US$15,000
+## Secondary workspace tools
+- Global job recommendations with visible source provenance
+- Geographic and role-based market insight
+- Application tracking, model selection, and public feedback
+- Localized public pages and interface support
+
+## Access
+- Every public feature is free and open source
+- There are no paid tiers, billing flows, or priority support levels
+- Accounts may be used for identity and future cross-device persistence, not payment
 
 ## Data policy
-CareerStoryMap uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
+InterviewThread uses official employer ATS endpoints, licensed providers, and user-supplied documents. It does not scrape restricted job boards or claim unsupported real-time coverage.
 `;
 
   return new Response(body, {

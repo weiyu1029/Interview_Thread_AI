@@ -6,7 +6,7 @@ AI can generate polished interview answers, but candidates still struggle to und
 
 ## 0:30 - Product
 
-CareerProof Agent turns a job description and candidate profile into an evidence-based interview strategy.
+InterviewThread Agent turns a job description and candidate profile into an evidence-based interview strategy.
 
 ## 1:00 - Demo input
 
@@ -25,4 +25,4 @@ Highlight:
 
 ## 2:30 - Platform vision
 
-CareerProof starts as a career concierge agent and can grow into a personal career intelligence graph, hiring signal database, industry interview knowledge graph, coach marketplace, and university career center platform.
+InterviewThread starts as a career concierge agent and can grow into a personal career intelligence graph, hiring signal database, industry interview knowledge graph, coach marketplace, and university career center platform.

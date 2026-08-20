@@ -29,6 +29,6 @@ Candidates do not only need more interview answers. They need help understanding
 
 ## Product implication
 
-CareerProof should position itself as an evidence-based career intelligence agent, not a generic answer generator.
+InterviewThread should position itself as an evidence-based career intelligence agent, not a generic answer generator.
 
-> Generic AI gives answers. CareerProof builds evidence.
+> Generic AI gives answers. InterviewThread builds evidence.

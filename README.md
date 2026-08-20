@@ -1,43 +1,58 @@
-# CareerStoryMap
+# InterviewThread
 
-![CareerStoryMap](platform/web/public/og-careerstorymap.png)
+![InterviewThread — Evidence you can defend](assets/interviewthread-readme-hero-v2.png)
 
-**CareerStoryMap — Map your evidence. Own your story.** is an open-source,
-evidence-grounded career intelligence platform. It compares a job description
-with a candidate's real experience, recommends stronger-fit roles worldwide,
-keeps missing proof visible, and turns the strongest evidence into a credible
-application and interview strategy.
+**A real resume. A real job description. Interview stories you can defend.**
 
-> Keywords may be reformulated, never fabricated.
+InterviewThread is open-source, evidence-grounded interview intelligence. It
+maps role requirements to candidate-provided proof, keeps genuine gaps visible,
+and turns verified evidence into story prompts and realistic follow-up
+questions—without inventing an achievement.
 
-[Try the professional web app](https://careerstorymap.com) · [Try the Streamlit reference app](https://careerproof-agent-4m3q4tptbzxasevumpfkjx.streamlit.app/) · [Platform architecture](docs/platform_architecture.md) · [Job data and brand policy](docs/job_data_and_brand_review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+> **Evidence rule:** no source, no claim. Partial proof stays qualified. Missing
+> proof stays visible.
 
-## Why CareerStoryMap exists
+[Try the live product](https://careerstorymap.com/en) · [Technical design](docs/technical_solution.md) · [Closed beta](docs/product_iteration.md) · [Product strategy](docs/product_strategy.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-Generic keyword tools reward repetition. Generic AI tools can produce fluent but unsupported claims. CareerStoryMap uses a different sequence:
+## Most career AI writes first. InterviewThread verifies first.
 
-1. decode the role and industry;
-2. extract required, core, and preferred concepts;
-3. match aliases with token boundaries;
-4. map each match to a candidate-provided source sentence;
-5. separate safe wording changes from real skill gaps;
-6. optionally use Gemini to improve framing without changing the canonical evidence result.
+Fluent answers are not useful when a candidate cannot defend them. InterviewThread
+starts with evidence, then builds the preparation workflow around what is true:
 
-The result is useful for resume tailoring and interview preparation while remaining understandable and reviewable by a human.
+1. **Resume + JD** — identify the experience supplied by the candidate and the
+   decisions the employer needs to make.
+2. **Evidence Map** — separate strong proof, partial proof, contradictions, and
+   genuine gaps with traceable source context.
+3. **Story Builder** — shape only supported actions and outcomes into concise,
+   defensible interview narratives.
+4. **Mock Interview** — rehearse with role-specific follow-ups that probe the
+   weakest evidence without coaching the answer in realistic mode.
 
-## What it produces
+The result is a preparation system a candidate can inspect, correct, and trust—not
+a polished story they cannot substantiate.
 
-- a transparent evidence-fit score and A–F grade;
-- weighted keyword coverage, exact wording coverage, evidence strength, and quantified-proof coverage;
-- an evidence matrix with Required / Core / Preferred priority;
-- exact and alias-aware keyword matches;
-- safe, evidence-backed wording suggestions;
-- honest skill and proof gaps;
-- role mission, industry context, and hiring-manager priorities;
-- interview stories, likely questions, and a seven-day preparation plan;
-- Markdown and JSON downloads for personal workflows.
+## Interview Proof Pack
 
-CareerStoryMap does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
+Provide one real resume, one real job description, and an interview date or
+current application stage. Within about ten minutes, InterviewThread produces:
+
+1. three strongest role-match proofs linked to source evidence;
+2. three real capability or evidence gaps;
+3. three to five defensible interview stories;
+4. ten likely role-specific follow-up questions;
+5. one focused 30-minute interview preparation plan.
+
+The primary journey is:
+
+`Resume + JD → Evidence Map → 3 Interview Stories → Mock Interview`
+
+Candidate evidence is not limited to one resume. The current web workspace can
+attach any number of LinkedIn, portfolio, GitHub, publication, project, or
+public resume links to candidate-provided text or uploaded files. A URL is
+recorded as provenance and never counts as proof by itself. See the
+[evidence-grounded technical solution](docs/technical_solution.md).
+
+InterviewThread does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
 
 ## Public web experience
 
@@ -55,8 +70,8 @@ The Streamlit app supports:
 
 ## Full platform foundation
 
-The `platform/` directory is the production-oriented evolution path requested
-for accounts, permanent tracking, collaboration, and paid plans:
+The `platform/` directory is the production-oriented evolution path for free
+accounts, permanent tracking, and open-source collaboration:
 
 - a professional, responsive, emoji-free React / Next-compatible interface;
 - guest analysis, 40 locale choices with eight reviewed end-to-end catalogs
@@ -68,14 +83,14 @@ for accounts, permanent tracking, collaboration, and paid plans:
   policies, analysis-linked chat, feedback, model discovery, usage, and plans;
 - PostgreSQL-ready multi-tenant data models and role-based workspace access;
 - Docker Compose for the web, API, and PostgreSQL services;
-- a billing-ready entitlement boundary without prematurely enabling checkout.
+- one free, open-source access level with no checkout or paid entitlement.
 
 Start the complete local stack:
 
 ```bash
 cd platform
 cp .env.example .env
-# replace CAREERPROOF_JWT_SECRET before starting
+# replace the legacy CAREERPROOF_JWT_SECRET compatibility variable before starting
 docker compose up --build
 ```
 
@@ -84,7 +99,7 @@ The web client is available at `http://localhost:3000` and the documented API at
 
 ## Open and local model ecosystem
 
-CareerStoryMap does not freeze a list that will become obsolete. It discovers
+InterviewThread does not freeze a list that will become obsolete. It discovers
 models at runtime and supports any compatible chat model served by:
 
 - Ollama;
@@ -120,7 +135,7 @@ Never commit a real key or resume.
 
 ## Transparent scoring
 
-CareerStoryMap weights detected concepts by where and how they appear in the job description:
+InterviewThread weights detected concepts by where and how they appear in the job description:
 
 | Priority | Typical source | Relative weight |
 |---|---|---:|
@@ -143,9 +158,8 @@ Candidate-facing claims may come only from the pasted profile or uploaded resume
 Job descriptions and uploaded documents are treated as untrusted data. They can influence matching, but they cannot issue instructions to the agent, expose secrets, or override the evidence boundary.
 
 The open-source default never auto-submits an application or sends a message.
-Manual mode remains free. Hybrid mode is designed to require approval for each
-submission. Pro may expose Manual, Hybrid, or Automatic controls, but any
-future automatic workflow must use approved employer
+Manual, Hybrid, and Automatic controls are free and open source. Hybrid is
+designed to require approval for each submission, and any future automatic workflow must use approved employer
 APIs with explicit consent, rate limits, audit logs, and an emergency stop; no
 submission connector is enabled in this repository.
 
@@ -242,8 +256,8 @@ Use `streamlit_app.py` as the entry point. The application is fully useful witho
 ### Docker
 
 ```bash
-docker build -t careerproof-agent .
-docker run --rm -p 8501:8501 careerproof-agent
+docker build -t careerstorymap-agent .
+docker run --rm -p 8501:8501 careerstorymap-agent
 ```
 
 ### Multi-user platform
@@ -257,6 +271,7 @@ feature incubator.
 ## Community maintenance
 
 - Start with an issue for scoring, data-flow, or architecture changes.
+- Use the [closed-beta and release-gate system](docs/product_iteration.md) for staged, reversible product changes.
 - Use synthetic resumes and job descriptions in tests and reports.
 - Follow the evidence and privacy rules in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Review project decisions in [GOVERNANCE.md](GOVERNANCE.md).
@@ -264,7 +279,10 @@ feature incubator.
 
 ## Origins and attribution
 
-This repository is the recommended canonical home for the public CareerStoryMap project because it has a modular agent package, an English documentation set, an MIT license, tests, and a web deployment entry point. Existing package and repository names remain stable for contributor compatibility.
+This repository is the canonical home for the public InterviewThread project.
+The brand, domain, metadata, documentation, and product UI use InterviewThread.
+Legacy environment-variable and Python-module identifiers remain temporarily
+supported only to avoid breaking existing self-hosted installations.
 
 It incorporates product lessons from:
 

@@ -1,7 +1,7 @@
 [project]
-name = "careerproof-agent"
+name = "careerstorymap-agent"
 version = "0.1.0"
-description = "CareerProof Agent: an AI career concierge for evidence-based interview strategy."
+description = "CareerStoryMap Agent: an AI career concierge for evidence-based interview strategy."
 authors = [{ name = "Alice Chen" }]
 requires-python = ">=3.11,<3.14"
 dependencies = [
@@ -81,7 +81,7 @@ deprecated = "ignore"
 unknown-argument = "ignore"
 
 [tool.codespell]
-ignore-words-list = "CareerProof,roadmap,FinTech,HealthTech,PropTech,InsurTech,EdTech,MarTech,AdTech,WealthTech,RevPAR,ROAS,ARR,MRR,NRR,GRR,ARPU,ARPPU,DAU,MAU"
+ignore-words-list = "CareerStoryMap,roadmap,FinTech,HealthTech,PropTech,InsurTech,EdTech,MarTech,AdTech,WealthTech,RevPAR,ROAS,ARR,MRR,NRR,GRR,ARPU,ARPPU,DAU,MAU"
 skip = ".venv,uv.lock,artifacts/traces,artifacts/grade_results"
 
 [tool.pytest.ini_options]

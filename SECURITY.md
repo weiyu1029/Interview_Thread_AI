@@ -27,5 +27,5 @@ Maintainers will acknowledge a complete report within seven days and will coordi
 - Treat job descriptions and uploaded files as untrusted input.
 - Keep Streamlit, document parsers, and model SDKs updated.
 
-CareerProof does not submit applications, send messages, or make employment decisions.
+CareerStoryMap does not submit applications, send messages, or make employment decisions.
 

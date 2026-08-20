@@ -1,9 +1,10 @@
-# CareerProof Platform
+# CareerStoryMap Platform
 
-This directory is the production-oriented evolution path for CareerProof. The
+This directory is the production-oriented evolution path for CareerStoryMap. The
 root Streamlit application remains the simplest public reference deployment;
 the platform adds a professional web client and a multi-tenant API for accounts,
-permanent history, shared workspaces, usage controls, and future billing.
+permanent history, shared workspaces, and usage controls. Every feature is free
+and open source.
 
 ## Stack
 
@@ -20,7 +21,7 @@ permanent history, shared workspaces, usage controls, and future billing.
    `http://localhost:8000/docs`.
 
 Guest analysis does not require an account. Accounts are used only for saved
-analysis history, the permanent application tracker, team workspaces, and
+analysis history, the permanent application tracker, shared workspaces, and
 conversation history.
 
 ## Model access
@@ -37,5 +38,4 @@ from providers at runtime. User API keys are accepted only in the ephemeral
 `CAREERPROOF_AUTO_MIGRATE=true` is intended for local alpha deployments. Before
 public multi-user production, set it to `false`, introduce reviewed Alembic
 migrations, configure a managed PostgreSQL backup policy, place the API behind a
-rate-limiting proxy, and connect the entitlement interface to a billing provider.
-
+rate-limiting proxy, and keep safety checks independent from account status.

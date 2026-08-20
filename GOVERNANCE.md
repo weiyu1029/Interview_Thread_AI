@@ -1,6 +1,6 @@
 # Governance
 
-CareerProof Agent uses a maintainer-led, community-informed governance model.
+CareerStoryMap Agent uses a maintainer-led, community-informed governance model.
 
 ## Roles
 

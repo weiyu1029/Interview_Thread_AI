@@ -1,4 +1,4 @@
-# Product and Commercial Roadmap
+# Open-source Product Roadmap
 
 ## Stage 1: trustworthy public utility
 
@@ -37,17 +37,16 @@ restore are exercised; deletion is verified end to end.
 Exit criteria: audit logs, invitation abuse controls, and tenant-isolation tests
 are in place.
 
-## Stage 4: paid plans
+## Stage 4: governed collaboration and automation
 
-- Pro plan for higher analysis limits, history, comparison, and advanced exports
-- Team plan for shared workspaces, reviewers, governance, and support
-- Metered model usage with bring-your-own-key and platform-credit options
-- Billing portal, invoices, cancellation, refunds, and grace periods
+- Higher analysis capacity, history, comparison, and advanced exports
+- Shared workspaces, reviewers, governance, and community support
+- Bring-your-own-key and self-hosted model options
 - Hybrid application preparation with per-application human approval
-- Team and Enterprise automation only through audited, allowlisted provider APIs
+- Automation only through audited, allowlisted provider APIs
 
-No safety boundary, export right, or self-hosting capability should be placed
-behind a paid plan.
+All public capabilities remain free and open source. Safety boundaries, export,
+and self-hosting are never restricted by account status.
 
 ## Quality and business metrics
 
@@ -58,7 +57,7 @@ behind a paid plan.
 | Product | Analysis-to-saved-opportunity rate | Guest completion rate |
 | Retention | Weekly users returning to a saved opportunity | Delete/export success |
 | AI | Helpful rating by provider and model | Cost, latency, refusal, and hallucination |
-| Commercial | Free-to-Pro conversion | Refunds, failed payments, support burden |
+| Community | Contributor and returning-user growth | Support burden and unresolved issues |
 
 ## Evaluation program
 
