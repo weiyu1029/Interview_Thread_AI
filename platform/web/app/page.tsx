@@ -17,6 +17,7 @@ import {
   localeToPath,
   LocaleCode,
   RTL_LOCALES,
+  walkthroughLabelFor,
 } from "./i18n";
 import { accountCopyFor, openSourceLabelFor } from "./account-copy";
 import { BrandMark } from "./BrandMark";
@@ -1884,6 +1885,7 @@ export default function Home({
   const [interviewStage, setInterviewStage] =
     useState<InterviewStageId>("hiring-manager");
   const [exampleLoaded, setExampleLoaded] = useState(false);
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
@@ -2203,6 +2205,15 @@ export default function Home({
     },
     [],
   );
+
+  useEffect(() => {
+    if (!walkthroughOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setWalkthroughOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [walkthroughOpen]);
 
   function chooseLocale(nextLocale: LocaleCode) {
     setLocale(nextLocale);
@@ -3320,8 +3331,7 @@ export default function Home({
       : copy.heroBody;
   const landingPrimaryCta =
     locale === "en" ? "Start my free mock interview" : detail.runMatch;
-  const landingSecondaryCta =
-    locale === "en" ? "See how it works" : detail.sample;
+  const landingSecondaryCta = walkthroughLabelFor(locale);
   const proofPackFlow =
     locale === "en"
       ? [
@@ -3568,7 +3578,7 @@ export default function Home({
             <button
               className="button secondary"
               type="button"
-              onClick={() => loadProofPackExample(true)}
+              onClick={() => setWalkthroughOpen(true)}
             >
               {landingSecondaryCta}
             </button>
@@ -3594,6 +3604,80 @@ export default function Home({
           </div>
         </div>
       </section>
+
+      {walkthroughOpen && (
+        <div
+          className="walkthrough-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setWalkthroughOpen(false);
+          }}
+        >
+          <section
+            className="walkthrough-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="walkthrough-title"
+          >
+            <button
+              className="walkthrough-close"
+              type="button"
+              aria-label="Close 60-second walkthrough"
+              onClick={() => setWalkthroughOpen(false)}
+            >
+              ×
+            </button>
+            <div className="walkthrough-heading">
+              <p className="eyebrow">{landingSecondaryCta}</p>
+              <h2 id="walkthrough-title">
+                {locale === "en"
+                  ? "From two documents to confident interview practice"
+                  : landingTitle}
+              </h2>
+              <p>{landingSubtitle}</p>
+            </div>
+            <video
+              className="walkthrough-video"
+              controls
+              autoPlay
+              playsInline
+              preload="metadata"
+              poster="/interviewthread-walkthrough-poster.png"
+            >
+              <source
+                src="/interviewthread-60-second-walkthrough.mp4"
+                type="video/mp4"
+              />
+              <track
+                kind="captions"
+                src="/interviewthread-walkthrough-en.vtt"
+                srcLang="en"
+                label="English"
+                default
+              />
+              Your browser does not support HTML video.
+            </video>
+            <ol className="walkthrough-steps" aria-label={landingSecondaryCta}>
+              {proofPackFlow.map((item, index) => (
+                <li key={item}>
+                  <span>{index + 1}</span>
+                  <b>{item}</b>
+                </li>
+              ))}
+            </ol>
+            <button
+              className="button primary walkthrough-start"
+              type="button"
+              onClick={() => {
+                setWalkthroughOpen(false);
+                openWorkspace("Analyze");
+              }}
+            >
+              {landingPrimaryCta}
+            </button>
+          </section>
+        </div>
+      )}
 
       <section className="workspace" id="workspace">
         <aside className="workspace-nav">

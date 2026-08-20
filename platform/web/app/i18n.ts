@@ -90,6 +90,53 @@ export function brandTaglineFor(locale: LocaleCode) {
   return BRAND_TAGLINES[locale];
 }
 
+const WALKTHROUGH_LABELS: Record<LocaleCode, string> = {
+  en: "Watch the 60-second walkthrough",
+  ja: "60秒の使い方を見る",
+  ko: "60초 사용 가이드 보기",
+  "zh-CN": "观看 60 秒操作演示",
+  "zh-TW": "觀看 60 秒操作示範",
+  es: "Ver la guía de 60 segundos",
+  fr: "Voir la démonstration de 60 secondes",
+  de: "60-Sekunden-Anleitung ansehen",
+  "pt-BR": "Ver o passo a passo de 60 segundos",
+  it: "Guarda la guida di 60 secondi",
+  nl: "Bekijk de uitleg van 60 seconden",
+  pl: "Zobacz przewodnik w 60 sekund",
+  tr: "60 saniyelik tanıtımı izle",
+  ru: "Посмотреть инструкцию за 60 секунд",
+  uk: "Переглянути 60-секундну інструкцію",
+  ar: "شاهد شرحًا في 60 ثانية",
+  he: "צפו בהדרכה של 60 שניות",
+  hi: "60 सेकंड का डेमो देखें",
+  bn: "৬০ সেকেন্ডের নির্দেশিকা দেখুন",
+  ur: "60 سیکنڈ کی رہنمائی دیکھیں",
+  id: "Lihat panduan 60 detik",
+  ms: "Tonton panduan 60 saat",
+  th: "ดูวิธีใช้ใน 60 วินาที",
+  vi: "Xem hướng dẫn 60 giây",
+  fil: "Panoorin ang 60-segundong gabay",
+  sv: "Se 60-sekundersguiden",
+  no: "Se 60-sekundersguiden",
+  da: "Se guiden på 60 sekunder",
+  fi: "Katso 60 sekunnin opastus",
+  cs: "Zhlédnout 60sekundový návod",
+  sk: "Pozrieť 60-sekundový návod",
+  hu: "60 másodperces bemutató",
+  ro: "Vezi ghidul de 60 de secunde",
+  el: "Δείτε τον οδηγό 60 δευτερολέπτων",
+  bg: "Вижте 60-секундното ръководство",
+  hr: "Pogledajte vodič od 60 sekundi",
+  sr: "Погледајте водич од 60 секунди",
+  sl: "Oglejte si 60-sekundni vodič",
+  sw: "Tazama mwongozo wa sekunde 60",
+  fa: "راهنمای ۶۰ ثانیه‌ای را ببینید",
+};
+
+export function walkthroughLabelFor(locale: LocaleCode) {
+  return WALKTHROUGH_LABELS[locale];
+}
+
 export const DEFAULT_LOCALE: LocaleCode = "en";
 
 export function localeToPath(locale: LocaleCode) {

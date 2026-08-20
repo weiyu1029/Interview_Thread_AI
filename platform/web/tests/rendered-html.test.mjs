@@ -5,6 +5,7 @@ import {
   copyFor,
   LANGUAGES,
   localeToPath,
+  walkthroughLabelFor,
 } from "../app/i18n.ts";
 import { faqCopyFor } from "../app/faq-copy.ts";
 import {
@@ -50,7 +51,7 @@ test("server-renders the InterviewThread product experience", async () => {
     /Practice the interview for the job you want\./i,
   );
   assert.match(html, /Start my free mock interview/i);
-  assert.match(html, /See how it works/i);
+  assert.match(html, /Watch the 60-second walkthrough/i);
   assert.match(html, /Upload your resume/);
   assert.match(html, /Paste the job description/);
   assert.match(html, /Get truthful stories/);
@@ -72,6 +73,28 @@ test("server-renders the InterviewThread product experience", async () => {
   assert.match(html, /mobile-nav-button/);
   assert.match(html, /aria-expanded="false"/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("localizes the 60-second walkthrough CTA for every supported language", () => {
+  for (const [locale] of LANGUAGES) {
+    assert.notEqual(walkthroughLabelFor(locale), "");
+    assert.match(walkthroughLabelFor(locale), /60|６０|৬০|۶۰/);
+  }
+});
+
+test("ships a web-ready 60-second walkthrough with captions and poster", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /interviewthread-60-second-walkthrough\.mp4/i);
+  assert.match(pageSource, /interviewthread-walkthrough-en\.vtt/i);
+  assert.match(pageSource, /interviewthread-walkthrough-poster\.png/i);
+  assert.match(pageSource, /aria-modal="true"/i);
+
+  const video = await readFile(
+    new URL("../public/interviewthread-60-second-walkthrough.mp4", import.meta.url),
+  );
+  assert.ok(video.length > 1_000_000);
+  await access(new URL("../public/interviewthread-walkthrough-en.vtt", import.meta.url));
+  await access(new URL("../public/interviewthread-walkthrough-poster.png", import.meta.url));
 });
 
 test("localizes market filters while retaining canonical values", () => {
