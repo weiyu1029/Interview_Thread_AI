@@ -92,6 +92,7 @@ type ApprovedSourceMeta = {
   employer: string;
   retrievedAt: string;
   coverage: string;
+  detailCoverage?: string;
 };
 type Job = {
   id: string;
@@ -4856,7 +4857,7 @@ export default function Home({
               </section>
               <p className="data-disclosure">
                 {sourceMeta
-                  ? `${sourceMeta.coverage}. Retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}.`
+                  ? `${sourceMeta.coverage}. ${sourceMeta.detailCoverage || "Full posting descriptions where the provider exposes them."} Retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}.`
                   : locale === "en"
                     ? "Example openings are labeled. Connect an employer's official public ATS board below for current published roles."
                     : detail.sourcePolicy}
@@ -4918,6 +4919,9 @@ export default function Home({
                       <span>
                         {sourceJobs?.length || 0} published roles · {sourceMeta.name}
                       </span>
+                      {sourceMeta.detailCoverage && (
+                        <small>{sourceMeta.detailCoverage}</small>
+                      )}
                     </div>
                     <a href={sourceMeta.docsUrl} target="_blank" rel="noreferrer">
                       Official API policy

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type MobileNavItem = {
   label: string;
@@ -16,7 +16,9 @@ export function MobileNav({
   items: MobileNavItem[];
 }) {
   const [open, setOpen] = useState(false);
-  const menuId = useId();
+  // A deterministic id keeps the server-rendered and hydrated trees aligned.
+  // Each rendered page has a single MobileNav instance.
+  const menuId = "mobile-navigation-menu";
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 

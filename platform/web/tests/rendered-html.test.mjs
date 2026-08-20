@@ -114,9 +114,10 @@ test("localizes market filters while retaining canonical values", () => {
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
-  const [layout, page, i18n, speech, seoPage, auth, brandMark, mobileNav, readme, strategy, brandGuide] = await Promise.all([
+  const [layout, page, globals, i18n, speech, seoPage, auth, brandMark, mobileNav, readme, strategy, brandGuide] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/interview-speech.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/SeoLandingPage.tsx", import.meta.url), "utf8"),
@@ -133,6 +134,12 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(layout, /\/og-interviewthread\.png/);
   assert.match(layout, /application\/ld\+json/);
   assert.match(layout, /Free AI mock interview practice/);
+  assert.doesNotMatch(layout, /Geist_Mono|font-geist-mono/);
+  assert.match(globals, /--font-serif-body/);
+  assert.match(globals, /Noto Serif TC/);
+  assert.match(globals, /Yu Mincho/);
+  assert.match(globals, /Batang/);
+  assert.doesNotMatch(globals, /ui-sans-serif|system-ui|sans-serif|font-geist-mono|monospace/);
   assert.match(page, /What you can prove/);
   assert.match(page, /What is missing/);
   assert.match(page, /Stories to practice/);
@@ -221,6 +228,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Lever EU/i);
   assert.match(page, /Ashby/i);
   assert.match(page, /No page scraping and no automatic application/i);
+  const jobsRoute = await readFile(new URL("../app/api/jobs/route.ts", import.meta.url), "utf8");
+  assert.match(jobsRoute, /includeGreenhouseContent/);
+  assert.match(jobsRoute, /lightweight listing/);
+  assert.match(jobsRoute, /detailCoverage/);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
   assert.equal(i18n.match(/\["[^"]+",\s*"[^"]+"\]/g)?.length, 40);
   assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);
@@ -255,6 +266,8 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(brandMark, /brand-mark-node-end/);
   assert.doesNotMatch(page, />CS<\/span>/);
   assert.match(mobileNav, /aria-expanded=\{open\}/);
+  assert.match(mobileNav, /mobile-navigation-menu/);
+  assert.doesNotMatch(mobileNav, /useId/);
   assert.match(mobileNav, /pointerdown/);
   assert.match(mobileNav, /Escape/);
   for (const publicSurface of [layout, page, readme, strategy, brandGuide]) {

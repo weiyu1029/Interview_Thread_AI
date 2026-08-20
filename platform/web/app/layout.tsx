@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import {
   Cormorant_Garamond,
-  Geist_Mono,
   Source_Serif_4,
 } from "next/font/google";
 import { headers } from "next/headers";
@@ -18,11 +17,6 @@ const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
 });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 async function requestOrigin() {
   const requestHeaders = await headers();
   const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
@@ -167,7 +161,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${sourceSerif.variable} ${cormorant.variable} ${geistMono.variable}`}
+        className={`${sourceSerif.variable} ${cormorant.variable}`}
       >
         <script
           type="application/ld+json"

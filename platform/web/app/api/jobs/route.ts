@@ -162,10 +162,16 @@ function parseReference(provider: ProviderId, rawReference: string): string {
   return account;
 }
 
-function sourceUrl(provider: ProviderId, account: string): string {
+function sourceUrl(
+  provider: ProviderId,
+  account: string,
+  includeGreenhouseContent = true,
+): string {
   const safe = encodeURIComponent(account);
   if (provider === "greenhouse") {
-    return `https://boards-api.greenhouse.io/v1/boards/${safe}/jobs?content=true`;
+    return `https://boards-api.greenhouse.io/v1/boards/${safe}/jobs${
+      includeGreenhouseContent ? "?content=true" : ""
+    }`;
   }
   if (provider === "lever") {
     return `https://api.lever.co/v0/postings/${safe}?mode=json&limit=${MAX_JOBS}`;
@@ -300,7 +306,27 @@ export async function GET(request: Request) {
 
   try {
     const account = parseReference(provider, reference);
-    const payload = await fetchOfficialJson(sourceUrl(provider, account));
+    let detailCoverage =
+      "Full posting descriptions where the provider exposes them.";
+    let payload: unknown;
+    try {
+      payload = await fetchOfficialJson(sourceUrl(provider, account));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (
+        provider !== "greenhouse" ||
+        message !== "The provider response is too large to process safely."
+      ) {
+        throw error;
+      }
+      // Greenhouse can return multi-megabyte HTML descriptions for large
+      // employers. Keep the response-size guard, but fall back to the same
+      // official API's lightweight listing instead of making the whole board
+      // unusable.
+      payload = await fetchOfficialJson(sourceUrl(provider, account, false));
+      detailCoverage =
+        "Titles, locations, departments, and official links. Posting descriptions were omitted because the employer board exceeded the safe response limit.";
+    }
     const jobs =
       provider === "greenhouse"
         ? normalizeGreenhouse(payload, account)
@@ -316,6 +342,7 @@ export async function GET(request: Request) {
           employer: humanizeAccount(account),
           retrievedAt,
           coverage: "One employer's published public job board",
+          detailCoverage,
         },
         jobs,
         count: jobs.length,

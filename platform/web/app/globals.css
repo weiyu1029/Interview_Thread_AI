@@ -502,12 +502,17 @@ html {
   scroll-padding-top: 88px;
 }
 body {
+  --font-serif-body:
+    var(--font-source-serif), "Iowan Old Style", "Palatino Linotype",
+    "Noto Serif", "Noto Serif TC", "Noto Serif SC", "Noto Serif CJK TC",
+    "Songti TC", "Songti SC", STSong, "Yu Mincho", "Hiragino Mincho ProN",
+    Batang, Georgia, "Times New Roman", serif;
+  --font-serif-display:
+    var(--font-cormorant), var(--font-serif-body);
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family:
-    var(--font-source-serif), "Iowan Old Style", "Palatino Linotype",
-    "Noto Serif", "Noto Serif CJK TC", Georgia, serif;
+  font-family: var(--font-serif-body);
   font-size: 16px;
   line-height: 1.55;
   text-rendering: optimizeLegibility;
@@ -520,9 +525,7 @@ h4,
 h5,
 h6,
 .brand {
-  font-family:
-    var(--font-cormorant), "Iowan Old Style", "Palatino Linotype",
-    "Noto Serif", "Noto Serif CJK TC", Georgia, serif;
+  font-family: var(--font-serif-display);
   font-variation-settings: "opsz" 72;
 }
 h1,
@@ -542,8 +545,12 @@ a {
 button,
 textarea,
 select,
-input {
+input,
+summary,
+code,
+pre {
   font: inherit;
+  font-family: var(--font-serif-body);
 }
 button {
   color: inherit;
@@ -991,7 +998,7 @@ h1 {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
   color: var(--accent-deep);
-  font: 500 30px/1 Georgia, serif;
+  font: 500 30px/1 var(--font-serif-display);
   cursor: pointer;
 }
 .walkthrough-close:hover,
@@ -1051,7 +1058,7 @@ h1 {
   border-radius: 50%;
   background: var(--accent-deep);
   color: #fff;
-  font: 700 13px/1 ui-sans-serif, system-ui, sans-serif;
+  font: 700 13px/1 var(--font-serif-body);
 }
 .walkthrough-steps b {
   font-size: 14px;
@@ -2128,7 +2135,7 @@ input:focus {
   border-radius: 4px;
   background: #e4e9ec;
   color: #405463;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-serif-body);
   font-size: 14px;
 }
 .model-result {
@@ -2260,7 +2267,8 @@ input:focus {
 }
 .score-band-grid span {
   margin-bottom: 4px;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-serif-body);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
   font-weight: 780;
 }
@@ -2317,9 +2325,7 @@ input:focus {
 .interview-schedule-field legend {
   padding: 0 7px;
   color: #33434f;
-  font-family:
-    var(--font-cormorant), "Iowan Old Style", "Palatino Linotype",
-    "Noto Serif", "Noto Serif CJK TC", Georgia, serif;
+  font-family: var(--font-serif-display);
   font-size: 21px;
   font-weight: 700;
 }
@@ -2450,7 +2456,8 @@ input:focus {
   border-radius: 50%;
   background: var(--accent-deep);
   color: white;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-serif-body);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
 }
 .proof-pack-result-label h4 {
@@ -2505,7 +2512,8 @@ input:focus {
 }
 .proof-pack-followups li > span {
   color: #8799a5;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-serif-body);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
 }
 .proof-pack-followups li p {
@@ -2615,7 +2623,8 @@ input:focus {
 }
 .keyword-score {
   color: var(--accent-deep);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-serif-body);
+  font-variant-numeric: tabular-nums;
   font-size: 15px;
   font-weight: 760;
 }
@@ -4164,7 +4173,7 @@ input:focus {
 .seo-hub-grid a > span,
 .seo-hub-grid a > small {
   color: #7d8c98;
-  font-family: var(--font-geist-mono);
+  font-family: var(--font-serif-body);
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -4197,7 +4206,7 @@ input:focus {
 .principle-grid article > span,
 .plan-grid article > span {
   color: #7d8c98;
-  font-family: var(--font-geist-mono);
+  font-family: var(--font-serif-body);
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -4270,7 +4279,8 @@ input:focus {
 }
 .home-faq-index {
   color: #7d909e;
-  font-family: var(--font-geist-mono);
+  font-family: var(--font-serif-body);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
   font-weight: 740;
   letter-spacing: 0.08em;
