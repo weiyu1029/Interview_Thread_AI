@@ -208,6 +208,9 @@ test("renders a localized registration page for free open-source access", async 
 });
 
 test("provides complete account safety copy in every supported language", () => {
+  assert.equal(accountCopyFor("en").signIn, "Continue securely");
+  assert.equal(accountCopyFor("zh-TW").signIn, "安全地繼續");
+
   for (const [locale] of LANGUAGES) {
     const labels = accountCopyFor(locale);
     assert.ok(labels.account, locale);
@@ -216,6 +219,7 @@ test("provides complete account safety copy in every supported language", () => 
     assert.ok(labels.selected, locale);
     assert.ok(labels.noCharge, locale);
     assert.ok(labels.privacy, locale);
+    assert.doesNotMatch(labels.signIn, /ChatGPT/i, locale);
     assert.ok(openSourceLabelFor(locale), locale);
   }
 });
