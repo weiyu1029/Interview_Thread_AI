@@ -21,6 +21,7 @@ export type OAuthProviderConfig = {
   tokenEndpoint: string;
   userInfoEndpoint: string;
   scope: string;
+  usesPkce: boolean;
 };
 
 export function authEnvironment(): AuthEnvironment {
@@ -77,6 +78,7 @@ const providerMetadata = {
     tokenEndpoint: "https://oauth2.googleapis.com/token",
     userInfoEndpoint: "https://openidconnect.googleapis.com/v1/userinfo",
     scope: "openid email profile",
+    usesPkce: true,
   },
   github: {
     id: "github",
@@ -85,6 +87,7 @@ const providerMetadata = {
     tokenEndpoint: "https://github.com/login/oauth/access_token",
     userInfoEndpoint: "https://api.github.com/user",
     scope: "read:user user:email",
+    usesPkce: true,
   },
   linkedin: {
     id: "linkedin",
@@ -93,6 +96,10 @@ const providerMetadata = {
     tokenEndpoint: "https://www.linkedin.com/oauth/v2/accessToken",
     userInfoEndpoint: "https://api.linkedin.com/v2/userinfo",
     scope: "openid profile email",
+    // LinkedIn's confidential web-app flow authenticates the token exchange
+    // with the client secret. PKCE is a separately enabled native-app flow
+    // with a different authorization endpoint, so do not mix the two.
+    usesPkce: false,
   },
 } satisfies Record<OAuthProvider, Omit<OAuthProviderConfig, "clientId" | "clientSecret">>;
 

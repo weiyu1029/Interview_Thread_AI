@@ -245,6 +245,42 @@ test("keeps every social sign-in click inside a real route instead of returning 
     assert.match(location, new RegExp(`provider=${provider}`), provider);
   }
 
+  const previousLinkedInEnvironment = Object.fromEntries(
+    ["AUTH_SECRET", "LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET", "APP_BASE_URL"].map(
+      (name) => [name, process.env[name]],
+    ),
+  );
+  try {
+    process.env.AUTH_SECRET = "test-only-auth-secret-with-at-least-32-characters";
+    process.env.LINKEDIN_CLIENT_ID = "test-linkedin-client";
+    process.env.LINKEDIN_CLIENT_SECRET = "test-linkedin-secret";
+    process.env.APP_BASE_URL = "https://interviewthread.example";
+    const configuredLinkedInResponse = await render(
+      `/api/auth/start/linkedin?locale=zh-tw&return_to=${encodeURIComponent("/zh-tw#workspace")}`,
+    );
+    assert.equal(configuredLinkedInResponse.status, 302);
+    const linkedInLocation = new URL(
+      configuredLinkedInResponse.headers.get("location"),
+    );
+    assert.equal(linkedInLocation.origin, "https://www.linkedin.com");
+    assert.equal(linkedInLocation.searchParams.get("scope"), "openid profile email");
+    assert.equal(linkedInLocation.searchParams.has("code_challenge"), false);
+    assert.equal(linkedInLocation.searchParams.has("code_challenge_method"), false);
+    assert.equal(
+      linkedInLocation.searchParams.get("redirect_uri"),
+      "https://interviewthread.example/auth/linkedin/callback",
+    );
+    const linkedInStateCookie =
+      configuredLinkedInResponse.headers.get("set-cookie") || "";
+    assert.match(linkedInStateCookie, /interviewthread_oauth_linkedin=/);
+    assert.match(linkedInStateCookie, /Path=\/auth\/linkedin\/callback/);
+  } finally {
+    for (const [name, value] of Object.entries(previousLinkedInEnvironment)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+
   const invalidCallback = await render("/api/auth/callback/google?state=invalid");
   assert.equal(invalidCallback.status, 302);
   assert.match(invalidCallback.headers.get("location") || "", /auth_error=invalid_state/);

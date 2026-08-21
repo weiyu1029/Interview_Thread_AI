@@ -41,15 +41,18 @@ export async function GET(request: Request, context: RouteContext) {
 
   const oauthState = await createOAuthState(providerName, returnTo, locale, secret);
   const authorizationUrl = new URL(config.authorizationEndpoint);
-  authorizationUrl.search = new URLSearchParams({
+  const authorizationParameters = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: callbackUrl(request, providerName),
     response_type: "code",
     scope: config.scope,
     state: oauthState.payload.state,
-    code_challenge: oauthState.challenge,
-    code_challenge_method: "S256",
-  }).toString();
+  });
+  if (config.usesPkce) {
+    authorizationParameters.set("code_challenge", oauthState.challenge);
+    authorizationParameters.set("code_challenge_method", "S256");
+  }
+  authorizationUrl.search = authorizationParameters.toString();
   if (providerName === "google") {
     authorizationUrl.searchParams.set("prompt", "select_account");
   }

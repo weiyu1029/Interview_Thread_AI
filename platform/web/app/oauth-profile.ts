@@ -22,20 +22,23 @@ export async function exchangeAuthorizationCode(input: {
   verifier: string;
   redirectUri: string;
 }): Promise<OAuthProfile> {
+  const tokenParameters = new URLSearchParams({
+    client_id: input.config.clientId,
+    client_secret: input.config.clientSecret,
+    code: input.code,
+    grant_type: "authorization_code",
+    redirect_uri: input.redirectUri,
+  });
+  if (input.config.usesPkce) {
+    tokenParameters.set("code_verifier", input.verifier);
+  }
   const tokenResponse = await fetch(input.config.tokenEndpoint, {
     method: "POST",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      client_id: input.config.clientId,
-      client_secret: input.config.clientSecret,
-      code: input.code,
-      code_verifier: input.verifier,
-      grant_type: "authorization_code",
-      redirect_uri: input.redirectUri,
-    }),
+    body: tokenParameters,
   });
   if (!tokenResponse.ok) throw new Error("OAuth token exchange failed.");
   const token = (await tokenResponse.json()) as TokenResponse;

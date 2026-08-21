@@ -1,10 +1,12 @@
 # Social authentication
 
 InterviewThread supports account sign-in with Google, GitHub, and LinkedIn. The
-application uses OAuth 2.0 Authorization Code flow with PKCE, a signed and
-short-lived state cookie, and an opaque HttpOnly session cookie. Access and
-refresh tokens are discarded after the app reads the provider's identity
-response; they are not stored in D1.
+application uses OAuth 2.0 Authorization Code flow, a signed and short-lived
+state cookie, and an opaque HttpOnly session cookie. Google and GitHub use
+PKCE. LinkedIn uses its confidential web-application flow with the client
+secret; LinkedIn's separately enabled native-app PKCE flow must not be mixed
+into that token exchange. Access and refresh tokens are discarded after the
+app reads the provider's identity response; they are not stored in D1.
 
 ## Data boundary
 
@@ -47,7 +49,7 @@ Register the exact production callback URLs:
 ```text
 https://interviewthreadai.com/api/auth/callback/google
 https://interviewthreadai.com/api/auth/callback/github
-https://interviewthreadai.com/api/auth/callback/linkedin
+https://interviewthreadai.com/auth/linkedin/callback
 ```
 
 ### LinkedIn dashboard: callback URL versus scopes
@@ -59,7 +61,7 @@ values are OAuth scopes, not redirect URLs.
 1. Under **OAuth 2.0 settings**, add this exact redirect URL:
 
    ```text
-   https://interviewthreadai.com/api/auth/callback/linkedin
+   https://interviewthreadai.com/auth/linkedin/callback
    ```
 
 2. Select **Update** and confirm that the URL appears in the saved list.
@@ -85,7 +87,7 @@ For local development on port 3001, use the matching callbacks:
 ```text
 http://localhost:3001/api/auth/callback/google
 http://localhost:3001/api/auth/callback/github
-http://localhost:3001/api/auth/callback/linkedin
+http://localhost:3001/auth/linkedin/callback
 ```
 
 If a different local port is used, both `APP_BASE_URL` and the registered
@@ -103,7 +105,8 @@ opening a nonexistent route.
 ## Session and storage design
 
 - OAuth state expires after ten minutes and is HMAC-signed.
-- PKCE uses `S256`.
+- Google and GitHub PKCE use `S256`; LinkedIn uses its confidential web-app
+  flow with `client_secret` and no PKCE parameters.
 - Session cookies are `HttpOnly`, `SameSite=Lax`, host-only, and `Secure` on
   HTTPS.
 - Only a SHA-256 hash of the 30-day session token is stored in D1.
