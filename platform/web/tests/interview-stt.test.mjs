@@ -3,12 +3,12 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { LANGUAGES } from "../app/i18n.ts";
-import { speechLocaleFor } from "../app/interview-speech.ts";
 import {
   STT_API_VERSION,
   STT_MAX_AUDIO_BYTES,
   STT_MAX_VOCABULARY_TERM_CHARACTERS,
   STT_MAX_VOCABULARY_TERMS,
+  azureSttLocaleFor,
   buildAzureTranscriptionRequest,
   isSttLocale,
   isSupportedInterviewAudioType,
@@ -133,7 +133,7 @@ test("builds a private Azure fast-transcription request for all 40 locales", () 
     assert.match(audio.name, /\.webm$/);
 
     const definition = JSON.parse(String(form.get("definition")));
-    assert.deepEqual(definition.locales, [speechLocaleFor(locale)]);
+    assert.deepEqual(definition.locales, [azureSttLocaleFor(locale)]);
     assert.equal(definition.profanityFilterMode, "None");
     assert.deepEqual(definition.phraseList.phrases, [
       "SQL",
@@ -141,6 +141,9 @@ test("builds a private Azure fast-transcription request for all 40 locales", () 
       "TypeScript",
     ]);
   }
+
+  assert.equal(azureSttLocaleFor("bn"), "bn-IN");
+  assert.equal(azureSttLocaleFor("ur"), "ur-IN");
 
   for (const invalid of ["", "en-US", "zh", "xx", null, 42, {}]) {
     assert.equal(isSttLocale(invalid), false, String(invalid));
@@ -188,6 +191,18 @@ test("accepts only bounded interview audio and locks provider hosts", () => {
       endpoint,
     );
   }
+
+  const regionalEndpoint = buildAzureTranscriptionRequest({
+    audio: testAudio(),
+    locale: "en",
+    vocabulary: [],
+    apiKey: "unit-test-speech-key",
+    endpoint: "https://westus.api.cognitive.microsoft.com/",
+  });
+  assert.equal(
+    new URL(regionalEndpoint.url).hostname,
+    "westus.api.cognitive.microsoft.com",
+  );
 
   for (const audio of [
     testAudio("audio/webm", 0),

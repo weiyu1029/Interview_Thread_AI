@@ -1,4 +1,5 @@
 const RESEND_EMAIL_ENDPOINT = "https://api.resend.com/emails";
+const EMAIL_DELIVERY_TIMEOUT_MS = 10_000;
 
 export type InboxKind = "feedback" | "partnerships";
 
@@ -106,26 +107,33 @@ export async function deliverInboxMessage(
   if (!apiKey || !from) return { delivered: false, reason: "not_configured" };
 
   const content = contentFor(input);
-  const response = await fetch(RESEND_EMAIL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json",
-      "idempotency-key": idempotencyKey.slice(0, 256),
-    },
-    body: JSON.stringify({
-      from,
-      to: [recipientFor(input.kind)],
-      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
-      subject: `[InterviewThread] ${labelFor(input.kind)}: ${input.topic}`,
-      text: content.text,
-      html: content.html,
-      tags: [
-        { name: "source", value: "website" },
-        { name: "kind", value: input.kind },
-      ],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(RESEND_EMAIL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        "content-type": "application/json",
+        "idempotency-key": idempotencyKey.slice(0, 256),
+      },
+      body: JSON.stringify({
+        from,
+        to: [recipientFor(input.kind)],
+        ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+        subject: `[InterviewThread] ${labelFor(input.kind)}: ${input.topic}`,
+        text: content.text,
+        html: content.html,
+        tags: [
+          { name: "source", value: "website" },
+          { name: "kind", value: input.kind },
+        ],
+      }),
+      signal: AbortSignal.timeout(EMAIL_DELIVERY_TIMEOUT_MS),
+    });
+  } catch (error) {
+    console.error("Email delivery provider could not be reached", error);
+    return { delivered: false, reason: "provider_error" };
+  }
 
   if (!response.ok) {
     console.error("Email delivery provider returned an error", response.status);

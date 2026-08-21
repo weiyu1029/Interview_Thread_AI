@@ -22,6 +22,11 @@ const ALLOWED_AUDIO_TYPES = [
   "audio/x-wav",
 ];
 
+const AZURE_STT_LOCALE_OVERRIDES: Partial<Record<LocaleCode, string>> = {
+  bn: "bn-IN",
+  ur: "ur-IN",
+};
+
 export function isSttLocale(value: unknown): value is LocaleCode {
   return typeof value === "string" && STT_LOCALES.has(value as LocaleCode);
 }
@@ -29,6 +34,10 @@ export function isSttLocale(value: unknown): value is LocaleCode {
 export function isSupportedInterviewAudioType(value: string) {
   const base = value.toLowerCase().split(";")[0].trim();
   return ALLOWED_AUDIO_TYPES.includes(base);
+}
+
+export function azureSttLocaleFor(locale: LocaleCode) {
+  return AZURE_STT_LOCALE_OVERRIDES[locale] || speechLocaleFor(locale);
 }
 
 export function sanitizeSpeechVocabulary(value: unknown) {
@@ -97,9 +106,13 @@ export function normalizeSttTranscript(value: string, vocabulary: string[] = [])
 
 function validatedEndpoint(endpoint: string) {
   const url = new URL(endpoint.trim());
+  const hostname = url.hostname.toLowerCase();
+  const isAzureSpeechHost =
+    hostname.endsWith(".cognitiveservices.azure.com") ||
+    hostname.endsWith(".api.cognitive.microsoft.com");
   if (
     url.protocol !== "https:" ||
-    !url.hostname.toLowerCase().endsWith(".cognitiveservices.azure.com") ||
+    !isAzureSpeechHost ||
     url.username ||
     url.password
   )
@@ -131,7 +144,7 @@ export function buildAzureTranscriptionRequest({
 
   const terms = sanitizeSpeechVocabulary(vocabulary);
   const definition: Record<string, unknown> = {
-    locales: [speechLocaleFor(locale)],
+    locales: [azureSttLocaleFor(locale)],
     profanityFilterMode: "None",
   };
   if (terms.length) definition.phraseList = { phrases: terms };
