@@ -8,15 +8,16 @@
 
 **Ace the interview for your dream job—with evidence you can defend.**
 
-InterviewThread is open-source, evidence-grounded interview intelligence. It
-maps role requirements to candidate-provided proof, keeps genuine gaps visible,
-and turns verified evidence into story prompts and realistic follow-up
-questions—without inventing an achievement.
+InterviewThread is an open-source, evidence-grounded AI mock interview coach.
+It turns a real resume and job post into defensible stories and role-specific
+practice while keeping genuine gaps visible. Beta testers are welcome.
 
 > **Evidence rule:** no source, no claim. Partial proof stays qualified. Missing
 > proof stays visible.
 
-[Join the founding beta](https://interviewthreadai.com/en/beta) · [Try InterviewThread](https://interviewthreadai.com/en) · [Watch the 60-second walkthrough](https://interviewthreadai.com/interviewthread-60-second-walkthrough.mp4) · [Contribute](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Security](SECURITY.md)
+**[Try InterviewThread](https://interviewthreadai.com/en)** · **[Join the founding beta](https://interviewthreadai.com/en/beta)** · **[Report a reproducible beta issue](https://github.com/weiyu1029/Interview_Thread_AI/issues/new?template=beta_feedback.yml)**
+
+[Watch the 60-second walkthrough](https://interviewthreadai.com/interviewthread-60-second-walkthrough.mp4) · [Read the beta guide](docs/BETA_TESTING.md) · [Preview the first beta release](docs/releases/v0.1.0-beta.1.md) · [Contribute](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Security](SECURITY.md)
 
 > **Founding beta testers wanted.** We are inviting new graduates, career
 > changers, non-native English speakers, and candidates interviewing in the
@@ -29,7 +30,9 @@ questions—without inventing an achievement.
 1. Add a resume or truthful career evidence and one real job post.
 2. Review the evidence matches, genuine gaps, and suggested interview stories.
 3. Complete one coaching-mode or realistic-mode mock interview.
-4. [Share the first thing that felt wrong or difficult](https://interviewthreadai.com/en/contact).
+4. Share the first thing that felt wrong or difficult through the
+   [private contact form](https://interviewthreadai.com/en/contact) or the
+   [privacy-safe beta issue form](https://github.com/weiyu1029/Interview_Thread_AI/issues/new?template=beta_feedback.yml).
 
 The beta application does not ask for a resume or job description. Guest-mode
 interview history is not saved. Never paste real candidate data into a public

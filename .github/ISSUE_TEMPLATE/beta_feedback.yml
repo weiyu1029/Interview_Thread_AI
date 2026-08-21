@@ -54,6 +54,23 @@ body:
       placeholder: "Example: Safari 18, iPhone 15, Traditional Chinese"
     validations:
       required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or footer release label
+      description: Copy the version shown in the product footer, if available.
+      placeholder: "Example: v0.1.0-beta.1"
+  - type: dropdown
+    id: reproducibility
+    attributes:
+      label: Can you reproduce it?
+      options:
+        - Every time
+        - Sometimes
+        - Only once
+        - Not sure
+    validations:
+      required: true
   - type: checkboxes
     id: privacy
     attributes:

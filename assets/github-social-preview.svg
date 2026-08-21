@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">InterviewThread Founding Beta</title>
+  <desc id="description">Turn a real resume and job post into truthful stories, realistic questions, and role-specific practice.</desc>
+  <rect width="1280" height="640" fill="#F7F4EF"/>
+  <circle cx="1223" cy="45" r="235" fill="#EDF1F2"/>
+  <line x1="64" y1="594" x2="1216" y2="594" stroke="#D4DCE0" stroke-width="2"/>
+
+  <!-- The approved logo asset is referenced directly; it is not redrawn. -->
+  <image href="../platform/web/public/interviewthread-logo-lockup.png" x="54" y="28" width="400" height="152" preserveAspectRatio="xMidYMid meet"/>
+
+  <g font-family="Georgia, 'Times New Roman', serif">
+    <text x="66" y="213" fill="#486174" font-size="14" font-weight="700" letter-spacing="2">EVIDENCE-GROUNDED AI MOCK INTERVIEWS</text>
+    <text x="62" y="286" fill="#202833" font-size="58">Interview stories</text>
+    <text x="62" y="354" fill="#202833" font-size="58">you can defend.</text>
+    <text x="66" y="430" fill="#69737D" font-size="22">
+      <tspan x="66" dy="0">Turn a real resume and job post into truthful stories,</tspan>
+      <tspan x="66" dy="34">realistic questions, and role-specific practice.</tspan>
+    </text>
+
+    <rect x="754" y="44" width="462" height="524" rx="32" fill="#293946"/>
+    <text x="808" y="103" fill="#AFC5D2" font-size="12" font-weight="700" letter-spacing="2">INTERVIEWTHREAD</text>
+    <rect x="1014" y="72" width="156" height="42" rx="21" fill="#E7ECEF"/>
+    <text x="1092" y="98" fill="#293946" font-size="14" font-weight="700" text-anchor="middle">FOUNDING BETA</text>
+    <text x="806" y="164" fill="#FBFCFC" font-size="32">One clear path</text>
+    <text x="808" y="196" fill="#C6D1D7" font-size="18">from evidence to practice</text>
+
+    <g>
+      <rect x="808" y="226" width="356" height="82" rx="18" fill="#344754" stroke="#526572" stroke-width="2"/>
+      <circle cx="849" cy="267" r="19" fill="#AFC5D2"/>
+      <text x="849" y="273" fill="#293946" font-size="16" font-weight="700" text-anchor="middle">1</text>
+      <text x="890" y="277" fill="#FBFCFC" font-size="20" font-weight="700">Resume + job post</text>
+      <line x1="849" y1="308" x2="849" y2="326" stroke="#AFC5D2" stroke-width="3"/>
+
+      <rect x="808" y="326" width="356" height="82" rx="18" fill="#344754" stroke="#526572" stroke-width="2"/>
+      <circle cx="849" cy="367" r="19" fill="#AFC5D2"/>
+      <text x="849" y="373" fill="#293946" font-size="16" font-weight="700" text-anchor="middle">2</text>
+      <text x="890" y="377" fill="#FBFCFC" font-size="20" font-weight="700">Truthful stories</text>
+      <line x1="849" y1="408" x2="849" y2="426" stroke="#AFC5D2" stroke-width="3"/>
+
+      <rect x="808" y="426" width="356" height="82" rx="18" fill="#344754" stroke="#526572" stroke-width="2"/>
+      <circle cx="849" cy="467" r="19" fill="#AFC5D2"/>
+      <text x="849" y="473" fill="#293946" font-size="16" font-weight="700" text-anchor="middle">3</text>
+      <text x="890" y="477" fill="#FBFCFC" font-size="20" font-weight="700">Mock interview</text>
+    </g>
+
+    <circle cx="814" cy="537" r="6" fill="#AFC5D2"/>
+    <text x="836" y="543" fill="#D7E1E6" font-size="15" font-weight="700">Evidence linked at every step</text>
+    <text x="66" y="622" fill="#293946" font-size="17" font-weight="700">interviewthreadai.com</text>
+    <text x="1038" y="622" fill="#69737D" font-size="17">Open source</text>
+  </g>
+</svg>

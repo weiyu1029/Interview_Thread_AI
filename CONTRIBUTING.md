@@ -11,6 +11,20 @@ more people.
 - Improve accessibility, localization, interview realism, documentation, or tests.
 - Review an issue labeled `good first issue`, `help wanted`, or `beta-feedback`.
 
+## Founding-beta feedback path
+
+1. Read the [beta testing guide](docs/BETA_TESTING.md) and test one complete
+   resume-to-mock-interview journey.
+2. Use the [private contact form](https://interviewthreadai.com/en/contact) for
+   account-specific feedback or anything containing personal career data.
+3. Use the [beta feedback issue form](https://github.com/weiyu1029/Interview_Thread_AI/issues/new?template=beta_feedback.yml)
+   only when synthetic data can reproduce the problem publicly.
+4. Include the version, browser, device, locale, expected result, and observed
+   result so another contributor can verify the report.
+
+The draft scope and known limitations for the first public cohort are recorded
+in the [v0.1.0-beta.1 release notes](docs/releases/v0.1.0-beta.1.md).
+
 ## Before you start
 
 - Search existing issues and discussions before opening a new one.

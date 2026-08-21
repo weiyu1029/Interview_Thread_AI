@@ -5,6 +5,14 @@ uses beta releases while the hosted workflow is still being validated.
 
 ## Unreleased
 
+No public changes have been assigned to the next release yet.
+
+## 0.1.0-beta.1
+
+The first founding-beta release packages the evidence-to-interview workflow for
+a small, feedback-driven cohort. See the complete
+[release notes](docs/releases/v0.1.0-beta.1.md).
+
 ### Added
 
 - A founding-beta guide and privacy-safe feedback issue form.
