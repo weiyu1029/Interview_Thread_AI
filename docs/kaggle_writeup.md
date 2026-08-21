@@ -1,4 +1,4 @@
-# InterviewThread Agent
+# InterviewThread
 
 ## Track
 
@@ -6,7 +6,10 @@ Concierge Agents
 
 ## Project summary
 
-InterviewThread Agent is a personal AI career concierge that turns job descriptions into evidence-based interview strategy for business, data, BI, product, operations, strategy, consulting, and AI/data product candidates.
+InterviewThread is an open-source, evidence-grounded AI mock interview coach.
+It connects a candidate's real resume or career evidence to a real job post,
+keeps unsupported claims visible as gaps, and turns supported evidence into
+defensible interview stories and role-specific practice.
 
 ## Problem
 
@@ -14,42 +17,64 @@ AI tools can generate polished answers, but candidates still struggle to underst
 
 ## Solution
 
-InterviewThread analyzes a job description and candidate profile, then produces:
+InterviewThread analyzes candidate-provided evidence and a job description,
+then produces:
 
-- Role Problem Map
-- Industry Context
-- Hiring Evidence Matrix
-- Candidate Proof Mapping
-- Interview Story Bank
-- Likely Interview Questions
-- Gap Analysis
-- 7-Day Prep Plan
-- Questions to Ask Interviewer
+- an Evidence Map that distinguishes strong proof, partial proof, and genuine gaps;
+- evidence-linked interview stories;
+- likely role-specific questions and follow-up probes;
+- coaching and realistic mock-interview modes;
+- a focused preparation plan the candidate can inspect and correct.
 
 ## Core insight
 
-Generic AI gives answers. InterviewThread builds evidence.
+Generic AI writes first. InterviewThread verifies first: no source, no claim.
 
 ## Technical implementation
 
-The prototype uses Google ADK and Gemini. Deterministic Python tools handle privacy redaction, job signal extraction, industry matching, and evidence hints. Gemini handles nuanced reasoning around business context, hiring evidence, and interview strategy.
+The production web experience uses a deterministic evidence engine by default.
+Resume and job-post parsing happens in the browser, while optional model and
+speech integrations are isolated behind explicit controls and privacy
+boundaries. The repository also retains a Google ADK-compatible experiment and
+an optional self-hosted FastAPI foundation.
 
 ## Industry coverage
 
-InterviewThread includes a 25-industry interview knowledge base, covering SaaS, FinTech, healthcare, retail, logistics, consulting, cybersecurity, HR Tech, EdTech, and more.
+InterviewThread includes a multi-industry evidence taxonomy, 40 locale choices,
+an open interview question bank, and curated external practice resources. The
+product distinguishes original or licensed material from link-only third-party
+resources.
 
 ## Market research
 
-Early survey responses suggest strong interest in experience-to-story translation, role-specific preparation, business model explanations, industry metrics, and structured interview frameworks.
+Founding-beta research focuses on experience-to-story translation,
+role-specific practice, mobile and multilingual usability, speech quality, and
+the accuracy of evidence and gap classification.
 
 ## Evaluation
 
-The included evaluation dataset tests five scenarios: healthcare business analyst, fintech risk analyst, marketplace analyst, missing-evidence ML engineering role, and privacy redaction case.
+Automated tests cover evidence matching, privacy redaction, document parsing,
+authentication boundaries, localization, question-bank coverage, job-source
+normalization, speech fallbacks, and accessible responsive rendering. Human
+beta review remains necessary for interview realism and language quality.
 
 ## Limitations
 
-This is a prototype. It does not yet connect to live job boards, LinkedIn, ATS systems, or a full web UI. Future versions can add a saved career graph, mock interview mode, coach marketplace, and university dashboard.
+InterviewThread is beta software. External job sources are limited to approved
+employer ATS feeds, speech quality varies by locale and device, and important
+outputs still require candidate review. The product does not scrape restricted
+job platforms, auto-submit applications, predict a proprietary ATS score, or
+guarantee interview outcomes.
 
 ## Future vision
 
-InterviewThread can grow into a career intelligence platform with a personal career graph, hiring signal database, industry interview knowledge graph, career coach marketplace, enterprise school dashboard, and API / agent marketplace version.
+InterviewThread can grow into a maintainable, privacy-conscious interview
+practice platform with stronger evidence provenance, native-speaker language
+review, transparent evaluation, and carefully governed integrations—without
+weakening the rule that every candidate-facing claim must come from evidence.
+
+## Try and contribute
+
+- Product: https://interviewthreadai.com
+- Founding beta: https://interviewthreadai.com/en/beta
+- Source: https://github.com/weiyu1029/Interview_Thread_AI
