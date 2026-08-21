@@ -12,7 +12,7 @@ export type HomepageCopy = {
 const HOMEPAGE_COPY: Record<LocaleCode, Omit<HomepageCopy, "trust">> = {
   en: {
     eyebrow: "AI mock interview",
-    heroTitle: "Ace the interview for the job you want.",
+    heroTitle: "Ace the interview for your dream jobs.",
     description:
       "Turn your resume and the job post into truthful interview stories, realistic questions, and a focused practice plan.",
     primaryCta: "Start my mock interview",

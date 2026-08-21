@@ -71,7 +71,7 @@ test("server-renders the InterviewThread product experience", async () => {
   assert.match(html, /InterviewThread/);
   assert.match(
     html,
-    /Ace the interview for the job(?: |&nbsp;|\u00a0)you want\./i,
+    /Ace the interview for your dream jobs\./i,
   );
   assert.match(html, /Start my mock interview/i);
   assert.doesNotMatch(html, /Free AI mock interview practice/i);
@@ -403,14 +403,14 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(globals, /\.hero-title--long/);
   assert.match(globals, /\[lang="ko"\] \.hero-title/);
-  assert.match(layout, /\/favicon\.ico/);
+  assert.match(layout, /\/icon\.png\?v=interviewthread-20260820/);
   assert.match(layout, /\/favicon-32x32\.png/);
   assert.match(layout, /\/apple-touch-icon\.png/);
   assert.match(manifest, /\/icon-192\.png/);
   assert.match(manifest, /\/icon-512\.png/);
   assert.match(
     globals,
-    /\.hero \.hero-actions\s*\{[^}]*margin-top:\s*clamp\(30px,\s*3\.2vw,\s*38px\)/s,
+    /\.hero \.hero-actions\s*\{[^}]*margin-top:\s*clamp\(46px,\s*4\.2vw,\s*56px\)/s,
   );
   assert.match(
     globals,
