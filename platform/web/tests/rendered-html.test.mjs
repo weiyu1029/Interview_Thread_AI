@@ -526,7 +526,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(page, /plan=(?:pro|team)|US\$15|US\$35/);
   assert.match(page, /disabled=\{!company\.trim\(\) \|\| !role\.trim\(\)\}/);
   assert.match(page, /disabled=\{tracker\.some\(\(item\) => item\.id === job\.id\)\}/);
-  assert.match(page, /github\.com\/weiyu1029\/careerproof-agent/);
+  assert.match(page, /github\.com\/weiyu1029\/Interview_Thread_AI/);
   assert.match(page, /Evidence before polish/i);
   assert.match(page, /Connect an employer job board/i);
   assert.match(page, /Greenhouse/i);
@@ -560,7 +560,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(seoPage, /const workspaceHref/);
   assert.match(seoPage, /seo-workflow-nav/);
   assert.match(seoPage, /href=\{workspaceHref\}/);
-  assert.match(siteFooter, /github\.com\/weiyu1029\/careerproof-agent/);
+  assert.match(siteFooter, /github\.com\/weiyu1029\/Interview_Thread_AI/);
   assert.match(auth, /oai-authenticated-user-id/);
   assert.match(auth, /oai-authenticated-user-email/);
   assert.match(auth, /safeRelativeReturnPath/);

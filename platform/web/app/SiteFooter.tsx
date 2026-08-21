@@ -5,7 +5,7 @@ import { informationLabelsFor } from "./site-information";
 import { betaLabelFor } from "./beta-copy";
 
 const REPOSITORY_URL =
-  "https://github.com/weiyu1029/careerproof-agent";
+  "https://github.com/weiyu1029/Interview_Thread_AI";
 
 export function SiteFooter({ locale }: { locale: LocaleCode }) {
   const labels = informationLabelsFor(locale);

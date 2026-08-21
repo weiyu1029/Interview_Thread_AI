@@ -48,9 +48,9 @@ export const OPEN_INTERVIEW_QUESTION_SOURCES: readonly OpenInterviewQuestionSour
   {
     id: "interviewthread",
     name: "InterviewThread Community Question Bank",
-    href: "https://github.com/weiyu1029/careerproof-agent",
+    href: "https://github.com/weiyu1029/Interview_Thread_AI",
     license: "MIT",
-    licenseHref: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
+    licenseHref: "https://github.com/weiyu1029/Interview_Thread_AI/blob/main/LICENSE",
     note: "Original, evidence-grounded questions maintained in this repository.",
   },
   {

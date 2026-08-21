@@ -167,7 +167,7 @@ export default async function RootLayout({
         height: 512,
       },
       image: previewImage,
-      sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
+      sameAs: ["https://github.com/weiyu1029/Interview_Thread_AI"],
     },
     {
       "@context": "https://schema.org",
@@ -198,7 +198,7 @@ export default async function RootLayout({
           priceCurrency: "USD",
         },
       ],
-      license: "https://github.com/weiyu1029/careerproof-agent/blob/main/LICENSE",
+      license: "https://github.com/weiyu1029/Interview_Thread_AI/blob/main/LICENSE",
     },
     {
       "@context": "https://schema.org",

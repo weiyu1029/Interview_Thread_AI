@@ -7494,7 +7494,7 @@ export default function Home({
               </a>
               <a
                 className="button secondary"
-                href="https://github.com/weiyu1029/careerproof-agent"
+                href="https://github.com/weiyu1029/Interview_Thread_AI"
                 target="_blank"
                 rel="noreferrer"
               >

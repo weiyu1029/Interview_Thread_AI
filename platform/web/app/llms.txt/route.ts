@@ -19,7 +19,7 @@ InterviewThread is a free, open-source AI mock interview product. Upload a real 
 - Resume keyword analyzer: ${siteUrl}/en/resume-keyword-analyzer
 - Job match recommendations: ${siteUrl}/en/job-match-recommendations
 - Career market insights: ${siteUrl}/en/career-market-insights
-- Source code: https://github.com/weiyu1029/careerproof-agent
+- Source code: https://github.com/weiyu1029/Interview_Thread_AI
 
 ## Language editions
 Every public page has an indexable, canonical language URL and reciprocal hreflang annotations. Supported URL prefixes are:

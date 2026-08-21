@@ -15,7 +15,7 @@ import {
   type InformationPageKey,
 } from "./site-information";
 
-const REPOSITORY_URL = "https://github.com/weiyu1029/careerproof-agent";
+const REPOSITORY_URL = "https://github.com/weiyu1029/Interview_Thread_AI";
 const ISSUE_URL = `${REPOSITORY_URL}/issues/new/choose`;
 const PRIVATE_REPORT_URL = `${REPOSITORY_URL}/security/advisories/new`;
 
