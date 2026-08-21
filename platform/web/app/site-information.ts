@@ -214,7 +214,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
     title: "Your career evidence should stay under your control.",
     description:
       "This notice describes what the hosted InterviewThread service handles, what stays on your device, why limited account data is stored, and how to request deletion.",
-    updated: "Effective August 20, 2026",
+    updated: "Effective August 21, 2026",
     callout:
       "At a glance: no advertising profiles, no sale of personal data, no automatic LinkedIn or GitHub import, and no stored OAuth access tokens.",
     sections: [
@@ -248,7 +248,8 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
       {
         title: "5. Voice, local models, job data, and ordinary logs",
         paragraphs: [
-          "Voice input and read-aloud use browser speech capabilities when available. InterviewThread does not store raw voice audio, but the browser, operating system, or speech provider may process audio under its own policy. You can edit recognized text before submitting an answer.",
+          "Voice input uses browser speech capabilities when available. InterviewThread does not store raw voice audio, but the browser, operating system, or speech-recognition provider may process audio under its own policy. You can edit recognized text before submitting an answer.",
+          "When cloud read-aloud is configured and you ask InterviewThread to read a question, only the current question text and selected language are sent to Microsoft Azure Speech to generate the audio response. This read-aloud request does not include your resume, job description, answer, transcript, or raw voice recording. InterviewThread returns the audio with private no-store instructions and does not save it; if cloud speech is unavailable, the feature falls back to the browser or device voice. Microsoft may process the request under its own privacy terms.",
           "If you connect a local or third-party model endpoint, your browser sends the content shown by that feature to the endpoint you configured. Model settings stay in local storage; review that provider’s terms before sending career data. Requests to approved job sources send the board or search parameters needed to retrieve listings. Hosting and security providers may process standard request information such as IP address, user agent, requested URL, and time.",
         ],
       },
@@ -263,7 +264,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
       {
         title: "7. Sharing and sales",
         paragraphs: [
-          "We use service providers needed to operate the site, including Cloudflare infrastructure and D1, the identity provider you choose, and a transactional email provider for contact-form delivery. Data also goes to an external endpoint only when you select a feature that requires it. We do not sell personal data, build advertising profiles, share career evidence with employers, or use the service to make employment decisions.",
+          "We use service providers needed to operate the site, including Cloudflare infrastructure and D1, the identity provider you choose, Microsoft Azure Speech when cloud read-aloud is configured and requested, and a transactional email provider for contact-form delivery. Data also goes to an external endpoint only when you select a feature that requires it. We do not sell personal data, build advertising profiles, share career evidence with employers, or use the service to make employment decisions.",
         ],
       },
       {
@@ -277,7 +278,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
         title: "9. Security, international use, and your choices",
         paragraphs: [
           "We use scoped OAuth access, PKCE, signed short-lived state, HttpOnly session cookies, hashed session tokens, transport encryption, and access checks. No online service can promise perfect security. The service may be accessed globally and information handled by providers may be processed in countries with different laws.",
-          "Depending on where you live, you may have rights to access, correct, delete, restrict, object, withdraw consent, or receive a copy of personal data, and to complain to a regulator. You can avoid account activity storage by using guest mode, avoid voice input, avoid external models, or clear browser data. Guest interview history and practice progress are not saved.",
+          "Depending on where you live, you may have rights to access, correct, delete, restrict, object, withdraw consent, or receive a copy of personal data, and to complain to a regulator. You can avoid account activity storage by using guest mode, avoid voice input and read-aloud, avoid external models, or clear browser data. Guest interview history and practice progress are not saved.",
         ],
       },
       {
@@ -355,18 +356,18 @@ const traditionalChinesePages: Record<InformationPageKey, InformationPageCopy> =
     eyebrow: "隱私權政策",
     title: "你的職涯證據應該由你控制。",
     description: "本政策說明託管版 InterviewThread 會處理什麼、哪些資料留在裝置、為何保存有限的帳號資料，以及如何要求刪除。",
-    updated: "生效日期：2026 年 8 月 20 日",
+    updated: "生效日期：2026 年 8 月 21 日",
     callout: "重點：沒有廣告画像、不販售個人資料、不自動匯入 LinkedIn 或 GitHub，也不保存 OAuth access token。",
     sections: [
       { title: "1. 適用範圍與負責對象", paragraphs: ["本政策適用於託管版 InterviewThread 網站及其帳號、回饋與活動功能。在此社群預覽政策中，「InterviewThread」與「我們」指營運此託管開源服務的維護者。自行架設或第三方 fork 應由各自營運者提供政策。"] },
       { title: "2. 留在你裝置上的資料", paragraphs: ["登入使用時，工作區可能將履歷與職涯證據文字、職缺描述、選填來源文字與網址、面試答案與逐字稿、追蹤項目、提醒、語言偏好與本機模型設定保留在瀏覽器記憶體或 local storage；只有在功能清楚告知要傳送時才會送往外部。訪客模式只在目前頁面工作階段保留面試內容，不會儲存面試紀錄、練習進度、追蹤項目或模型設定；語言偏好仍可能被記住。單一網址只代表來源，不會自動抓取或直接視為證據。"] },
       { title: "3. 我們保存的帳號資料", paragraphs: ["當你選擇 Google、GitHub 或 LinkedIn 登入，我們會保存 provider 名稱、provider account ID、顯示名稱、可取得的已驗證 email、頭像網址，以及 GitHub 提供時的公開使用者名稱與個人頁網址。用途限於建立與保護 InterviewThread 帳號，並把你自己的活動連結到帳號。", "取得身分資料後，provider access token 與 refresh token 會被捨棄且不存入資料庫。系統不會只憑相同 email 默默合併不同 provider，也不會自動匯入個人頁、程式庫、聯絡人、履歷或貼文。"] },
       { title: "4. 回饋、活動與封測申請資料", paragraphs: ["若你主動送出意見回饋，我們會保存分類、評分、訊息、語言、狀態、時間、帳號擁有者、產品版本、功能頁面，以及適用時的封測梯次。登入後也可能保存有限事件，例如完成分析、開始或回答面試、更新追蹤器、送出回饋、申請或退出封測。事件只表示操作曾發生，不包含履歷、職缺描述、答案逐字稿或原始語音。", "當你使用聯絡或合作洽詢表單時，你提供的姓名、回覆信箱、主題、訊息、語言與來源頁面，會透過交易郵件服務商寄送至對應的 InterviewThread 官方信箱。請勿在表單中提供密碼、權杖、完整履歷、面試逐字稿或其他敏感資料。", "若你申請封閉測試，我們會保存結構化的職類、資歷、面試時程、主要需求、語言、梯次狀態、分開選擇的研究／更新同意，以及你接受的條款、隱私與產品版本。封測申請不要求履歷或自由書寫的職涯歷史；你可以退出封測而不刪除帳號。"] },
-      { title: "5. 語音、本機模型、職缺資料與一般紀錄", paragraphs: ["語音輸入與朗讀會在可用時使用瀏覽器語音能力。InterviewThread 不保存原始語音，但瀏覽器、作業系統或語音服務商可能依其政策處理音訊；你可以在送出答案前修改辨識文字。", "若你連結本機或第三方模型端點，瀏覽器會把該功能畫面所示內容傳到你設定的端點。模型設定留在 local storage；傳送職涯資料前請查閱該供應商政策。對核准職缺來源的請求會傳送取得職缺所需的看板或搜尋參數。託管與安全供應商可能處理 IP、瀏覽器資訊、請求網址與時間等標準請求資料。"] },
+      { title: "5. 語音、本機模型、職缺資料與一般紀錄", paragraphs: ["語音輸入會在可用時使用瀏覽器語音能力。InterviewThread 不保存原始語音，但瀏覽器、作業系統或語音辨識服務商可能依其政策處理音訊；你可以在送出答案前修改辨識文字。", "當雲端朗讀已設定，而你要求 InterviewThread 朗讀問題時，只有目前的問題文字與所選語言會傳送至 Microsoft Azure Speech 以產生音訊回應。朗讀請求不包含履歷、職缺描述、答案、逐字稿或原始語音。InterviewThread 會以私密且不得快取的指示回傳音訊，且不會保存音訊；若雲端語音無法使用，系統會改用瀏覽器或裝置語音。Microsoft 可能依其自身隱私條款處理該請求。", "若你連結本機或第三方模型端點，瀏覽器會把該功能畫面所示內容傳到你設定的端點。模型設定留在 local storage；傳送職涯資料前請查閱該供應商政策。對核准職缺來源的請求會傳送取得職缺所需的看板或搜尋參數。託管與安全供應商可能處理 IP、瀏覽器資訊、請求網址與時間等標準請求資料。"] },
       { title: "6. 處理目的", bullets: ["提供並保護登入、工作階段、你要求的產品功能與帳號活動紀錄。", "取得職缺、支援語音與使用者自行設定的模型連線，並記住裝置偏好。", "接收回饋、確認核心流程是否可用、防止濫用、調查事件並遵守法律義務。"] },
-      { title: "7. 分享與販售", paragraphs: ["我們使用營運網站所需的服務商，包括 Cloudflare 基礎設施與 D1、你選擇的身分提供者，以及負責寄送聯絡表單的交易郵件服務商。只有當你主動選擇需要外部端點的功能時，資料才會送往該端點。我們不販售個人資料、不建立廣告画像、不把職涯證據分享給雇主，也不使用本服務做出聘僱決策。"] },
+      { title: "7. 分享與販售", paragraphs: ["我們使用營運網站所需的服務商，包括 Cloudflare 基礎設施與 D1、你選擇的身分提供者、在雲端朗讀已設定且由你要求朗讀時使用的 Microsoft Azure Speech，以及負責寄送聯絡表單的交易郵件服務商。只有當你主動選擇需要外部端點的功能時，資料才會送往該端點。我們不販售個人資料、不建立廣告画像、不把職涯證據分享給雇主，也不使用本服務做出聘僱決策。"] },
       { title: "8. 保存與刪除", paragraphs: ["訪客工作區內容不會寫入 InterviewThread 帳號或本機面試紀錄，頁面工作階段結束後即會遺失。登入後的本機工作區資料則保留到你清除網站資料或瀏覽器移除為止。OAuth state 十分鐘後失效；登入工作階段 30 天後失效，資料庫只保存 session token 的雜湊。帳號身分、回饋與有限活動紀錄只在提供社群服務、處理請求、維護安全或遵守法律所需期間保存。", "如要存取、更正、匯出或刪除託管帳號資料，請透過私人聯絡管道提供登入 provider 與大約登入日期；不要提供密碼或 token。我們會先驗證請求。你也可以在 provider 的已連結應用程式設定中另行撤銷 InterviewThread。"] },
-      { title: "9. 安全、跨國使用與你的選擇", paragraphs: ["我們採用最小範圍 OAuth、PKCE、短效簽章 state、HttpOnly session cookie、雜湊 session token、傳輸加密與存取檢查，但任何線上服務都無法保證絕對安全。服務可在全球存取，供應商可能在法律不同的國家處理資訊。", "依所在地不同，你可能有權要求存取、更正、刪除、限制、反對、撤回同意或取得個人資料副本，並向主管機關申訴。你可使用訪客模式避免建立帳號活動紀錄，也可不使用語音、不連結外部模型或清除瀏覽器資料；訪客的面試紀錄與練習進度不會儲存。"] },
+      { title: "9. 安全、跨國使用與你的選擇", paragraphs: ["我們採用最小範圍 OAuth、PKCE、短效簽章 state、HttpOnly session cookie、雜湊 session token、傳輸加密與存取檢查，但任何線上服務都無法保證絕對安全。服務可在全球存取，供應商可能在法律不同的國家處理資訊。", "依所在地不同，你可能有權要求存取、更正、刪除、限制、反對、撤回同意或取得個人資料副本，並向主管機關申訴。你可使用訪客模式避免建立帳號活動紀錄，也可不使用語音輸入與朗讀、不連結外部模型或清除瀏覽器資料；訪客的面試紀錄與練習進度不會儲存。"] },
       { title: "10. 兒童、變更與聯絡", paragraphs: ["InterviewThread 為求職者設計，不以 16 歲以下兒童為對象，也不會在知情情況下收集其帳號資料。重大政策變更會更新本頁日期；若法律要求，在以新方式使用資料前會再次取得同意。產品問題請使用聯絡頁，隱私或安全請求請使用私人管道。"] },
     ],
   },

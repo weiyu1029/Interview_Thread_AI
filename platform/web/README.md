@@ -60,6 +60,21 @@ service in `../api` after authorization, privacy, retention, and commercial
 requirements are approved. Set `NEXT_PUBLIC_CAREERPROOF_API_URL` when integrating
 those authenticated routes.
 
+## Neural question read-aloud
+
+Interview questions use server-side Microsoft Azure Speech when both
+`AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` are configured. Keep the key in
+the server environment; it must never use a `NEXT_PUBLIC_` name or be included
+in client code. The speech route accepts only the current question text and one
+of the 40 supported locale codes, returns private no-store audio, and does not
+persist the generated audio. If either setting is absent or Azure Speech is
+unavailable, the client falls back to the browser or device voice.
+
+Read-aloud does not send the resume, job description, interview answer,
+transcript, or raw voice recording to Azure Speech. Voice recognition remains a
+separate browser capability. Keep the public privacy policy and FAQ aligned if
+this data flow changes.
+
 Resume text, job descriptions, tracker items, and Story Signal alert settings
 remain on the device until an authenticated persistence feature explicitly
 says otherwise. Submitted product feedback is stored in the Sites D1 database

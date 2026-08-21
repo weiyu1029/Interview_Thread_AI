@@ -12,6 +12,11 @@ GITHUB_CLIENT_SECRET=
 LINKEDIN_CLIENT_ID=
 LINKEDIN_CLIENT_SECRET=
 
+# Optional server-side neural read-aloud. Keep the subscription key private.
+# Without both values, interview questions fall back to the browser/device voice.
+AZURE_SPEECH_KEY=
+AZURE_SPEECH_REGION=
+
 # Transactional website email. Keep the API key secret and verify the sender
 # domain with the provider before using the production address.
 RESEND_API_KEY=

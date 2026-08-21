@@ -75,6 +75,7 @@ import {
   speechLocaleFor,
   speechRateFor,
 } from "./interview-speech";
+import { normalizeTtsText } from "./interview-tts";
 import {
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
@@ -2812,6 +2813,10 @@ export default function Home({
   const walkthroughVideoRef = useRef<HTMLVideoElement>(null);
   const walkthroughCueRef = useRef(-1);
   const walkthroughSpeechTokenRef = useRef(0);
+  const interviewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const interviewSpeechAbortRef = useRef<AbortController | null>(null);
+  const interviewSpeechUrlRef = useRef("");
+  const interviewSpeechRequestIdRef = useRef(0);
   const speechRecognitionRef = useRef<{
     start: () => void;
     stop: () => void;
@@ -3038,6 +3043,15 @@ export default function Home({
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
+    interviewSpeechRequestIdRef.current += 1;
+    interviewSpeechAbortRef.current?.abort();
+    interviewSpeechAbortRef.current = null;
+    interviewAudioRef.current?.pause();
+    interviewAudioRef.current = null;
+    if (interviewSpeechUrlRef.current) {
+      URL.revokeObjectURL(interviewSpeechUrlRef.current);
+      interviewSpeechUrlRef.current = "";
+    }
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     if (interviewLocaleRef.current !== locale) {
       setInterviewMessages([]);
@@ -3127,6 +3141,11 @@ export default function Home({
     () => () => {
       keepListeningRef.current = false;
       speechRecognitionRef.current?.stop();
+      interviewSpeechRequestIdRef.current += 1;
+      interviewSpeechAbortRef.current?.abort();
+      interviewAudioRef.current?.pause();
+      if (interviewSpeechUrlRef.current)
+        URL.revokeObjectURL(interviewSpeechUrlRef.current);
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     },
     [],
@@ -3901,7 +3920,7 @@ export default function Home({
   function startInterview() {
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    stopInterviewSpeech();
     const candidates = questionsForInterviewRole(
       interviewPersona,
       interviewQuestionTrack,
@@ -3935,13 +3954,14 @@ export default function Home({
     setIsListening(false);
     setIsSpeaking(false);
     recordActivity("interview_started");
+    if (autoReadInterviewQuestions) scheduleInterviewSpeech(opening);
   }
 
   function changeInterviewMode(mode: InterviewMode) {
     if (mode === interviewMode) return;
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    stopInterviewSpeech();
     setInterviewMode(mode);
     setInterviewMessages([]);
     setInterviewAnswer("");
@@ -3960,7 +3980,7 @@ export default function Home({
   function finishRealisticInterview() {
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    stopInterviewSpeech();
     setIsListening(false);
     setIsSpeaking(false);
     setRealisticReviewOpen(true);
@@ -4002,8 +4022,7 @@ export default function Home({
     setVoiceInterim("");
     setRecognitionConfidence(null);
     setIsListening(false);
-    if (autoReadInterviewQuestions)
-      window.setTimeout(() => void speakInterviewQuestion(nextQuestion), 0);
+    if (autoReadInterviewQuestions) scheduleInterviewSpeech(nextQuestion);
   }
 
   async function modelInterviewFollowUp(
@@ -4099,17 +4118,50 @@ export default function Home({
       },
     ]);
     if (autoReadInterviewQuestions)
-      window.setTimeout(() => void speakInterviewQuestion(visibleNextQuestion), 0);
+      scheduleInterviewSpeech(visibleNextQuestion);
   }
 
-  async function speakInterviewQuestion(content: string) {
+  function releaseInterviewAudio() {
+    const audio = interviewAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+      interviewAudioRef.current = null;
+    }
+    if (interviewSpeechUrlRef.current) {
+      URL.revokeObjectURL(interviewSpeechUrlRef.current);
+      interviewSpeechUrlRef.current = "";
+    }
+  }
+
+  function stopInterviewSpeech(setIdle = true) {
+    interviewSpeechRequestIdRef.current += 1;
+    interviewSpeechAbortRef.current?.abort();
+    interviewSpeechAbortRef.current = null;
+    releaseInterviewAudio();
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (setIdle) setIsSpeaking(false);
+  }
+
+  function scheduleInterviewSpeech(content: string) {
+    const expectedRequestId = interviewSpeechRequestIdRef.current;
+    window.setTimeout(() => {
+      if (expectedRequestId !== interviewSpeechRequestIdRef.current) return;
+      void speakInterviewQuestion(content);
+    }, 0);
+  }
+
+  async function speakWithDeviceVoice(text: string, requestId: number) {
     if (!("speechSynthesis" in window)) {
-      setVoiceMessage(interview.unavailable);
+      if (requestId === interviewSpeechRequestIdRef.current) {
+        setIsSpeaking(false);
+        setVoiceMessage(interview.unavailable);
+      }
       return;
     }
     const speechLocale = speechLocaleFor(locale);
     const utterance = new SpeechSynthesisUtterance(
-      pronunciationTextFor(content, locale),
+      pronunciationTextFor(text, locale),
     );
     utterance.lang = speechLocale;
     utterance.rate = speechRateFor(
@@ -4119,18 +4171,93 @@ export default function Home({
     utterance.pitch = 1;
     utterance.volume = 1;
     const voice = bestSpeechVoice(await availableSpeechVoices(), locale);
+    if (requestId !== interviewSpeechRequestIdRef.current) return;
     if (voice) utterance.voice = voice;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => {
+    utterance.onend = () => {
+      if (requestId === interviewSpeechRequestIdRef.current)
+        setIsSpeaking(false);
+    };
+    utterance.onerror = (event) => {
+      if (requestId !== interviewSpeechRequestIdRef.current) return;
       setIsSpeaking(false);
-      setVoiceMessage(interview.unavailable);
+      if (!["canceled", "interrupted"].includes(event.error))
+        setVoiceMessage(interview.unavailable);
     };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
     setVoiceMessage(
-      `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocale}${voice ? ` · ${voice.name}` : " · system voice"}`,
+      `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocale}${voice ? ` · ${voice.name}` : ""}`,
     );
+  }
+
+  async function speakInterviewQuestion(content: string) {
+    stopInterviewSpeech();
+    const requestId = interviewSpeechRequestIdRef.current;
+    const questionText = normalizeTtsText(questionOnly(content));
+    if (!questionText) {
+      setVoiceMessage(interview.unavailable);
+      return;
+    }
+    const controller = new AbortController();
+    interviewSpeechAbortRef.current = controller;
+    setIsSpeaking(true);
+    setVoiceMessage(
+      `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)}…`,
+    );
+    let fallbackStarted = false;
+    const fallbackToDeviceVoice = async () => {
+      if (
+        fallbackStarted ||
+        controller.signal.aborted ||
+        requestId !== interviewSpeechRequestIdRef.current
+      )
+        return;
+      fallbackStarted = true;
+      releaseInterviewAudio();
+      await speakWithDeviceVoice(questionText, requestId);
+    };
+
+    try {
+      const response = await fetch("/api/speech", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: questionText, locale }),
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("premium speech unavailable");
+      const blob = await response.blob();
+      if (
+        !blob.size ||
+        controller.signal.aborted ||
+        requestId !== interviewSpeechRequestIdRef.current
+      )
+        return;
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      interviewAudioRef.current = audio;
+      interviewSpeechUrlRef.current = audioUrl;
+      audio.onended = () => {
+        if (requestId !== interviewSpeechRequestIdRef.current) return;
+        releaseInterviewAudio();
+        setIsSpeaking(false);
+      };
+      audio.onerror = () => void fallbackToDeviceVoice();
+      await audio.play();
+      if (requestId !== interviewSpeechRequestIdRef.current) {
+        releaseInterviewAudio();
+        return;
+      }
+      setVoiceMessage(
+        `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · Azure Neural`,
+      );
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      await fallbackToDeviceVoice();
+    } finally {
+      if (interviewSpeechAbortRef.current === controller)
+        interviewSpeechAbortRef.current = null;
+    }
   }
 
   async function speakLatestInterviewQuestion() {
@@ -4139,8 +4266,7 @@ export default function Home({
       return;
     }
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      stopInterviewSpeech();
       return;
     }
     const latest = [...interviewMessages]

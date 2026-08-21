@@ -803,18 +803,19 @@ test("provides a complete, product-specific FAQ in every supported language", ()
     assert.ok(faq.eyebrow, locale);
     assert.ok(faq.title, locale);
     assert.ok(faq.intro, locale);
-    assert.equal(faq.items.length, 7, locale);
+    assert.equal(faq.items.length, 8, locale);
     const optionalSource = optionalCareerSourceCopyFor(locale);
     assert.ok(optionalSource.label, locale);
     assert.match(optionalSource.note, /LinkedIn/i, locale);
     assert.match(optionalSource.note, /GitHub/i, locale);
     assert.match(faq.items[1].answer, /LinkedIn/i, locale);
     assert.equal(faq.items[3].answer, accountIntroCopyFor(locale).description, locale);
+    assert.match(faq.items[7].answer, /Microsoft Azure Speech/i, locale);
     for (const item of faq.items) {
       assert.ok(item.question, locale);
       assert.ok(item.answer, locale);
-      assert.doesNotMatch(item.question, /JobOps/i, locale);
-      assert.doesNotMatch(item.answer, /JobOps/i, locale);
+      assert.doesNotMatch(item.question, /\bJobOps\b/iu, locale);
+      assert.doesNotMatch(item.answer, /\bJobOps\b/iu, locale);
     }
   }
 });
