@@ -2,6 +2,8 @@
 # AUTH_SECRET must be a cryptographically random value of at least 32 characters.
 AUTH_SECRET=replace-with-at-least-32-random-characters
 APP_BASE_URL=http://localhost:3001
+# Immutable release label used only in privacy-safe health and operations logs.
+APP_RELEASE=local
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -27,3 +29,7 @@ RESEND_API_KEY=
 EMAIL_FROM=InterviewThread Website <notifications@send.interviewthreadai.com>
 EMAIL_FEEDBACK_TO=feedback@interviewthreadai.com
 EMAIL_PARTNERSHIPS_TO=partnerships@interviewthreadai.com
+
+# Comma-separated operator accounts allowed to view aggregate-only metrics.
+# Use exact email addresses; wildcards are intentionally unsupported.
+ADMIN_EMAILS=contact@interviewthreadai.com,wy.alice.chen@gmail.com

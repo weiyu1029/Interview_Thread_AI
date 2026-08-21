@@ -1,3 +1,8 @@
+import {
+  elapsedMilliseconds,
+  logObservability,
+} from "./observability.ts";
+
 const RESEND_EMAIL_ENDPOINT = "https://api.resend.com/emails";
 const EMAIL_DELIVERY_TIMEOUT_MS = 10_000;
 
@@ -100,11 +105,24 @@ function contentFor(input: InboxMessage) {
 export async function deliverInboxMessage(
   input: InboxMessage,
   idempotencyKey: string,
+  route: "api_contact" | "api_feedback" =
+    input.kind === "partnerships" ? "api_contact" : "api_feedback",
 ): Promise<DeliveryResult> {
+  const startedAt = Date.now();
   const environment = emailEnvironment();
   const apiKey = environment.RESEND_API_KEY?.trim();
   const from = environment.EMAIL_FROM?.trim();
-  if (!apiKey || !from) return { delivered: false, reason: "not_configured" };
+  if (!apiKey || !from) {
+    logObservability({
+      route,
+      outcome: "degraded",
+      status: 503,
+      durationMs: elapsedMilliseconds(startedAt),
+      provider: "resend",
+      release: process.env.APP_RELEASE,
+    });
+    return { delivered: false, reason: "not_configured" };
+  }
 
   const content = contentFor(input);
   let response: Response;
@@ -130,15 +148,38 @@ export async function deliverInboxMessage(
       }),
       signal: AbortSignal.timeout(EMAIL_DELIVERY_TIMEOUT_MS),
     });
-  } catch (error) {
-    console.error("Email delivery provider could not be reached", error);
+  } catch {
+    logObservability({
+      route,
+      outcome: "unavailable",
+      status: 503,
+      durationMs: elapsedMilliseconds(startedAt),
+      provider: "resend",
+      release: process.env.APP_RELEASE,
+    });
     return { delivered: false, reason: "provider_error" };
   }
 
   if (!response.ok) {
-    console.error("Email delivery provider returned an error", response.status);
+    logObservability({
+      route,
+      outcome: response.status === 429 ? "rate_limited" : "error",
+      status: response.status,
+      durationMs: elapsedMilliseconds(startedAt),
+      provider: "resend",
+      release: process.env.APP_RELEASE,
+    });
     return { delivered: false, reason: "provider_error" };
   }
+
+  logObservability({
+    route,
+    outcome: "ok",
+    status: 200,
+    durationMs: elapsedMilliseconds(startedAt),
+    provider: "resend",
+    release: process.env.APP_RELEASE,
+  });
 
   const payload = (await response.json().catch(() => null)) as {
     id?: string;

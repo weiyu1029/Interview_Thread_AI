@@ -2,6 +2,11 @@ import { insertFeedback } from "../../../db";
 import { getAppUser } from "../../auth";
 import { PRODUCT_VERSION } from "../../product-version";
 import { deliverInboxMessage } from "../../email-delivery.ts";
+import {
+  jsonRequestGuardResponse,
+  readJsonBody,
+  validateJsonRequest,
+} from "../request-security.ts";
 
 const CATEGORIES = new Set([
   "accuracy",
@@ -21,14 +26,20 @@ const SURFACES = new Set([
   "account",
   "beta",
 ]);
+const MAX_FEEDBACK_REQUEST_BYTES = 32 * 1024;
 
 export async function POST(request: Request) {
   try {
+    const unsafeRequest = jsonRequestGuardResponse(
+      validateJsonRequest(request, MAX_FEEDBACK_REQUEST_BYTES),
+    );
+    if (unsafeRequest) return unsafeRequest;
+
     const user = await getAppUser();
     if (!user)
       return Response.json({ error: "Sign in is required." }, { status: 401 });
 
-    const payload = (await request.json()) as {
+    const body = await readJsonBody<{
       category?: string;
       rating?: number;
       message?: string;
@@ -36,7 +47,10 @@ export async function POST(request: Request) {
       locale?: string;
       website?: string;
       surface?: string;
-    };
+    }>(request, MAX_FEEDBACK_REQUEST_BYTES);
+    const invalidBody = jsonRequestGuardResponse(body);
+    if (invalidBody) return invalidBody;
+    const payload = body.payload;
     if (payload.website) return new Response(null, { status: 204 });
 
     const category = payload.category?.trim().toLowerCase() || "";
@@ -92,6 +106,7 @@ export async function POST(request: Request) {
         },
       },
       `feedback-${id}`,
+      "api_feedback",
     );
     if (!notification.delivered) {
       console.error("Feedback was stored but its inbox notification was not delivered");
@@ -101,8 +116,8 @@ export async function POST(request: Request) {
       { id, priority, inboxNotified: notification.delivered },
       { status: 201 },
     );
-  } catch (error) {
-    console.error("Feedback submission failed", error);
+  } catch {
+    // Raw provider/database exceptions may contain request or account details.
     return Response.json(
       { error: "Feedback is temporarily unavailable." },
       { status: 503 },

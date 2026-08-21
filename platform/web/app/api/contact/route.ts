@@ -3,21 +3,17 @@ import {
   type InboxKind,
   validReplyTo,
 } from "../../email-delivery.ts";
+import {
+  jsonRequestGuardResponse,
+  readJsonBody,
+  validateJsonRequest,
+} from "../request-security.ts";
 
 const KINDS = new Set<InboxKind>(["feedback", "partnerships"]);
+const MAX_CONTACT_REQUEST_BYTES = 32 * 1024;
 
 function text(value: unknown, maximum: number) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
-}
-
-function sameOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin) return false;
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
 }
 
 function sameOriginSource(request: Request, value: string) {
@@ -32,10 +28,18 @@ function sameOriginSource(request: Request, value: string) {
 
 export async function POST(request: Request) {
   try {
-    if (!sameOrigin(request))
-      return Response.json({ error: "Invalid request origin." }, { status: 403 });
+    const unsafeRequest = jsonRequestGuardResponse(
+      validateJsonRequest(request, MAX_CONTACT_REQUEST_BYTES),
+    );
+    if (unsafeRequest) return unsafeRequest;
 
-    const payload = (await request.json()) as Record<string, unknown>;
+    const body = await readJsonBody<Record<string, unknown>>(
+      request,
+      MAX_CONTACT_REQUEST_BYTES,
+    );
+    const invalidBody = jsonRequestGuardResponse(body);
+    if (invalidBody) return invalidBody;
+    const payload = body.payload;
     if (text(payload.website, 200)) return new Response(null, { status: 204 });
 
     const kind = text(payload.kind, 32) as InboxKind;
@@ -66,6 +70,7 @@ export async function POST(request: Request) {
     const result = await deliverInboxMessage(
       { kind, name, replyTo: replyTo || undefined, topic, message, locale, sourceUrl },
       `contact-${submissionId}`,
+      "api_contact",
     );
     if (!result.delivered) {
       return Response.json(
@@ -75,8 +80,8 @@ export async function POST(request: Request) {
     }
 
     return Response.json({ id: submissionId }, { status: 201 });
-  } catch (error) {
-    console.error("Contact form submission failed", error);
+  } catch {
+    // Raw provider/database exceptions may contain request or account details.
     return Response.json(
       { error: "Automatic email delivery is temporarily unavailable." },
       { status: 503 },

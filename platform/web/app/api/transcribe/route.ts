@@ -8,6 +8,14 @@ import {
   transcriptFromAzureResponse,
 } from "../../interview-stt.ts";
 import { getAppUser } from "../../auth";
+import {
+  createRequestId,
+  elapsedMilliseconds,
+  logObservability,
+  type ObservabilityOutcome,
+  type ObservabilityProvider,
+} from "../../observability.ts";
+import { hasSameOrigin as sameOrigin } from "../request-security.ts";
 
 const TRANSCRIPTION_WINDOW_MS = 10 * 60 * 1_000;
 const TRANSCRIPTION_WINDOW_LIMIT = 12;
@@ -24,13 +32,18 @@ const PRIVATE_HEADERS = {
   "X-Content-Type-Options": "nosniff",
 };
 
-function json(payload: Record<string, unknown>, status = 200) {
-  return Response.json(payload, { status, headers: PRIVATE_HEADERS });
-}
-
-function sameOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  return origin === new URL(request.url).origin;
+function json(
+  payload: Record<string, unknown>,
+  status = 200,
+  requestId?: string,
+) {
+  return Response.json(payload, {
+    status,
+    headers: {
+      ...PRIVATE_HEADERS,
+      ...(requestId ? { "X-Request-ID": requestId } : {}),
+    },
+  });
 }
 
 function rateLimitExceeded(userId: string) {
@@ -48,27 +61,59 @@ function rateLimitExceeded(userId: string) {
 }
 
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) return json({ error: "invalid_origin" }, 403);
+  const startedAt = Date.now();
+  const requestId = createRequestId();
+  const record = (
+    outcome: ObservabilityOutcome,
+    status: number,
+    provider: ObservabilityProvider = "internal",
+  ) =>
+    logObservability({
+      requestId,
+      route: "api_transcribe",
+      outcome,
+      status,
+      durationMs: elapsedMilliseconds(startedAt),
+      provider,
+      release: process.env.APP_RELEASE,
+    });
+  const reply = (
+    payload: Record<string, unknown>,
+    status: number,
+    outcome: ObservabilityOutcome,
+    provider: ObservabilityProvider = "internal",
+  ) => {
+    record(outcome, status, provider);
+    return json(payload, status, requestId);
+  };
+
+  if (!sameOrigin(request))
+    return reply({ error: "invalid_origin" }, 403, "forbidden");
   if (!request.headers.get("content-type")?.includes("multipart/form-data"))
-    return json({ error: "invalid_request" }, 415);
+    return reply({ error: "invalid_request" }, 415, "invalid");
   const declaredLength = Number(request.headers.get("content-length") || "0");
   if (
     !Number.isFinite(declaredLength) ||
     declaredLength < 0 ||
     declaredLength > MAX_MULTIPART_BYTES
   )
-    return json({ error: "payload_too_large" }, 413);
+    return reply({ error: "payload_too_large" }, 413, "invalid");
 
   const user = await getAppUser();
-  if (!user) return json({ error: "sign_in_required" }, 401);
+  if (!user)
+    return reply({ error: "sign_in_required" }, 401, "unauthorized");
   if (rateLimitExceeded(user.userId))
-    return json({ error: "transcription_rate_limited" }, 429);
+    return reply(
+      { error: "transcription_rate_limited" },
+      429,
+      "rate_limited",
+    );
 
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
-    return json({ error: "invalid_request" }, 400);
+    return reply({ error: "invalid_request" }, 400, "invalid");
   }
 
   const audio = form.get("audio");
@@ -81,20 +126,26 @@ export async function POST(request: Request) {
     !isSupportedInterviewAudioType(audio.type) ||
     !isSttLocale(locale)
   )
-    return json({ error: "invalid_request" }, 400);
+    return reply({ error: "invalid_request" }, 400, "invalid");
 
   let vocabulary: string[] = [];
   if (typeof vocabularyValue === "string" && vocabularyValue) {
     try {
       vocabulary = sanitizeSpeechVocabulary(JSON.parse(vocabularyValue));
     } catch {
-      return json({ error: "invalid_request" }, 400);
+      return reply({ error: "invalid_request" }, 400, "invalid");
     }
   }
 
   const apiKey = process.env.AZURE_SPEECH_KEY?.trim();
   const endpoint = process.env.AZURE_SPEECH_ENDPOINT?.trim();
-  if (!apiKey || !endpoint) return json({ error: "premium_unavailable" }, 503);
+  if (!apiKey || !endpoint)
+    return reply(
+      { error: "premium_unavailable" },
+      503,
+      "degraded",
+      "azure_speech",
+    );
 
   try {
     const providerRequest = buildAzureTranscriptionRequest({
@@ -109,7 +160,7 @@ export async function POST(request: Request) {
       signal: AbortSignal.timeout(30_000),
     });
     if (!providerResponse.ok)
-      return json(
+      return reply(
         {
           error:
             providerResponse.status === 429
@@ -117,6 +168,8 @@ export async function POST(request: Request) {
               : "transcription_unavailable",
         },
         providerResponse.status === 429 ? 429 : 502,
+        providerResponse.status === 429 ? "rate_limited" : "error",
+        "azure_speech",
       );
 
     const providerPayload = (await providerResponse.json()) as unknown;
@@ -124,9 +177,16 @@ export async function POST(request: Request) {
       transcriptFromAzureResponse(providerPayload),
       vocabulary,
     );
-    if (!transcript) return json({ error: "no_speech" }, 422);
-    return json({ transcript, locale }, 200);
+    if (!transcript)
+      return reply({ error: "no_speech" }, 422, "invalid", "azure_speech");
+    record("ok", 200, "azure_speech");
+    return json({ transcript, locale }, 200, requestId);
   } catch {
-    return json({ error: "transcription_unavailable" }, 503);
+    return reply(
+      { error: "transcription_unavailable" },
+      503,
+      "unavailable",
+      "azure_speech",
+    );
   }
 }
