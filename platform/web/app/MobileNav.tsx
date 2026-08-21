@@ -6,6 +6,8 @@ export type MobileNavItem = {
   label: string;
   href: string;
   external?: boolean;
+  mobileOnly?: boolean;
+  compactOnly?: boolean;
 };
 
 export type MobileNavLanguage = {
@@ -89,6 +91,8 @@ export function MobileNav({
           <a
             href={item.href}
             key={`${item.href}-${item.label}`}
+            data-mobile-only={item.mobileOnly ? "true" : undefined}
+            data-compact-only={item.compactOnly ? "true" : undefined}
             onClick={() => setOpen(false)}
             target={item.external ? "_blank" : undefined}
             rel={item.external ? "noreferrer" : undefined}

@@ -4450,13 +4450,14 @@ export default function Home({
           </span>
         </a>
         <nav className="topnav" aria-label={detail.product}>
-          <a href="#how-it-works">
+          <a className="topnav-secondary" href="#how-it-works">
             {locale === "en" ? "How it works" : detail.product}
           </a>
-          <a href="#product">
+          <a className="topnav-secondary" href="#product">
             {locale === "en" ? "Why InterviewThread" : "InterviewThread"}
           </a>
           <a
+            className="topnav-priority"
             href="#workspace"
             onClick={(event) => {
               event.preventDefault();
@@ -4465,7 +4466,9 @@ export default function Home({
           >
             {landingPrimaryCta}
           </a>
-          <a href="#questions">{locale === "en" ? "FAQ" : faq.eyebrow}</a>
+          <a className="topnav-priority" href="#questions">
+            {locale === "en" ? "FAQ" : faq.eyebrow}
+          </a>
         </nav>
         <label className="locale-control">
           <span>{copy.language}</span>
@@ -4511,12 +4514,18 @@ export default function Home({
               label:
                 landingPrimaryCta,
               href: `${localizedPath(locale)}?view=Analyze#workspace`,
+              mobileOnly: true,
             },
-            { label: locale === "en" ? "FAQ" : faq.eyebrow, href: "#questions" },
+            {
+              label: locale === "en" ? "FAQ" : faq.eyebrow,
+              href: "#questions",
+              mobileOnly: true,
+            },
             { label: openSourceLabel, href: "#plans" },
             {
               label: accountLabels.account,
               href: localizedPath(locale, "account"),
+              compactOnly: true,
             },
           ]}
         />
