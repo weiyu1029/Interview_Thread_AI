@@ -14,6 +14,12 @@ export type InterviewQuestionTrack =
 
 export type InterviewQuestionDifficulty = 1 | 2 | 3;
 
+export type InterviewQuestionLens =
+  | "evidence"
+  | "ownership"
+  | "judgment"
+  | "pressure";
+
 export type OpenInterviewQuestionSourceId =
   | "interviewthread"
   | "system-design-primer"
@@ -35,10 +41,12 @@ export type OpenInterviewQuestion = {
   track: InterviewQuestionTrack;
   depth: 0 | 1 | 2 | 3 | 4;
   difficulty: InterviewQuestionDifficulty;
+  lens?: InterviewQuestionLens;
   sourceId: OpenInterviewQuestionSourceId;
   /**
-   * Community questions are rendered by questionForInterview so they remain
-   * evidence-aware and localized. Imported questions use this reviewed prompt.
+   * Community prompts are reviewed follow-up probes appended to the
+   * evidence-aware, localized role question. Imported questions use this as
+   * their complete reviewed prompt.
    */
   prompt?: string;
   topic?: string;
@@ -68,7 +76,7 @@ export const OPEN_INTERVIEW_QUESTION_SOURCES: readonly OpenInterviewQuestionSour
     href: "https://github.com/h5bp/front-end-developer-interview-questions",
     license: "MIT",
     licenseHref:
-      "https://github.com/h5bp/front-end-developer-interview-questions/blob/main/LICENSE",
+      "https://github.com/h5bp/front-end-developer-interview-questions/blob/main/LICENSE.md",
     note: "Front-end prompts selected and lightly adapted for spoken practice.",
   },
   {
@@ -118,18 +126,73 @@ const PERSONA_TRACK: Record<InterviewPersonaId, InterviewQuestionTrack> = {
   panel: "role-fit",
 };
 
-const DEPTH_DIFFICULTY: readonly InterviewQuestionDifficulty[] = [1, 1, 2, 2, 3];
+export const INTERVIEW_QUESTION_LENSES: readonly InterviewQuestionLens[] = [
+  "evidence",
+  "ownership",
+  "judgment",
+  "pressure",
+];
+
+const COMMUNITY_PROBES: Record<
+  InterviewQuestionDifficulty,
+  Record<InterviewQuestionLens, string>
+> = {
+  1: {
+    evidence:
+      "Which specific detail, artifact, or observable result would let an interviewer verify that claim?",
+    ownership:
+      "Which part did you personally own, and which part belonged to someone else?",
+    judgment:
+      "What decision did you make, and what information made that choice reasonable at the time?",
+    pressure:
+      "What is one honest limitation or uncertainty in this example?",
+  },
+  2: {
+    evidence:
+      "What was the baseline, what changed, and how did you measure the difference?",
+    ownership:
+      "Where did your authority end, and how did dependencies or collaborators shape the outcome?",
+    judgment:
+      "Which alternative did you reject, and what trade-off did you accept by choosing this path?",
+    pressure:
+      "What was the most likely failure mode, and what did you do to detect or reduce it?",
+  },
+  3: {
+    evidence:
+      "Which part of the claim is least certain, and what evidence would disprove your interpretation?",
+    ownership:
+      "If a teammate disputed your ownership, what record or observable behavior would resolve the disagreement?",
+    judgment:
+      "If a key constraint reversed tomorrow, which part of your decision would change first and why?",
+    pressure:
+      "Assume the interviewer challenges your result as correlation rather than impact. How would you respond without overstating it?",
+  },
+};
+
+export function communityQuestionProbe(
+  difficulty: InterviewQuestionDifficulty,
+  lens: InterviewQuestionLens,
+) {
+  return COMMUNITY_PROBES[difficulty][lens];
+}
 
 const COMMUNITY_QUESTIONS: OpenInterviewQuestion[] = PERSONAS.flatMap(
   (persona) =>
-    DEPTH_DIFFICULTY.map((difficulty, depth) => ({
-      id: `interviewthread-${persona}-${depth + 1}`,
-      persona,
-      track: PERSONA_TRACK[persona],
-      depth: depth as OpenInterviewQuestion["depth"],
-      difficulty,
-      sourceId: "interviewthread" as const,
-    })),
+    ([0, 1, 2, 3, 4] as const).flatMap((depth) =>
+      ([1, 2, 3] as const).flatMap((difficulty) =>
+        INTERVIEW_QUESTION_LENSES.map((lens) => ({
+          id: `interviewthread-${persona}-${depth + 1}-l${difficulty}-${lens}`,
+          persona,
+          track: PERSONA_TRACK[persona],
+          depth,
+          difficulty,
+          lens,
+          sourceId: "interviewthread" as const,
+          prompt: communityQuestionProbe(difficulty, lens),
+          topic: `${lens} · stage ${depth + 1} · L${difficulty}`,
+        })),
+      ),
+    ),
 );
 
 const SYSTEM_DESIGN_QUESTIONS: readonly OpenInterviewQuestion[] = [
@@ -225,12 +288,14 @@ export function questionsForInterviewRole(
   track: InterviewQuestionTrack | "all",
   depth: OpenInterviewQuestion["depth"] | "all",
   difficulty: InterviewQuestionDifficulty | "all",
+  lens: InterviewQuestionLens | "all" = "all",
 ) {
   return OPEN_INTERVIEW_QUESTIONS.filter(
     (question) =>
       question.persona === persona &&
       (track === "all" || question.track === track) &&
       (depth === "all" || question.depth === depth) &&
-      (difficulty === "all" || question.difficulty === difficulty),
+      (difficulty === "all" || question.difficulty === difficulty) &&
+      (lens === "all" || question.lens === lens),
   );
 }

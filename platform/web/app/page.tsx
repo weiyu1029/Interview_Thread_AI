@@ -76,8 +76,10 @@ import {
   speechRateFor,
 } from "./interview-speech";
 import {
+  INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
   InterviewQuestionDifficulty,
+  InterviewQuestionLens,
   InterviewQuestionTrack,
   OpenInterviewQuestion,
   OPEN_INTERVIEW_QUESTIONS,
@@ -1415,7 +1417,7 @@ function interviewTopicsFor(
   const fallbackProof =
     proofs[0]?.keyword ||
     (locale === "en"
-      ? "your most relevant resume experience"
+      ? "work"
       : detailFor(locale).matchedEvidence);
   const fallbackGap =
     gaps[0]?.keyword ||
@@ -1686,6 +1688,145 @@ function questionTrackLabelFor(
   );
 }
 
+function questionLensLabelFor(
+  locale: LocaleCode,
+  lens: InterviewQuestionLens,
+) {
+  const reviewed: Partial<
+    Record<LocaleCode, Record<InterviewQuestionLens, string>>
+  > = {
+    en: {
+      evidence: "Evidence and verification",
+      ownership: "Ownership and boundaries",
+      judgment: "Decisions and trade-offs",
+      pressure: "Pressure test and limits",
+    },
+    "zh-TW": {
+      evidence: "證據與驗證",
+      ownership: "責任與邊界",
+      judgment: "判斷與取捨",
+      pressure: "壓力測試與限制",
+    },
+    "zh-CN": {
+      evidence: "证据与验证",
+      ownership: "责任与边界",
+      judgment: "判断与取舍",
+      pressure: "压力测试与限制",
+    },
+    ja: {
+      evidence: "根拠と検証",
+      ownership: "責任範囲",
+      judgment: "判断とトレードオフ",
+      pressure: "反証と限界",
+    },
+    ko: {
+      evidence: "근거와 검증",
+      ownership: "책임과 경계",
+      judgment: "판단과 트레이드오프",
+      pressure: "압박 검증과 한계",
+    },
+    es: {
+      evidence: "Evidencia y verificación",
+      ownership: "Responsabilidad y límites",
+      judgment: "Decisiones y concesiones",
+      pressure: "Prueba de presión y límites",
+    },
+    fr: {
+      evidence: "Preuves et vérification",
+      ownership: "Responsabilité et limites",
+      judgment: "Décisions et compromis",
+      pressure: "Mise à l’épreuve et limites",
+    },
+    de: {
+      evidence: "Belege und Überprüfung",
+      ownership: "Verantwortung und Grenzen",
+      judgment: "Entscheidungen und Abwägungen",
+      pressure: "Belastungsprobe und Grenzen",
+    },
+  };
+  if (reviewed[locale]) return reviewed[locale]![lens];
+  const stages = interviewFlowCopyFor(locale).stages;
+  const stageIndex: Record<InterviewQuestionLens, number> = {
+    evidence: 0,
+    ownership: 1,
+    judgment: 2,
+    pressure: 4,
+  };
+  return stages[stageIndex[lens]];
+}
+
+function communityProbeForLocale(
+  question: OpenInterviewQuestion,
+  locale: LocaleCode,
+  proofLabel: string,
+  gapLabel: string,
+) {
+  const lens = question.lens || "evidence";
+  if (locale === "en") return question.prompt || "";
+
+  const reviewed: Partial<
+    Record<
+      LocaleCode,
+      Record<
+        InterviewQuestionDifficulty,
+        Record<InterviewQuestionLens, string>
+      >
+    >
+  > = {
+    "zh-TW": {
+      1: {
+        evidence: "哪個具體細節、成果或作品可以讓面試官驗證這項說法？",
+        ownership: "其中哪一部分由你親自負責，哪一部分是其他人的貢獻？",
+        judgment: "你做了哪個關鍵決定？當時哪些資訊支持這個選擇？",
+        pressure: "這個例子中，有哪項限制或不確定性必須誠實說明？",
+      },
+      2: {
+        evidence: "原本的基準是什麼、後來改變了什麼，又是如何衡量差異的？",
+        ownership: "你的權責到哪裡為止？依賴關係與合作夥伴如何影響結果？",
+        judgment: "你放棄了哪個替代方案？選擇目前做法時接受了什麼取捨？",
+        pressure: "最可能失敗的地方是什麼？你如何提早發現或降低風險？",
+      },
+      3: {
+        evidence: "這項說法中最不確定的是哪一部分？什麼證據會推翻你的解讀？",
+        ownership: "若隊友不同意你的責任歸屬，哪項紀錄或可觀察行為能釐清？",
+        judgment: "若關鍵限制明天完全反轉，你會先改變決策中的哪一部分？為什麼？",
+        pressure: "假設面試官質疑這只是相關而非影響，你會如何回應且不誇大成果？",
+      },
+    },
+    "zh-CN": {
+      1: {
+        evidence: "哪个具体细节、成果或作品可以让面试官验证这项说法？",
+        ownership: "其中哪一部分由你亲自负责，哪一部分是其他人的贡献？",
+        judgment: "你做了哪个关键决定？当时哪些信息支持这个选择？",
+        pressure: "这个例子中，有哪项限制或不确定性必须诚实说明？",
+      },
+      2: {
+        evidence: "原本的基准是什么、后来改变了什么，又是如何衡量差异的？",
+        ownership: "你的权责到哪里为止？依赖关系与合作伙伴如何影响结果？",
+        judgment: "你放弃了哪个替代方案？选择当前做法时接受了什么取舍？",
+        pressure: "最可能失败的地方是什么？你如何提前发现或降低风险？",
+      },
+      3: {
+        evidence: "这项说法中最不确定的是哪一部分？什么证据会推翻你的解读？",
+        ownership: "如果队友不同意你的责任归属，哪项记录或可观察行为能够厘清？",
+        judgment: "如果关键限制明天完全反转，你会先改变决策中的哪一部分？为什么？",
+        pressure: "假设面试官质疑这只是相关而非影响，你会如何回应且不夸大成果？",
+      },
+    },
+  };
+  const localized = reviewed[locale]?.[question.difficulty]?.[lens];
+  if (localized) return localized;
+
+  const lensIndex: Record<InterviewQuestionLens, number> = {
+    evidence: 0,
+    ownership: 1,
+    judgment: 2,
+    pressure: 4,
+  };
+  const turn = (lensIndex[lens] + question.difficulty - 1) % 5;
+  return `${questionLensLabelFor(locale, lens)} · L${question.difficulty}: ${localizedInterviewQuestion(locale, turn, proofLabel, gapLabel)}`;
+}
+
 function importedQuestionForLocale(
   question: OpenInterviewQuestion,
   locale: LocaleCode,
@@ -1726,16 +1867,24 @@ function openQuestionForInterview(
   locale: LocaleCode,
   topicIndex = 0,
 ) {
-  if (question.sourceId === "interviewthread")
-    return questionForInterview(
+  const topics = interviewTopicsFor(matches, locale);
+  const topic = topics[topicIndex % topics.length];
+  if (question.sourceId === "interviewthread") {
+    const planned = questionForInterview(
       question.persona,
       question.depth,
       matches,
       locale,
       topicIndex,
     );
-  const topics = interviewTopicsFor(matches, locale);
-  const topic = topics[topicIndex % topics.length];
+    const probe = communityProbeForLocale(
+      question,
+      locale,
+      topic.proofLabel,
+      topic.gapLabel,
+    );
+    return probe ? `${planned} ${probe}` : planned;
+  }
   const prompt = importedQuestionForLocale(question, locale, topic.gapLabel);
   const topicLabel = interviewFlowCopyFor(locale).topic;
   return `${topicLabel} ${topicIndex + 1} · ${question.topic || topic.focusLabel}\n\n${prompt}`;
@@ -2151,19 +2300,23 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resources: "Technical Round 練習資源",
       resourcesIntro: "依目前面試角色推薦；開啟外部網站前，請自行確認帳號、價格與隱私條款。",
       questionBank: "開源面試題庫",
-      questionBankIntro: "依面試官角色、題型、回答階段與難度選題；每題都標示來源與授權。",
+      questionBankIntro: "依面試官角色、題型、回答階段、難度與追問焦點選題；L1、L2、L3 每個組合都有題目，且保留來源與授權。",
       category: "題型分類",
       allCategories: "全部題型",
+      focus: "追問焦點",
+      allFocuses: "全部焦點",
       stage: "回答階段",
       allStages: "全部階段",
       difficulty: "難度",
       allDifficulties: "全部難度",
       chooseQuestion: "選擇題目",
       randomQuestion: "從篩選結果隨機出題",
-      questionsAvailable: "題可用",
+      questionsAvailable: "題符合篩選",
+      totalQuestions: "題庫總計",
+      clearFilters: "重設篩選",
       source: "來源",
       license: "授權",
-      noQuestions: "目前篩選沒有題目，請放寬分類或難度。",
+      noQuestions: "目前沒有符合的題目，請重設篩選。",
       vocabulary: "語音專有名詞強化",
       vocabularyNote: "辨識會優先考慮履歷、JD 與此關卡的詞彙；文字仍可在送出前編輯。",
       thinking: "面試官正在準備追問…",
@@ -2178,19 +2331,23 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resources: "Technical Round 练习资源",
       resourcesIntro: "按当前面试角色推荐；打开外部网站前，请自行确认账号、价格与隐私条款。",
       questionBank: "开源面试题库",
-      questionBankIntro: "按面试官角色、题型、回答阶段和难度选题；每道题都标明来源和授权。",
+      questionBankIntro: "按面试官角色、题型、回答阶段、难度和追问重点选题；L1、L2、L3 每种组合都有题目，并保留来源和授权。",
       category: "题型分类",
       allCategories: "全部题型",
+      focus: "追问重点",
+      allFocuses: "全部重点",
       stage: "回答阶段",
       allStages: "全部阶段",
       difficulty: "难度",
       allDifficulties: "全部难度",
       chooseQuestion: "选择题目",
       randomQuestion: "从筛选结果随机出题",
-      questionsAvailable: "道题可用",
+      questionsAvailable: "道题符合筛选",
+      totalQuestions: "题库总计",
+      clearFilters: "重置筛选",
       source: "来源",
       license: "授权",
-      noQuestions: "当前筛选没有题目，请放宽分类或难度。",
+      noQuestions: "当前没有符合的题目，请重置筛选。",
       vocabulary: "语音专业词汇增强",
       vocabularyNote: "识别会优先考虑简历、JD 与本关词汇；文字仍可在发送前编辑。",
       thinking: "面试官正在准备追问…",
@@ -2204,19 +2361,23 @@ function interviewStudioUiFor(locale: LocaleCode) {
     resources: "Technical-round practice",
     resourcesIntro: "Selected for this interviewer. External sites have their own accounts, pricing, privacy, and terms.",
     questionBank: "Open-source interview question bank",
-    questionBankIntro: "Filter by interviewer role, question type, answer stage, and difficulty. Every bundled question keeps its source and license.",
+    questionBankIntro: "Filter by interviewer role, question type, answer stage, level, and follow-up focus. Every L1, L2, and L3 combination is covered, with source and license preserved.",
     category: "Question type",
     allCategories: "All question types",
+    focus: "Follow-up focus",
+    allFocuses: "All focuses",
     stage: "Answer stage",
     allStages: "All answer stages",
     difficulty: "Difficulty",
     allDifficulties: "All levels",
     chooseQuestion: "Choose a question",
     randomQuestion: "Surprise me from these results",
-    questionsAvailable: "questions available",
+    questionsAvailable: "questions match",
+    totalQuestions: "total in the bank",
+    clearFilters: "Reset filters",
     source: "Source",
     license: "License",
-    noQuestions: "No questions match these filters. Broaden the type or difficulty.",
+    noQuestions: "No questions match these filters. Reset them to continue.",
     vocabulary: "Speech vocabulary boost",
     vocabularyNote: "Recognition prioritizes terms from your resume, the job post, and this interview type. You can edit the transcript before sending.",
     thinking: "The interviewer is preparing a follow-up…",
@@ -2236,6 +2397,8 @@ function interviewStudioUiFor(locale: LocaleCode) {
     questionBankIntro: `${core.interview} · ${flow.topic} · ${flow.stages.join(" → ")}`,
     category: flow.topic,
     allCategories: `${core.interview} · ${flow.topic}`,
+    focus: flow.nextQuestion,
+    allFocuses: flow.newTopic,
     stage: flow.step,
     allStages: `${core.interview} · ${flow.step}`,
     difficulty: `${core.interview} · L1–L3`,
@@ -2243,6 +2406,8 @@ function interviewStudioUiFor(locale: LocaleCode) {
     chooseQuestion: flow.nextQuestion,
     randomQuestion: flow.newTopic,
     questionsAvailable: core.interview,
+    totalQuestions: detail.matrix,
+    clearFilters: flow.newTopic,
     source: detail.source,
     license: openSourceLabelFor(locale),
     noQuestions: `${flow.newTopic} · ${flow.nextQuestion}`,
@@ -2636,6 +2801,9 @@ export default function Home({
   >("all");
   const [interviewQuestionDifficulty, setInterviewQuestionDifficulty] =
     useState<InterviewQuestionDifficulty | "all">("all");
+  const [interviewQuestionLens, setInterviewQuestionLens] = useState<
+    InterviewQuestionLens | "all"
+  >("all");
   const [selectedOpenQuestionId, setSelectedOpenQuestionId] =
     useState("random");
   const [activeOpenQuestionId, setActiveOpenQuestionId] = useState("");
@@ -2816,6 +2984,7 @@ export default function Home({
             questionTrack?: InterviewQuestionTrack | "all";
             questionDepth?: OpenInterviewQuestion["depth"] | "all";
             questionDifficulty?: InterviewQuestionDifficulty | "all";
+            questionLens?: InterviewQuestionLens | "all";
             selectedQuestionId?: string;
             activeQuestionId?: string;
           };
@@ -2864,6 +3033,13 @@ export default function Home({
               setInterviewQuestionDifficulty(
                 session.questionDifficulty ?? "all",
               );
+            if (
+              session.questionLens === "all" ||
+              INTERVIEW_QUESTION_LENSES.includes(
+                session.questionLens as InterviewQuestionLens,
+              )
+            )
+              setInterviewQuestionLens(session.questionLens || "all");
             if (
               session.selectedQuestionId === "random" ||
               OPEN_INTERVIEW_QUESTIONS.some(
@@ -2964,6 +3140,7 @@ export default function Home({
         questionTrack: interviewQuestionTrack,
         questionDepth: interviewQuestionDepth,
         questionDifficulty: interviewQuestionDifficulty,
+        questionLens: interviewQuestionLens,
         selectedQuestionId: selectedOpenQuestionId,
         activeQuestionId: activeOpenQuestionId,
         locale,
@@ -2976,6 +3153,7 @@ export default function Home({
     interviewPersona,
     interviewQuestionDepth,
     interviewQuestionDifficulty,
+    interviewQuestionLens,
     interviewQuestionTrack,
     interviewScores,
     interviewScoreHistory,
@@ -3780,6 +3958,7 @@ export default function Home({
       interviewQuestionTrack,
       interviewQuestionDepth,
       interviewQuestionDifficulty,
+      interviewQuestionLens,
     );
     const chosenQuestion =
       candidates.find((item) => item.id === selectedOpenQuestionId) ||
@@ -4307,6 +4486,7 @@ export default function Home({
     interviewQuestionTrack,
     interviewQuestionDepth,
     interviewQuestionDifficulty,
+    interviewQuestionLens,
   );
   const previewOpenQuestion =
     filteredOpenQuestions.find(
@@ -5806,6 +5986,7 @@ export default function Home({
                       setInterviewQuestionTrack("all");
                       setInterviewQuestionDepth("all");
                       setInterviewQuestionDifficulty("all");
+                      setInterviewQuestionLens("all");
                       setSelectedOpenQuestionId("random");
                       setActiveOpenQuestionId("");
                       setInterviewScores(null);
@@ -5877,6 +6058,8 @@ export default function Home({
                   </div>
                   <span className="status-pill light">
                     {filteredOpenQuestions.length} {interviewStudioUi.questionsAvailable}
+                    {" · "}
+                    {OPEN_INTERVIEW_QUESTIONS.length} {interviewStudioUi.totalQuestions}
                   </span>
                 </div>
                 <div className="open-question-filters">
@@ -5898,6 +6081,26 @@ export default function Home({
                       {availableInterviewQuestionTracks.map((track) => (
                         <option value={track} key={track}>
                           {questionTrackLabelFor(locale, track)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{interviewStudioUi.focus}</span>
+                    <select
+                      value={interviewQuestionLens}
+                      disabled={interviewThinking}
+                      onChange={(event) => {
+                        setInterviewQuestionLens(
+                          event.target.value as InterviewQuestionLens | "all",
+                        );
+                        setSelectedOpenQuestionId("random");
+                      }}
+                    >
+                      <option value="all">{interviewStudioUi.allFocuses}</option>
+                      {INTERVIEW_QUESTION_LENSES.map((lens) => (
+                        <option value={lens} key={lens}>
+                          {questionLensLabelFor(locale, lens)}
                         </option>
                       ))}
                     </select>
@@ -5962,7 +6165,12 @@ export default function Home({
                       </option>
                       {filteredOpenQuestions.map((question) => (
                         <option value={question.id} key={question.id}>
-                          L{question.difficulty} · {questionOnly(
+                          L{question.difficulty}
+                          {question.lens
+                            ? ` · ${questionLensLabelFor(locale, question.lens)}`
+                            : ""}
+                          {" · "}
+                          {questionOnly(
                             openQuestionForInterview(question, matches, locale, 0),
                           )}
                         </option>
@@ -5977,6 +6185,14 @@ export default function Home({
                         {questionTrackLabelFor(locale, previewOpenQuestion.track)}
                       </span>
                       <b>L{previewOpenQuestion.difficulty}</b>
+                      {previewOpenQuestion.lens && (
+                        <i>
+                          {questionLensLabelFor(
+                            locale,
+                            previewOpenQuestion.lens,
+                          )}
+                        </i>
+                      )}
                       {activeOpenQuestionId === previewOpenQuestion.id && (
                         <i>{interviewFlow.step}</i>
                       )}
@@ -6003,9 +6219,22 @@ export default function Home({
                     </small>
                   </article>
                 ) : (
-                  <p className="open-question-empty">
-                    {interviewStudioUi.noQuestions}
-                  </p>
+                  <div className="open-question-empty">
+                    <p>{interviewStudioUi.noQuestions}</p>
+                    <button
+                      type="button"
+                      className="button secondary compact"
+                      onClick={() => {
+                        setInterviewQuestionTrack("all");
+                        setInterviewQuestionLens("all");
+                        setInterviewQuestionDepth("all");
+                        setInterviewQuestionDifficulty("all");
+                        setSelectedOpenQuestionId("random");
+                      }}
+                    >
+                      {interviewStudioUi.clearFilters}
+                    </button>
+                  </div>
                 )}
               </section>
 
