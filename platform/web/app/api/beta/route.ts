@@ -10,6 +10,12 @@ import {
   PRODUCT_VERSION,
   TERMS_VERSION,
 } from "../../product-version";
+import {
+  hasSameOrigin,
+  jsonRequestGuardResponse,
+  readJsonBody,
+  validateJsonRequest,
+} from "../request-security.ts";
 
 const ROLE_FAMILIES = new Set([
   "product",
@@ -42,11 +48,7 @@ const PRIMARY_GOALS = new Set([
   "accessibility",
   "other",
 ]);
-
-function sameOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  return !origin || origin === new URL(request.url).origin;
-}
+const MAX_BETA_REQUEST_BYTES = 8 * 1024;
 
 export async function GET() {
   try {
@@ -62,15 +64,22 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    if (!sameOrigin(request))
-      return Response.json({ error: "Invalid request origin." }, { status: 403 });
+    const unsafeRequest = jsonRequestGuardResponse(
+      validateJsonRequest(request, MAX_BETA_REQUEST_BYTES),
+    );
+    if (unsafeRequest) return unsafeRequest;
+
     const user = await getAppUser();
     if (!user)
       return Response.json({ error: "Sign in is required." }, { status: 401 });
-    if (!request.headers.get("content-type")?.includes("application/json"))
-      return Response.json({ error: "JSON is required." }, { status: 415 });
 
-    const payload = (await request.json()) as Record<string, unknown>;
+    const body = await readJsonBody<Record<string, unknown>>(
+      request,
+      MAX_BETA_REQUEST_BYTES,
+    );
+    const invalidBody = jsonRequestGuardResponse(body);
+    if (invalidBody) return invalidBody;
+    const payload = body.payload;
     const roleFamily = String(payload.roleFamily || "");
     const experienceLevel = String(payload.experienceLevel || "");
     const interviewTimeline = String(payload.interviewTimeline || "");
@@ -117,7 +126,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    if (!sameOrigin(request))
+    if (!hasSameOrigin(request))
       return Response.json({ error: "Invalid request origin." }, { status: 403 });
     const user = await getAppUser();
     if (!user)

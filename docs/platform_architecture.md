@@ -1,87 +1,90 @@
-# Platform Architecture
+# Production Platform Architecture
 
-InterviewThread uses a progressive architecture: anyone can start without an
-account, while people who need permanent history or collaboration can move into
-the free account-backed platform without changing the
-evidence model.
+InterviewThread is a real full-stack application deployed at
+`interviewthreadai.com`. The production source of truth is `platform/web`.
+Its React interface and same-origin API routes run together as a Cloudflare
+Sites Worker, with Cloudflare D1 as the managed relational database.
+
+The separate `platform/api` FastAPI/PostgreSQL project remains an optional
+self-hosting prototype. The public website does not call it, and it must not be
+treated as a second production backend.
 
 ## System boundary
 
 ```text
-Next-compatible web client
-  ├─ guest evidence match and device-local tracker
-  └─ authenticated API client
-               │
-               ▼
-FastAPI application
-  ├─ identity and workspace authorization
-  ├─ document extraction and PII redaction
-  ├─ canonical keyword and evidence engine
-  ├─ model-provider router
-  ├─ story and chat orchestration
-  ├─ global job-provider adapters and evidence ranking
-  ├─ market snapshot aggregation and provenance
-  ├─ application-mode safety policy
-  ├─ feedback and usage events
-  └─ open-source feature configuration
-               │
-               ▼
-PostgreSQL
-  ├─ users, workspaces, and memberships
-  ├─ analyses and evidence-linked stories
-  ├─ tracker items and conversations
-  ├─ jobs, market metrics, and application preferences
-  ├─ feedback
-  └─ usage events
+Browser
+  │ HTTPS, Cloudflare TLS, WAF and edge controls
+  ▼
+Cloudflare Sites Worker (`platform/web`)
+  ├─ localized React / server-rendered pages
+  ├─ OAuth callbacks and encrypted session cookies
+  ├─ same-origin API routes and request validation
+  ├─ in-memory document parsing and evidence analysis
+  ├─ aggregate-only operational events
+  └─ fixed-host outbound provider adapters
+          │                    │
+          ▼                    └─ Azure Speech / Resend / approved ATS hosts
+Cloudflare D1
+  ├─ accounts and hashed sessions
+  ├─ user-requested activity history
+  ├─ beta status and product feedback
+  └─ aggregate event counts
 ```
 
-The deterministic evidence result is canonical. A language model can improve
-organization and phrasing, but cannot create a supported claim or silently
-change the underlying score.
+This arrangement keeps browser, API and identity on one origin, removes a
+public database endpoint, and lets one immutable release contain both frontend
+and backend code. Cloudflare version history is the rollback boundary.
 
-Live job data is adapter-based and administrator-configured. The current
-implementation includes a fixed-host Adzuna adapter and storage contracts for
-imported job postings and market snapshots. Provider coverage is displayed as
-provider coverage, not as a census of the global labor market.
+## Identity and access
 
-## Identity and tenancy
+- Guest mode is supported, but guest interview history is not saved.
+- Google, GitHub and LinkedIn use OAuth; provider secrets stay in encrypted
+  production environment variables.
+- Session tokens are random, stored only as hashes in D1 and sent in secure,
+  HTTP-only cookies.
+- Paid speech endpoints require a signed-in account.
+- The operator dashboard requires both a valid session and an exact email match
+  in `ADMIN_EMAILS`; non-operators receive a 404.
 
-- Guest use is available for the first analysis and device-local tracking.
-- Registration creates a personal workspace and an owner membership.
-- Every persisted record belongs to a workspace.
-- Owner, admin, member, and viewer roles provide the basis for team access.
-- API authorization checks workspace membership instead of trusting IDs from
-  the browser.
+## Data and privacy boundary
 
-The current alpha accepts email and password credentials. Production should
-add verified email, password reset, passkeys or a well-maintained identity
-provider, session revocation, audit logging, and abuse controls before public
-registration is opened.
+Uploaded documents are parsed in memory. Raw resume files, job descriptions,
+interview audio and transcripts are not copied into observability logs.
+Product tracking is deliberately limited to bounded event names, counts,
+status codes, latency, provider category, release ID and random request ID.
 
-## Data lifecycle
+The public health endpoint runs `SELECT 1` against D1 and returns only
+`{"status":"ok"}` or `{"status":"unavailable"}`. It never reveals schema,
+provider errors, account data or infrastructure credentials.
 
-Uploaded files are parsed in memory. The API stores redacted text and derived
-analysis only when an authenticated user asks to persist the result. Raw file
-storage is deliberately absent from the alpha. If original-file storage is
-introduced, it should use encrypted object storage, short-lived upload URLs,
-malware scanning, explicit retention controls, and per-workspace deletion.
+Original-file object storage is disabled. If it is ever introduced, require a
+separate threat model, malware scanning, short-lived upload URLs, retention and
+deletion controls, and encryption-at-rest review before production use.
 
-Model keys arrive through `X-Model-Api-Key` and are not written to the database.
-Long-lived bring-your-own-key storage should not be added without envelope
-encryption, key rotation, access auditing, and a clear deletion flow.
+## Abuse and provider boundary
 
-## Scale path
+- State-changing JSON routes require an exact same-origin request, the correct
+  media type and both declared and actual request-size limits.
+- Speech-to-text validates authentication, locale, audio type and size. A local
+  user window is a second layer; global limits belong at the Cloudflare edge.
+- Text-to-speech is authenticated and falls back to device speech when the
+  managed provider is unavailable.
+- Contact delivery uses a honeypot, bounded fields, a fixed recipient map and a
+  server-side Resend key. User input cannot choose arbitrary recipients.
+- Job adapters may call only documented, fixed provider hosts.
 
-1. Keep synchronous extraction and analysis while traffic is low.
-2. Add a queue for OCR, large documents, and batch analyses.
-3. Add Redis only when distributed rate limits, job locks, or short-lived caches
-   are actually required.
-4. Add managed object storage only for features that require original files.
-5. Split services by operating need, not by feature count.
+## Monitoring and release
 
-## Open-source access boundary
+- `/api/healthz` verifies Worker-to-D1 health and disables caching.
+- A scheduled GitHub Actions smoke check requests the English landing page and
+  health endpoint every 15 minutes without credentials.
+- Worker logs are structured and privacy-minimized; the private operator page
+  exposes aggregate counts only.
+- Production variables are managed through Sites. Secrets never enter source,
+  logs, build artifacts or the browser bundle.
+- Releases are built from the reviewed Git commit, saved as an immutable Sites
+  version, deployed, smoke-tested and rolled back to the previous version if a
+  release gate fails.
 
-The public product exposes one free access level. Workspace roles protect data
-and collaboration boundaries, not commercial entitlements. The evidence engine,
-self-hosting path, data export, application modes, and safety rules remain open
-source and are never restricted by account status.
+See [Production Operations](production_operations.md) for the release,
+incident and recovery checklist.
