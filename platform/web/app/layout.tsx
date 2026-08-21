@@ -33,7 +33,7 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const assetVersion = "interviewthread-20260820-v2";
+  const assetVersion = "interviewthread-20260821-wave-v3";
   const title = "InterviewThread — AI mock interview preparation";
   const description =
     "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence.";

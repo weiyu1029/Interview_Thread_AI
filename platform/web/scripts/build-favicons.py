@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -8,6 +8,8 @@ PUBLIC = ROOT / "public"
 SOURCE = PUBLIC / "interviewthread-logo-lockup.png"
 BACKGROUND = (244, 242, 237)
 INK = (16, 49, 70)
+THREAD = (244, 242, 237)
+ACCENT = (141, 171, 194)
 
 
 def build_master() -> Image.Image:
@@ -25,14 +27,38 @@ def build_master() -> Image.Image:
     mask = mask.crop(bounds)
 
     canvas = Image.new("RGB", (512, 512), BACKGROUND)
-    target_width = 448
+    draw = ImageDraw.Draw(canvas)
+    draw.rounded_rectangle(
+        (24, 24, 488, 488),
+        radius=118,
+        fill=INK,
+    )
+
+    # A compact, high-contrast favicon adaptation of the approved connected-
+    # thread mark. The former light-background version became nearly invisible
+    # at 16 px, causing some browser surfaces to fall back to a generic globe.
+    target_width = 404
     target_height = round(mask.height * target_width / mask.width)
     resized_mask = mask.resize((target_width, target_height), Image.Resampling.LANCZOS)
-    color = Image.new("RGB", resized_mask.size, INK)
+    color = Image.new("RGB", resized_mask.size, THREAD)
+    mark_left = (512 - target_width) // 2
+    mark_top = (512 - target_height) // 2
     canvas.paste(
         color,
-        ((512 - target_width) // 2, (512 - target_height) // 2),
+        (mark_left, mark_top),
         resized_mask,
+    )
+    draw = ImageDraw.Draw(canvas)
+    dot_radius = 18
+    dot_center = (256, mark_top + round(target_height * 0.23))
+    draw.ellipse(
+        (
+            dot_center[0] - dot_radius,
+            dot_center[1] - dot_radius,
+            dot_center[0] + dot_radius,
+            dot_center[1] + dot_radius,
+        ),
+        fill=ACCENT,
     )
     return canvas
 
@@ -54,6 +80,20 @@ def main() -> None:
         )
     master.save(
         PUBLIC / "favicon.ico",
+        format="ICO",
+        sizes=[(16, 16), (32, 32), (48, 48)],
+    )
+
+    # Next.js App Router emits automatic icon metadata for files under app/.
+    # Keep those byte-for-byte aligned with the public and manifest assets.
+    app = ROOT / "app"
+    master.save(app / "icon.png", optimize=True)
+    master.resize((180, 180), Image.Resampling.LANCZOS).save(
+        app / "apple-icon.png",
+        optimize=True,
+    )
+    master.save(
+        app / "favicon.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
     )
