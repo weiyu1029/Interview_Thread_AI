@@ -941,6 +941,7 @@ h1 {
 }
 .hero-title {
   max-width: 980px;
+  line-height: 1.08;
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
@@ -949,12 +950,12 @@ h1 {
 .hero-title--medium {
   max-width: 960px;
   font-size: 55px;
-  line-height: 1.04;
+  line-height: 1.1;
 }
 .hero-title--long {
   max-width: 980px;
   font-size: 49px;
-  line-height: 1.09;
+  line-height: 1.14;
   letter-spacing: -0.045em;
 }
 [lang="ja"] .hero-title,
@@ -966,6 +967,9 @@ h1 {
 [lang="ko"] .hero-title {
   word-break: keep-all;
   overflow-wrap: break-word;
+}
+[lang="vi"] .hero-title {
+  line-height: 1.18;
 }
 [lang]:not([lang="en"]) .eyebrow {
   text-transform: none;
@@ -992,7 +996,7 @@ h1 {
   justify-content: center;
 }
 .hero .hero-actions {
-  margin-top: clamp(30px, 3.2vw, 38px);
+  margin-top: clamp(46px, 4.2vw, 56px);
 }
 .hero-primary-action {
   min-width: 180px;
@@ -5686,7 +5690,7 @@ input:focus {
   .hero-title {
     max-width: 12.5em;
     font-size: clamp(35px, 10.3vw, 43px);
-    line-height: 1.04;
+    line-height: 1.1;
     letter-spacing: -0.042em;
   }
   .hero-title--medium {
@@ -5694,7 +5698,7 @@ input:focus {
   }
   .hero-title--long {
     font-size: clamp(29px, 8.2vw, 35px);
-    line-height: 1.09;
+    line-height: 1.15;
     letter-spacing: -0.032em;
   }
   [lang="ja"] .hero-title,
@@ -5720,7 +5724,7 @@ input:focus {
     flex-direction: column;
   }
   .hero .hero-actions {
-    margin-top: 28px;
+    margin-top: 38px;
   }
   .hero-actions .button {
     width: 100%;
