@@ -848,11 +848,13 @@ label:focus-within {
   white-space: nowrap;
 }
 .locale-control select {
-  width: 132px;
-  padding-inline-start: 22px;
+  width: 220px;
+  min-width: 220px;
+  padding-inline-start: 18px;
   white-space: nowrap;
-  text-align: center;
-  text-align-last: center;
+  text-align: start;
+  text-align-last: start;
+  text-overflow: clip;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -869,7 +871,7 @@ label:focus-within {
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1480px) {
   .topnav {
     display: none;
   }
