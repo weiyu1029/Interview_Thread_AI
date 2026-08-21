@@ -574,6 +574,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(mobileNav, /useId/);
   assert.match(mobileNav, /pointerdown/);
   assert.match(mobileNav, /Escape/);
+  assert.match(
+    globals,
+    /@media \(max-width: 1480px\)[\s\S]*?\.topbar > \.locale-control,[\s\S]*?\.topbar > \.account-link\s*\{\s*display: none;/,
+  );
   for (const publicSurface of [layout, page, readme, strategy, brandGuide]) {
     assert.doesNotMatch(publicSurface, /CareerProof/);
   }

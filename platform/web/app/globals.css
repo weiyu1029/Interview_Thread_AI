@@ -875,6 +875,10 @@ label:focus-within {
   .topnav {
     display: none;
   }
+  .topbar > .locale-control,
+  .topbar > .account-link {
+    display: none;
+  }
   .topbar .mobile-nav {
     display: block;
   }
