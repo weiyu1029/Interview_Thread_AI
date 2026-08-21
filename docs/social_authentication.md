@@ -50,6 +50,36 @@ https://interviewthreadai.com/api/auth/callback/github
 https://interviewthreadai.com/api/auth/callback/linkedin
 ```
 
+### LinkedIn dashboard: callback URL versus scopes
+
+On LinkedIn's **Auth** page, the OAuth 2.0 redirect URL list accepts callback
+URLs only. Do not try to add `openid`, `profile`, or `email` in that list; those
+values are OAuth scopes, not redirect URLs.
+
+1. Under **OAuth 2.0 settings**, add this exact redirect URL:
+
+   ```text
+   https://interviewthreadai.com/api/auth/callback/linkedin
+   ```
+
+2. Select **Update** and confirm that the URL appears in the saved list.
+3. Confirm that the LinkedIn application has the **Sign In with LinkedIn using
+   OpenID Connect** product enabled.
+4. Start a LinkedIn sign-in from InterviewThread and inspect the authorization
+   request if troubleshooting is necessary. The application requests:
+
+   ```text
+   scope=openid%20profile%20email
+   ```
+
+   The unencoded value is `openid profile email`. InterviewThread adds this
+   parameter automatically when it starts OAuth; it is not entered manually in
+   the LinkedIn dashboard.
+5. If LinkedIn reports that `redirect_uri` does not match the registered value,
+   compare the complete URL character for character, including `https`, the
+   domain, path, and absence of a trailing slash. After saving the corrected
+   callback, test **Continue securely · LinkedIn** again.
+
 For local development on port 3001, use the matching callbacks:
 
 ```text
