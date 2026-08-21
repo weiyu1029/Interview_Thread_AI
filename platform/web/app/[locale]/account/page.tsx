@@ -80,9 +80,12 @@ export default async function AccountPage({
       : signOutPath(accountPath);
   const providerLabel = user ? providerName(user.provider) : null;
   const authError = query.auth_error
-    ? query.auth_error === "provider_not_configured"
-      ? `${providerName(query.provider)}: ${authCopy.setupNeeded}`
-      : authCopy.signInFailed
+    ? authenticationErrorDetails(
+        query.auth_error,
+        query.provider,
+        authCopy.setupNeeded,
+        authCopy.signInFailed,
+      )
     : null;
 
   return (
@@ -171,7 +174,10 @@ export default async function AccountPage({
 
           {authError && (
             <p className="account-auth-error" role="alert">
-              {authError}
+              <strong>{authError.provider}</strong>: {authError.message}{" "}
+              <code className="account-auth-reference">
+                {authError.reference}
+              </code>
             </p>
           )}
 
@@ -240,6 +246,35 @@ function providerMark(provider: "google" | "github" | "linkedin") {
   if (provider === "google") return "G";
   if (provider === "github") return "GH";
   return "in";
+}
+
+const AUTH_ERROR_REFERENCES = {
+  provider_not_configured: "IT-AUTH-100",
+  token_invalid_client: "IT-AUTH-101",
+  token_invalid_grant: "IT-AUTH-102",
+  scope_denied: "IT-AUTH-103",
+  token_exchange_failed: "IT-AUTH-104",
+  profile_failed: "IT-AUTH-105",
+  storage_failed: "IT-AUTH-106",
+  invalid_state: "IT-AUTH-107",
+  provider_cancelled: "IT-AUTH-108",
+  missing_code: "IT-AUTH-109",
+  provider_failed: "IT-AUTH-110",
+} as const;
+
+function authenticationErrorDetails(
+  error: string,
+  provider: string | undefined,
+  setupNeeded: string,
+  signInFailed: string,
+) {
+  const knownError = error as keyof typeof AUTH_ERROR_REFERENCES;
+  return {
+    provider: providerName(provider),
+    message:
+      knownError === "provider_not_configured" ? setupNeeded : signInFailed,
+    reference: AUTH_ERROR_REFERENCES[knownError] || "IT-AUTH-199",
+  };
 }
 
 function betaLabel(locale: string) {

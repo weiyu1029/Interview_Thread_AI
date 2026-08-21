@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { exchangeAuthorizationCode } from "../app/oauth-profile.ts";
+import {
+  exchangeAuthorizationCode,
+  oauthFailureDiagnostic,
+  oauthFailurePublicCode,
+} from "../app/oauth-profile.ts";
 
 function providerConfig(overrides = {}) {
   return {
@@ -89,4 +93,51 @@ test("retains PKCE for providers configured to use it", async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("classifies token failures without exposing provider descriptions", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    Response.json(
+      {
+        error: "invalid_client",
+        error_description: "client secret must never appear in diagnostics",
+      },
+      { status: 401 },
+    );
+
+  try {
+    await assert.rejects(
+      exchangeAuthorizationCode({
+        provider: "linkedin",
+        config: providerConfig(),
+        code: "authorization-code",
+        verifier: "unused",
+        redirectUri: "https://interviewthreadai.com/auth/linkedin/callback",
+      }),
+      (error) => {
+        assert.equal(oauthFailurePublicCode(error), "token_invalid_client");
+        assert.deepEqual(oauthFailureDiagnostic(error), {
+          stage: "token_exchange",
+          providerStatus: 401,
+          providerCode: "invalid_client",
+        });
+        assert.doesNotMatch(String(error), /client secret must never/i);
+        return true;
+      },
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("uses safe stage codes for profile and storage failures", () => {
+  assert.equal(
+    oauthFailurePublicCode(new Error("database connection details"), "storage"),
+    "storage_failed",
+  );
+  assert.equal(
+    oauthFailurePublicCode(new Error("unknown provider failure")),
+    "provider_failed",
+  );
 });

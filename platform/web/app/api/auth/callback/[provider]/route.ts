@@ -1,9 +1,11 @@
-import {
-  safeReturnPath,
-} from "../../../../auth-paths";
+import { safeReturnPath } from "../../../../auth-paths";
 import type { LocaleCode } from "../../../../i18n";
 import { localizedPath } from "../../../../intl-routing";
-import { exchangeAuthorizationCode } from "../../../../oauth-profile";
+import {
+  exchangeAuthorizationCode,
+  oauthFailureDiagnostic,
+  oauthFailurePublicCode,
+} from "../../../../oauth-profile";
 import {
   authSecret,
   callbackUrl,
@@ -64,10 +66,8 @@ export async function GET(request: Request, context: RouteContext) {
     return accountErrorRedirect(request, returnTo, "missing_code", locale, providerName);
   }
 
+  let failureStage: "provider" | "storage" = "provider";
   try {
-    const { createAuthSession, upsertOAuthUser } = await import(
-      "../../../../../db"
-    );
     const profile = await exchangeAuthorizationCode({
       provider: providerName,
       config,
@@ -75,6 +75,10 @@ export async function GET(request: Request, context: RouteContext) {
       verifier: statePayload.verifier,
       redirectUri: callbackUrl(request, providerName),
     });
+    failureStage = "storage";
+    const { createAuthSession, upsertOAuthUser } = await import(
+      "../../../../../db"
+    );
     const userId = await stableExternalUserId(
       providerName,
       profile.providerUserId,
@@ -108,8 +112,21 @@ export async function GET(request: Request, context: RouteContext) {
     response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (error) {
-    console.error(`OAuth callback failed for ${providerName}`, error);
-    return accountErrorRedirect(request, returnTo, "provider_failed", locale, providerName);
+    const diagnostic = oauthFailureDiagnostic(error, failureStage);
+    console.error("OAuth callback failed", {
+      event: "oauth_callback_failed",
+      provider: providerName,
+      stage: diagnostic.stage,
+      providerStatus: diagnostic.providerStatus,
+      providerCode: diagnostic.providerCode,
+    });
+    return accountErrorRedirect(
+      request,
+      returnTo,
+      oauthFailurePublicCode(error, failureStage),
+      locale,
+      providerName,
+    );
   }
 }
 
