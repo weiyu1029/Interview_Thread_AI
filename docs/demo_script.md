@@ -6,7 +6,9 @@ AI can generate polished interview answers, but candidates still struggle to und
 
 ## 0:30 - Product
 
-InterviewThread Agent turns a job description and candidate profile into an evidence-based interview strategy.
+InterviewThread turns a real resume and job post into interview stories the
+candidate can defend. It shows the evidence behind each suggestion and keeps
+unsupported requirements visible as gaps.
 
 ## 1:00 - Demo input
 
@@ -14,15 +16,17 @@ Show a Business Analyst role requiring dashboards, KPIs, stakeholder communicati
 
 ## 1:30 - Demo output
 
-Highlight:
+Highlight the complete evidence-to-practice journey:
 
-- Role Problem Map
-- Industry Context
-- Hiring Evidence Matrix
-- Interview Story Bank
-- Gap Analysis
-- 7-Day Prep Plan
+- Evidence Map: strong proof, partial proof, and genuine gaps
+- source-linked interview stories
+- role-specific follow-up questions
+- coaching mode and realistic mock-interview mode
+- the user's ability to correct evidence before practicing
 
 ## 2:30 - Platform vision
 
-InterviewThread starts as a career concierge agent and can grow into a personal career intelligence graph, hiring signal database, industry interview knowledge graph, coach marketplace, and university career center platform.
+InterviewThread is an open-source, evidence-grounded mock interview platform.
+Close by inviting viewers to test one real resume-to-interview journey, report
+anything inaccurate or confusing, and help shape the founding beta—without
+sharing personal career data in public issues.
