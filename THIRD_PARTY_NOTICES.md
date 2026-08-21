@@ -34,3 +34,12 @@ Product research also reviewed Resume Matcher, Reactive Resume, OpenResume, JobS
 - License: MIT
 - License text: https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE
 - Changes: selected concepts were adapted into open-ended spoken interview prompts and tagged with filtering metadata.
+
+## 30 Seconds of Interviews
+
+- Source: https://github.com/Chalarangelo/30-seconds-of-interviews
+- Pinned source commit: `da235b6185721161b7ebc413075b76dc70339ccf`
+- Copyright: Copyright (c) 2018 Stefan Feješ and contributors
+- License: MIT
+- License text: https://github.com/Chalarangelo/30-seconds-of-interviews/blob/master/LICENSE
+- Changes: answer material was excluded; 103 question prompts were normalized into a generated TypeScript data module, assigned stable InterviewThread IDs, and tagged with interviewer persona, track, answer stage, and L1–L3 difficulty metadata. The original wording is retained except for surrounding product presentation and localization.

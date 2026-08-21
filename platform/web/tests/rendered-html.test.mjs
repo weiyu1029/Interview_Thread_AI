@@ -533,7 +533,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /event\.resultIndex/);
   assert.match(page, /bestSpeechVoice/);
   assert.match(page, /questionOnly/);
-  assert.match(page, /version: 3/);
+  assert.match(page, /version: 4/);
   assert.match(page, /See guidance and answer signals after every response/i);
   assert.match(page, /No hints or live scores/i);
   assert.match(page, /changeInterviewMode/);

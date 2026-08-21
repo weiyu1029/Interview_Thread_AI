@@ -1,9 +1,9 @@
 # Open interview question sources
 
-InterviewThread ships a structured, auditable interview question bank rather than claiming to include “every question on the internet.” The current bank contains **926 questions**:
+InterviewThread ships a structured, auditable interview question bank rather than claiming to include “every question on the internet.” The current bank contains **1,029 questions**:
 
 - **900 original InterviewThread questions** generated from a complete `15 personas × 5 answer stages × 3 difficulty levels × 4 lenses` matrix.
-- **26 attributed adaptations** from three license-compatible open-source projects.
+- **129 attributed questions and adaptations** from four license-compatible open-source projects.
 
 Every bundled question has a stable ID, filtering metadata, and a source record. Original questions are grounded in the user’s resume evidence and job description at render time. Adapted questions retain their upstream source and license links in the product interface.
 
@@ -62,8 +62,30 @@ Difficulty is independent of seniority. A new graduate can receive an L3 pressur
 | [The System Design Primer](https://github.com/donnemartin/system-design-primer) | 10 attributed and adapted system-design prompts | [CC BY 4.0](https://github.com/donnemartin/system-design-primer/blob/master/LICENSE.txt) |
 | [Front-end Developer Interview Questions](https://github.com/h5bp/front-end-developer-interview-questions) | 8 selected and adapted front-end prompts | [MIT](https://github.com/h5bp/front-end-developer-interview-questions/blob/main/LICENSE.md) |
 | [JavaScript Questions](https://github.com/lydiahallie/javascript-questions) | 8 JavaScript concepts adapted into spoken interview prompts | [MIT](https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE) |
+| [30 Seconds of Interviews](https://github.com/Chalarangelo/30-seconds-of-interviews) | 103 independently reviewed web-development questions imported from pinned commit `da235b6` and tagged for spoken practice | [MIT](https://github.com/Chalarangelo/30-seconds-of-interviews/blob/master/LICENSE) |
 
-The three external projects contribute **26 attributed adaptations**, bringing the bundled total to **926 questions**. Their upstream licenses continue to apply to those adaptations; they are not relicensed merely because InterviewThread’s original question bank and application code use MIT.
+The four external projects contribute **129 attributed questions and adaptations**, bringing the bundled total to **1,029 questions**. Their upstream licenses continue to apply to those records; they are not relicensed merely because InterviewThread’s original question bank and application code use MIT.
+
+The 900 InterviewThread records are structured, evidence-aware practice paths rather than 900 scraped company questions. The 129 external records are independently reviewed prompts with direct source and license links. This distinction is retained in the product and documentation so the total remains auditable.
+
+## Smart session selection
+
+The default interface does not render 1,029 prompts in a dropdown. It builds a 5-, 10-, or 15-question session from three decisions: practice goal, session length, and challenge level. Optional track, stage, and follow-up-focus controls remain behind progressive disclosure.
+
+Session generation is deterministic for a stored seed, balances answer stages and L1–L3 difficulty, avoids duplicate IDs within a session, and excludes the latest 200 practiced questions when the remaining pool is large enough. When a narrow preference cannot fill the requested session, the generator adds nearby questions from the same interviewer persona and discloses that fallback.
+
+## Reviewed expansion sources
+
+The following sources were evaluated for future role and industry coverage but are not silently copied into the current 1,029-question total:
+
+- [O*NET 30.3 Database](https://www.onetcenter.org/database.html) — CC BY 4.0 occupation, task, skill, work-style, and competency data. Derived prompts must credit the O*NET database and USDOL/ETA, link the license, identify modifications, and avoid implying endorsement.
+- [ESCO occupations and skills](https://esco.ec.europa.eu/en/classification) — multilingual European occupation and skill classifications suitable for derived role taxonomies with European Commission attribution.
+- [OPM Structured Interviews](https://www.opm.gov/policy-data-oversight/assessment-and-selection/structured-interviews/) — official structured-interview methodology for behavior- and competency-based assessment design.
+- [NIST NICE Framework](https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center/current-versions) — cybersecurity work roles, tasks, knowledge, and skills suitable for future reviewed prompts.
+- [UK Government Digital and Data Capability Framework](https://ddat-capability-framework.service.gov.uk/) — role and proficiency data published under the Open Government Licence.
+- [Data Science Interviews](https://github.com/alexeygrigorev/data-science-interviews) — CC BY 4.0 data, ML, SQL, statistics, and Python material that requires separate adaptation review.
+
+These sources will be added only through reviewed, attributed data modules with stable IDs and tests. Commercial or unclear-license banks remain link-only.
 
 ## Linked-only and excluded sources
 
@@ -83,4 +105,4 @@ New question contributions must include:
 6. No claim that a company is guaranteed to ask the question.
 7. No personal data, confidential interview-loop material, or content obtained in violation of an NDA or website terms.
 
-Add structured records in `platform/web/app/interview-question-bank.ts`, update `THIRD_PARTY_NOTICES.md` when a new external source is bundled, and add tests for count, uniqueness, filtering coverage, and source metadata.
+Add structured records in `platform/web/app/interview-question-bank.ts`, update `THIRD_PARTY_NOTICES.md` when a new external source is bundled, and add tests for count, uniqueness, filtering coverage, source metadata, and session-selection behavior.

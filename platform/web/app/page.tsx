@@ -77,15 +77,18 @@ import {
 } from "./interview-speech";
 import { normalizeTtsText } from "./interview-tts";
 import {
+  buildInterviewSession,
+  InterviewDifficultyMode,
+  InterviewPracticeGoal,
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
   InterviewQuestionDifficulty,
   InterviewQuestionLens,
+  InterviewSessionSize,
   InterviewQuestionTrack,
   OpenInterviewQuestion,
   OPEN_INTERVIEW_QUESTIONS,
   openInterviewQuestionSource,
-  questionsForInterviewRole,
 } from "./interview-question-bank";
 import {
   technicalResourcesForPersona,
@@ -2246,7 +2249,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resourcesIntro:
         "依目前面試官的決策重點推薦。只提供外部連結，不複製第三方題目；開啟前請確認帳號、價格與隱私條款。",
       questionBank: "開源面試題庫",
-      questionBankIntro: "依面試官角色、題型、回答階段、難度與追問焦點選題；L1、L2、L3 每個組合都有題目，且保留來源與授權。",
+      questionBankIntro: "超過 1,000 題可追溯題庫，由系統依面試官、練習目標與近期紀錄自動組卷；L1、L2、L3 都有覆蓋，且保留來源與授權。",
       category: "題型分類",
       allCategories: "全部題型",
       focus: "追問焦點",
@@ -2278,7 +2281,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resourcesIntro:
         "按当前面试官的决策重点推荐。这里只提供外部链接，不复制第三方题目；打开前请确认账号、价格和隐私条款。",
       questionBank: "开源面试题库",
-      questionBankIntro: "按面试官角色、题型、回答阶段、难度和追问重点选题；L1、L2、L3 每种组合都有题目，并保留来源和授权。",
+      questionBankIntro: "超过 1,000 道可追溯题目，由系统按面试官、练习目标和近期记录自动组卷；L1、L2、L3 均有覆盖，并保留来源和授权。",
       category: "题型分类",
       allCategories: "全部题型",
       focus: "追问重点",
@@ -2309,7 +2312,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
     resourcesIntro:
       "Selected for this interviewer’s decision criteria. We link out without copying third-party questions; external sites have their own accounts, pricing, privacy, and terms.",
     questionBank: "Open-source interview question bank",
-    questionBankIntro: "Filter by interviewer role, question type, answer stage, level, and follow-up focus. Every L1, L2, and L3 combination is covered, with source and license preserved.",
+    questionBankIntro: "A traceable bank of 1,000+ questions, automatically assembled by interviewer, practice goal, and recent history. L1, L2, and L3 are covered, with source and license preserved.",
     category: "Question type",
     allCategories: "All question types",
     focus: "Follow-up focus",
@@ -2363,6 +2366,105 @@ function interviewStudioUiFor(locale: LocaleCode) {
     vocabularyNote: flow.languageLocked,
     thinking: `${flow.nextQuestion}…`,
   };
+}
+
+function interviewSessionUiFor(locale: LocaleCode) {
+  if (locale === "zh-TW")
+    return {
+      title: "建立智慧練習場次",
+      intro: "不用從上千題逐題挑選。選擇目標、題數與挑戰程度，系統會依面試官、自身證據與近期練習自動組卷。",
+      goal: "這次想練什麼？",
+      goals: {
+        recommended: "依此面試官推薦",
+        "first-round": "第一輪適配",
+        behavioral: "行為故事",
+        technical: "技術深度",
+        leadership: "領導判斷",
+        pressure: "壓力追問",
+      },
+      length: "場次長度",
+      lengths: { 5: "快速 5 題", 10: "標準 10 題", 15: "完整 15 題" },
+      challenge: "挑戰程度",
+      challenges: {
+        adaptive: "自適應混合",
+        foundation: "基礎表達 · L1",
+        applied: "實務追問 · L2",
+        challenge: "高壓挑戰 · L3",
+      },
+      fineTune: "進階調整（可選）",
+      build: "開始這組練習",
+      another: "換一組題目",
+      ready: "練習場次已準備",
+      eligible: "題符合目前偏好",
+      coverage: "場次涵蓋",
+      fallback: "為補足場次題數，系統已自動加入相近題型。",
+      recent: "未練題不足，這組會重用最早練過的題目。",
+      preview: "第一題預覽",
+    };
+  if (locale === "zh-CN")
+    return {
+      title: "创建智能练习场次",
+      intro: "不必从上千道题逐题挑选。选择目标、题数和挑战程度，系统会按面试官、个人证据和近期练习自动组卷。",
+      goal: "这次想练什么？",
+      goals: {
+        recommended: "按此面试官推荐",
+        "first-round": "首轮匹配",
+        behavioral: "行为故事",
+        technical: "技术深度",
+        leadership: "领导判断",
+        pressure: "压力追问",
+      },
+      length: "场次长度",
+      lengths: { 5: "快速 5 题", 10: "标准 10 题", 15: "完整 15 题" },
+      challenge: "挑战程度",
+      challenges: {
+        adaptive: "自适应混合",
+        foundation: "基础表达 · L1",
+        applied: "实务追问 · L2",
+        challenge: "高压挑战 · L3",
+      },
+      fineTune: "高级调整（可选）",
+      build: "开始这组练习",
+      another: "换一组题目",
+      ready: "练习场次已准备",
+      eligible: "题符合当前偏好",
+      coverage: "场次覆盖",
+      fallback: "为补足场次题数，系统已自动加入相近题型。",
+      recent: "未练题不足，本组会重用最早练过的题目。",
+      preview: "第一题预览",
+    };
+  const english = {
+    title: "Build a smart practice session",
+    intro: "Do not search through 1,000+ questions one by one. Choose a goal, length, and challenge; InterviewThread builds a balanced session for this interviewer and avoids recent repeats.",
+    goal: "What do you want to practice?",
+    goals: {
+      recommended: "Recommended for this interviewer",
+      "first-round": "First-round fit",
+      behavioral: "Behavioral stories",
+      technical: "Technical depth",
+      leadership: "Leadership judgment",
+      pressure: "Pressure follow-ups",
+    },
+    length: "Session length",
+    lengths: { 5: "Quick · 5", 10: "Standard · 10", 15: "Full · 15" },
+    challenge: "Challenge",
+    challenges: {
+      adaptive: "Adaptive mix",
+      foundation: "Foundations · L1",
+      applied: "Applied follow-ups · L2",
+      challenge: "Pressure test · L3",
+    },
+    fineTune: "Fine-tune (optional)",
+    build: "Start this practice session",
+    another: "Build another mix",
+    ready: "Practice session ready",
+    eligible: "questions match these preferences",
+    coverage: "Session coverage",
+    fallback: "Nearby question types were added to complete this session.",
+    recent: "The unseen pool was too small, so the oldest practiced questions were reused.",
+    preview: "First-question preview",
+  };
+  return english;
 }
 
 function interviewScheduleUiFor(locale: LocaleCode) {
@@ -2756,6 +2858,17 @@ export default function Home({
     useState("random");
   const [activeOpenQuestionId, setActiveOpenQuestionId] = useState("");
   const [questionShuffleIndex, setQuestionShuffleIndex] = useState(0);
+  const [interviewPracticeGoal, setInterviewPracticeGoal] =
+    useState<InterviewPracticeGoal>("recommended");
+  const [interviewDifficultyMode, setInterviewDifficultyMode] =
+    useState<InterviewDifficultyMode>("adaptive");
+  const [interviewSessionSize, setInterviewSessionSize] =
+    useState<InterviewSessionSize>(10);
+  const [interviewSessionQuestionIds, setInterviewSessionQuestionIds] =
+    useState<string[]>([]);
+  const [interviewSessionIndex, setInterviewSessionIndex] = useState(0);
+  const [recentInterviewQuestionIds, setRecentInterviewQuestionIds] =
+    useState<string[]>([]);
   const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([]);
   const [interviewAnswer, setInterviewAnswer] = useState("");
   const [interviewTurn, setInterviewTurn] = useState(0);
@@ -2792,6 +2905,7 @@ export default function Home({
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
   const interviewStudioUi = interviewStudioUiFor(locale);
+  const interviewSessionUi = interviewSessionUiFor(locale);
   const technicalResourceUi = technicalResourceCopyFor(locale);
   const resourceAction = technicalResourceUi.action;
   const interviewScheduleUi = interviewScheduleUiFor(locale);
@@ -2870,6 +2984,9 @@ export default function Home({
       const savedInterview = window.localStorage.getItem(
         "aptograph-interview-session",
       );
+      const savedQuestionHistory = window.localStorage.getItem(
+        "interviewthread-question-history",
+      );
       const savedModelSettings = window.localStorage.getItem(
         "aptograph-model-settings",
       );
@@ -2921,6 +3038,23 @@ export default function Home({
           window.localStorage.removeItem("aptograph-story-radar-alerts");
         }
       }
+      if (savedQuestionHistory) {
+        try {
+          const history = JSON.parse(savedQuestionHistory);
+          if (Array.isArray(history))
+            setRecentInterviewQuestionIds(
+              history
+                .filter(
+                  (id): id is string =>
+                    typeof id === "string" &&
+                    OPEN_INTERVIEW_QUESTIONS.some((question) => question.id === id),
+                )
+                .slice(-200),
+            );
+        } catch {
+          window.localStorage.removeItem("interviewthread-question-history");
+        }
+      }
       if (savedInterview && !guestMode) {
         try {
           const session = JSON.parse(savedInterview) as {
@@ -2941,13 +3075,18 @@ export default function Home({
             questionLens?: InterviewQuestionLens | "all";
             selectedQuestionId?: string;
             activeQuestionId?: string;
+            practiceGoal?: InterviewPracticeGoal;
+            difficultyMode?: InterviewDifficultyMode;
+            sessionSize?: InterviewSessionSize;
+            sessionQuestionIds?: string[];
+            sessionIndex?: number;
           };
           if (INTERVIEW_PERSONAS.some((item) => item.id === session.persona))
             setInterviewPersona(session.persona as InterviewPersonaId);
           if (session.mode === "Coaching" || session.mode === "Realistic")
             setInterviewMode(session.mode);
           if (
-            session.version === 3 &&
+            (session.version === 3 || session.version === 4) &&
             session.locale ===
               (initialLocale ||
                 (savedLocale &&
@@ -3009,6 +3148,41 @@ export default function Home({
               )
             )
               setActiveOpenQuestionId(session.activeQuestionId || "");
+            if (
+              [
+                "recommended",
+                "first-round",
+                "behavioral",
+                "technical",
+                "leadership",
+                "pressure",
+              ].includes(session.practiceGoal || "")
+            )
+              setInterviewPracticeGoal(
+                session.practiceGoal || "recommended",
+              );
+            if (
+              ["adaptive", "foundation", "applied", "challenge"].includes(
+                session.difficultyMode || "",
+              )
+            )
+              setInterviewDifficultyMode(
+                session.difficultyMode || "adaptive",
+              );
+            if ([5, 10, 15].includes(Number(session.sessionSize)))
+              setInterviewSessionSize(session.sessionSize || 10);
+            if (Array.isArray(session.sessionQuestionIds))
+              setInterviewSessionQuestionIds(
+                session.sessionQuestionIds.filter((id) =>
+                  OPEN_INTERVIEW_QUESTIONS.some(
+                    (question) => question.id === id,
+                  ),
+                ),
+              );
+            if (Number.isInteger(session.sessionIndex))
+              setInterviewSessionIndex(
+                Math.max(0, Number(session.sessionIndex)),
+              );
           } else {
             window.localStorage.removeItem("aptograph-interview-session");
           }
@@ -3059,6 +3233,8 @@ export default function Home({
       setInterviewTurn(0);
       setInterviewTopicIndex(0);
       setActiveOpenQuestionId("");
+      setInterviewSessionQuestionIds([]);
+      setInterviewSessionIndex(0);
       setInterviewScores(null);
       setInterviewScoreHistory([]);
       setRealisticReviewOpen(false);
@@ -3090,7 +3266,7 @@ export default function Home({
     window.localStorage.setItem(
       "aptograph-interview-session",
       JSON.stringify({
-        version: 3,
+        version: 4,
         persona: interviewPersona,
         mode: interviewMode,
         messages: interviewMessages.slice(-12),
@@ -3106,6 +3282,11 @@ export default function Home({
         questionLens: interviewQuestionLens,
         selectedQuestionId: selectedOpenQuestionId,
         activeQuestionId: activeOpenQuestionId,
+        practiceGoal: interviewPracticeGoal,
+        difficultyMode: interviewDifficultyMode,
+        sessionSize: interviewSessionSize,
+        sessionQuestionIds: interviewSessionQuestionIds,
+        sessionIndex: interviewSessionIndex,
         locale,
       }),
     );
@@ -3118,6 +3299,11 @@ export default function Home({
     interviewQuestionDifficulty,
     interviewQuestionLens,
     interviewQuestionTrack,
+    interviewPracticeGoal,
+    interviewDifficultyMode,
+    interviewSessionSize,
+    interviewSessionQuestionIds,
+    interviewSessionIndex,
     interviewScores,
     interviewScoreHistory,
     interviewTopicIndex,
@@ -3128,6 +3314,14 @@ export default function Home({
     activeOpenQuestionId,
     selectedOpenQuestionId,
   ]);
+
+  useEffect(() => {
+    if (!preferencesLoaded.current) return;
+    window.localStorage.setItem(
+      "interviewthread-question-history",
+      JSON.stringify(recentInterviewQuestionIds.slice(-200)),
+    );
+  }, [recentInterviewQuestionIds]);
 
   useEffect(() => {
     if (!preferencesLoaded.current || guestMode) return;
@@ -3921,16 +4115,7 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     stopInterviewSpeech();
-    const candidates = questionsForInterviewRole(
-      interviewPersona,
-      interviewQuestionTrack,
-      interviewQuestionDepth,
-      interviewQuestionDifficulty,
-      interviewQuestionLens,
-    );
-    const chosenQuestion =
-      candidates.find((item) => item.id === selectedOpenQuestionId) ||
-      candidates[questionShuffleIndex % Math.max(candidates.length, 1)];
+    const chosenQuestion = proposedInterviewQuestions[0];
     const plannedOpening = chosenQuestion
       ? openQuestionForInterview(chosenQuestion, matches, locale, 0)
       : questionForInterview(interviewPersona, 0, matches, locale, 0);
@@ -3942,8 +4127,15 @@ export default function Home({
     setInterviewTurn(chosenQuestion?.depth || 0);
     setInterviewTopicIndex(0);
     setActiveOpenQuestionId(chosenQuestion?.id || "");
-    if (selectedOpenQuestionId === "random")
-      setQuestionShuffleIndex((current) => current + 1);
+    setInterviewSessionQuestionIds(proposedInterviewSession.questionIds);
+    setInterviewSessionIndex(0);
+    if (chosenQuestion)
+      setRecentInterviewQuestionIds((current) =>
+        [...current.filter((id) => id !== chosenQuestion.id), chosenQuestion.id].slice(
+          -200,
+        ),
+      );
+    setQuestionShuffleIndex((current) => current + 1);
     setInterviewScores(null);
     setInterviewScoreHistory([]);
     setRealisticReviewOpen(false);
@@ -3968,6 +4160,8 @@ export default function Home({
     setInterviewTurn(0);
     setInterviewTopicIndex(0);
     setActiveOpenQuestionId("");
+    setInterviewSessionQuestionIds([]);
+    setInterviewSessionIndex(0);
     setInterviewScores(null);
     setInterviewScoreHistory([]);
     setRealisticReviewOpen(false);
@@ -4005,6 +4199,38 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     const next = nextInterviewCoordinates(forceNewTopic);
+    const nextSessionIndex = interviewSessionIndex + 1;
+    const queuedQuestion = OPEN_INTERVIEW_QUESTIONS.find(
+      (question) =>
+        question.id === interviewSessionQuestionIds[nextSessionIndex],
+    );
+    if (queuedQuestion) {
+      const queuedText = openQuestionForInterview(
+        queuedQuestion,
+        matches,
+        locale,
+        next.topicIndex,
+      );
+      setInterviewMessages((current) => [
+        ...current,
+        { role: "assistant", content: queuedText },
+      ]);
+      setInterviewSessionIndex(nextSessionIndex);
+      setActiveOpenQuestionId(queuedQuestion.id);
+      setInterviewTurn(queuedQuestion.depth);
+      setInterviewTopicIndex(next.topicIndex);
+      setInterviewAnswer("");
+      setVoiceInterim("");
+      setRecognitionConfidence(null);
+      setIsListening(false);
+      setRecentInterviewQuestionIds((current) =>
+        [...current.filter((id) => id !== queuedQuestion.id), queuedQuestion.id].slice(
+          -200,
+        ),
+      );
+      if (autoReadInterviewQuestions) scheduleInterviewSpeech(queuedText);
+      return;
+    }
     const nextQuestion = questionForInterview(
       interviewPersona,
       next.turn,
@@ -4556,17 +4782,24 @@ export default function Home({
           question.persona === interviewPersona && question.track === track,
       ),
   );
-  const filteredOpenQuestions = questionsForInterviewRole(
-    interviewPersona,
-    interviewQuestionTrack,
-    interviewQuestionDepth,
-    interviewQuestionDifficulty,
-    interviewQuestionLens,
-  );
+  const proposedInterviewSession = buildInterviewSession({
+    persona: interviewPersona,
+    goal: interviewPracticeGoal,
+    size: interviewSessionSize,
+    difficultyMode: interviewDifficultyMode,
+    track: interviewQuestionTrack,
+    depth: interviewQuestionDepth,
+    lens: interviewQuestionLens,
+    seed: questionShuffleIndex + 1,
+    recentlyPracticedIds: recentInterviewQuestionIds,
+  });
+  const proposedInterviewQuestions = proposedInterviewSession.questionIds
+    .map((id) => OPEN_INTERVIEW_QUESTIONS.find((question) => question.id === id))
+    .filter((question): question is OpenInterviewQuestion => Boolean(question));
   const previewOpenQuestion =
-    filteredOpenQuestions.find(
-      (question) => question.id === selectedOpenQuestionId,
-    ) || filteredOpenQuestions[0];
+    OPEN_INTERVIEW_QUESTIONS.find(
+      (question) => question.id === activeOpenQuestionId,
+    ) || proposedInterviewQuestions[0];
   const previewOpenQuestionText = previewOpenQuestion
     ? questionOnly(
         openQuestionForInterview(previewOpenQuestion, matches, locale, 0),
@@ -6063,6 +6296,8 @@ export default function Home({
                       setInterviewQuestionLens("all");
                       setSelectedOpenQuestionId("random");
                       setActiveOpenQuestionId("");
+                      setInterviewSessionQuestionIds([]);
+                      setInterviewSessionIndex(0);
                       setInterviewScores(null);
                       setInterviewScoreHistory([]);
                       setRealisticReviewOpen(false);
@@ -6112,7 +6347,10 @@ export default function Home({
                   type="button"
                   className="button primary"
                   onClick={startInterview}
-                  disabled={interviewThinking || !filteredOpenQuestions.length}
+                  disabled={
+                    interviewThinking ||
+                    !proposedInterviewSession.questionIds.length
+                  }
                 >
                   {interviewMessages.length ? interview.restart : interview.start}
                 </button>
@@ -6131,129 +6369,219 @@ export default function Home({
                     <p>{interviewStudioUi.questionBankIntro}</p>
                   </div>
                   <span className="status-pill light">
-                    {filteredOpenQuestions.length} {interviewStudioUi.questionsAvailable}
-                    {" · "}
-                    {OPEN_INTERVIEW_QUESTIONS.length} {interviewStudioUi.totalQuestions}
+                    {OPEN_INTERVIEW_QUESTIONS.length}{" "}
+                    {interviewStudioUi.totalQuestions}
                   </span>
                 </div>
-                <div className="open-question-filters">
-                  <label>
-                    <span>{interviewStudioUi.category}</span>
-                    <select
-                      value={interviewQuestionTrack}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionTrack(
-                          event.target.value as InterviewQuestionTrack | "all",
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">
-                        {interviewStudioUi.allCategories}
-                      </option>
-                      {availableInterviewQuestionTracks.map((track) => (
-                        <option value={track} key={track}>
-                          {questionTrackLabelFor(locale, track)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>{interviewStudioUi.focus}</span>
-                    <select
-                      value={interviewQuestionLens}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionLens(
-                          event.target.value as InterviewQuestionLens | "all",
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">{interviewStudioUi.allFocuses}</option>
-                      {INTERVIEW_QUESTION_LENSES.map((lens) => (
-                        <option value={lens} key={lens}>
-                          {questionLensLabelFor(locale, lens)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>{interviewStudioUi.stage}</span>
-                    <select
-                      value={interviewQuestionDepth}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionDepth(
-                          event.target.value === "all"
-                            ? "all"
-                            : (Number(event.target.value) as OpenInterviewQuestion["depth"]),
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">{interviewStudioUi.allStages}</option>
-                      {interviewFlow.stages.map((stage, index) => (
-                        <option value={index} key={stage}>
-                          {index + 1}. {stage}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>{interviewStudioUi.difficulty}</span>
-                    <select
-                      value={interviewQuestionDifficulty}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionDifficulty(
-                          event.target.value === "all"
-                            ? "all"
-                            : (Number(event.target.value) as InterviewQuestionDifficulty),
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">
-                        {interviewStudioUi.allDifficulties}
-                      </option>
-                      {[1, 2, 3].map((level) => (
-                        <option value={level} key={level}>
-                          L{level}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="open-question-picker">
-                    <span>{interviewStudioUi.chooseQuestion}</span>
-                    <select
-                      value={selectedOpenQuestionId}
-                      disabled={!filteredOpenQuestions.length || interviewThinking}
-                      onChange={(event) =>
-                        setSelectedOpenQuestionId(event.target.value)
-                      }
-                    >
-                      <option value="random">
-                        {interviewStudioUi.randomQuestion}
-                      </option>
-                      {filteredOpenQuestions.map((question) => (
-                        <option value={question.id} key={question.id}>
-                          L{question.difficulty}
-                          {question.lens
-                            ? ` · ${questionLensLabelFor(locale, question.lens)}`
-                            : ""}
-                          {" · "}
-                          {questionOnly(
-                            openQuestionForInterview(question, matches, locale, 0),
+                <div className="smart-session-builder">
+                  <div className="smart-session-controls">
+                    <div>
+                      <h4>{interviewSessionUi.title}</h4>
+                      <p>{interviewSessionUi.intro}</p>
+                    </div>
+                    <fieldset>
+                      <legend>{interviewSessionUi.goal}</legend>
+                      <div className="session-choice-grid goals">
+                        {(
+                          [
+                            "recommended",
+                            "first-round",
+                            "behavioral",
+                            "technical",
+                            "leadership",
+                            "pressure",
+                          ] as InterviewPracticeGoal[]
+                        ).map((goal) => (
+                          <label key={goal}>
+                            <input
+                              type="radio"
+                              name="interview-practice-goal"
+                              value={goal}
+                              checked={interviewPracticeGoal === goal}
+                              disabled={interviewThinking}
+                              onChange={() => setInterviewPracticeGoal(goal)}
+                            />
+                            <span>{interviewSessionUi.goals[goal]}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <div className="session-compact-options">
+                      <fieldset>
+                        <legend>{interviewSessionUi.length}</legend>
+                        <div className="session-choice-grid compact">
+                          {([5, 10, 15] as InterviewSessionSize[]).map(
+                            (size) => (
+                              <label key={size}>
+                                <input
+                                  type="radio"
+                                  name="interview-session-size"
+                                  value={size}
+                                  checked={interviewSessionSize === size}
+                                  disabled={interviewThinking}
+                                  onChange={() => setInterviewSessionSize(size)}
+                                />
+                                <span>{interviewSessionUi.lengths[size]}</span>
+                              </label>
+                            ),
                           )}
-                        </option>
+                        </div>
+                      </fieldset>
+                      <fieldset>
+                        <legend>{interviewSessionUi.challenge}</legend>
+                        <div className="session-choice-grid compact">
+                          {(
+                            [
+                              "adaptive",
+                              "foundation",
+                              "applied",
+                              "challenge",
+                            ] as InterviewDifficultyMode[]
+                          ).map((mode) => (
+                            <label key={mode}>
+                              <input
+                                type="radio"
+                                name="interview-difficulty-mode"
+                                value={mode}
+                                checked={interviewDifficultyMode === mode}
+                                disabled={interviewThinking}
+                                onChange={() =>
+                                  setInterviewDifficultyMode(mode)
+                                }
+                              />
+                              <span>{interviewSessionUi.challenges[mode]}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    </div>
+                  </div>
+                  <aside className="smart-session-summary" aria-live="polite">
+                    <span>{interviewSessionUi.ready}</span>
+                    <strong>{proposedInterviewQuestions.length}</strong>
+                    <p>
+                      {proposedInterviewSession.eligibleCount}{" "}
+                      {interviewSessionUi.eligible}
+                    </p>
+                    <div className="session-coverage-chips">
+                      {proposedInterviewSession.coverage.tracks.map((track) => (
+                        <i key={track}>{questionTrackLabelFor(locale, track)}</i>
                       ))}
-                    </select>
-                  </label>
+                      {proposedInterviewSession.coverage.difficulties.map(
+                        (difficulty) => <i key={difficulty}>L{difficulty}</i>,
+                      )}
+                      <i>
+                        {proposedInterviewSession.coverage.depths.length}{" "}
+                        {interviewStudioUi.stage}
+                      </i>
+                    </div>
+                    {proposedInterviewSession.usedFallback && (
+                      <small>{interviewSessionUi.fallback}</small>
+                    )}
+                    {proposedInterviewSession.reusedRecentQuestions && (
+                      <small>{interviewSessionUi.recent}</small>
+                    )}
+                    <div className="session-builder-actions">
+                      <button
+                        type="button"
+                        className="button primary"
+                        onClick={startInterview}
+                        disabled={
+                          interviewThinking ||
+                          !proposedInterviewSession.questionIds.length
+                        }
+                      >
+                        {interviewSessionUi.build}
+                      </button>
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => {
+                          setActiveOpenQuestionId("");
+                          setQuestionShuffleIndex((current) => current + 1);
+                        }}
+                        disabled={interviewThinking}
+                      >
+                        {interviewSessionUi.another}
+                      </button>
+                    </div>
+                  </aside>
                 </div>
+                <details className="open-question-advanced">
+                  <summary>{interviewSessionUi.fineTune}</summary>
+                  <div className="open-question-filters">
+                    <label>
+                      <span>{interviewStudioUi.category}</span>
+                      <select
+                        value={interviewQuestionTrack}
+                        disabled={interviewThinking}
+                        onChange={(event) => {
+                          setInterviewQuestionTrack(
+                            event.target.value as InterviewQuestionTrack | "all",
+                          );
+                          setInterviewQuestionLens("all");
+                          setSelectedOpenQuestionId("random");
+                        }}
+                      >
+                        <option value="all">
+                          {interviewStudioUi.allCategories}
+                        </option>
+                        {availableInterviewQuestionTracks.map((track) => (
+                          <option value={track} key={track}>
+                            {questionTrackLabelFor(locale, track)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>{interviewStudioUi.focus}</span>
+                      <select
+                        value={interviewQuestionLens}
+                        disabled={interviewThinking}
+                        onChange={(event) => {
+                          setInterviewQuestionLens(
+                            event.target.value as InterviewQuestionLens | "all",
+                          );
+                          setSelectedOpenQuestionId("random");
+                        }}
+                      >
+                        <option value="all">{interviewStudioUi.allFocuses}</option>
+                        {INTERVIEW_QUESTION_LENSES.map((lens) => (
+                          <option value={lens} key={lens}>
+                            {questionLensLabelFor(locale, lens)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>{interviewStudioUi.stage}</span>
+                      <select
+                        value={interviewQuestionDepth}
+                        disabled={interviewThinking}
+                        onChange={(event) => {
+                          setInterviewQuestionDepth(
+                            event.target.value === "all"
+                              ? "all"
+                              : (Number(event.target.value) as OpenInterviewQuestion["depth"]),
+                          );
+                          setSelectedOpenQuestionId("random");
+                        }}
+                      >
+                        <option value="all">{interviewStudioUi.allStages}</option>
+                        {interviewFlow.stages.map((stage, index) => (
+                          <option value={index} key={stage}>
+                            {index + 1}. {stage}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </details>
                 {previewOpenQuestion && previewOpenQuestionSource ? (
                   <article className="open-question-preview" aria-live="polite">
+                    <span className="open-question-preview-label">
+                      {interviewSessionUi.preview}
+                    </span>
                     <div>
                       <span>
                         {questionTrackLabelFor(locale, previewOpenQuestion.track)}
