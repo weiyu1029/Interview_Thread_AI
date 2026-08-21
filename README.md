@@ -1,8 +1,12 @@
 # InterviewThread
 
+[![CI](https://github.com/weiyu1029/Interview_Thread_AI/actions/workflows/ci.yml/badge.svg)](https://github.com/weiyu1029/Interview_Thread_AI/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/badge/license-MIT-273846.svg)](LICENSE)
+[![Founding Beta](https://img.shields.io/badge/status-founding%20beta-6f8da6.svg)](https://interviewthreadai.com/en/beta)
+
 ![InterviewThread — Evidence you can defend](assets/interviewthread-readme-hero-v2.png)
 
-**A real resume. A real job description. Interview stories you can defend.**
+**Ace the interview for your dream job—with evidence you can defend.**
 
 InterviewThread is open-source, evidence-grounded interview intelligence. It
 maps role requirements to candidate-provided proof, keeps genuine gaps visible,
@@ -12,7 +16,24 @@ questions—without inventing an achievement.
 > **Evidence rule:** no source, no claim. Partial proof stays qualified. Missing
 > proof stays visible.
 
-[Try the live product](https://interviewthreadai.com/en) · [Technical design](docs/technical_solution.md) · [Closed beta](docs/product_iteration.md) · [Product strategy](docs/product_strategy.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Join the founding beta](https://interviewthreadai.com/en/beta) · [Try InterviewThread](https://interviewthreadai.com/en) · [Watch the 60-second walkthrough](https://interviewthreadai.com/interviewthread-60-second-walkthrough.mp4) · [Contribute](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Security](SECURITY.md)
+
+> **Founding beta testers wanted.** We are inviting new graduates, career
+> changers, non-native English speakers, and candidates interviewing in the
+> next 30 days to test the complete resume-to-mock-interview workflow. We want
+> candid reports about anything inaccurate, repetitive, confusing, inaccessible,
+> or blocked—not promotional praise.
+
+## Test InterviewThread in about 15 minutes
+
+1. Add a resume or truthful career evidence and one real job post.
+2. Review the evidence matches, genuine gaps, and suggested interview stories.
+3. Complete one coaching-mode or realistic-mode mock interview.
+4. [Share the first thing that felt wrong or difficult](https://interviewthreadai.com/en/contact).
+
+The beta application does not ask for a resume or job description. Guest-mode
+interview history is not saved. Never paste real candidate data into a public
+GitHub issue; use synthetic examples when reporting a reproducible bug.
 
 ## Most career AI writes first. InterviewThread verifies first.
 
@@ -54,9 +75,10 @@ recorded as provenance and never counts as proof by itself. See the
 
 InterviewThread does **not** claim to predict a proprietary applicant tracking system. It provides a transparent, reproducible comparison that the candidate can inspect.
 
-## Public web experience
+## Legacy Streamlit reference experience
 
-The Streamlit app supports:
+The original Streamlit implementation remains available for local evaluation
+and feature experiments. It supports:
 
 - pasted candidate profiles;
 - in-memory PDF, DOCX, ODT, RTF, TXT, Markdown, HTML, CSV, JSON, and XLSX parsing;
@@ -68,7 +90,7 @@ The Streamlit app supports:
 - a human-reviewed, session-local application tracker with CSV import/export;
 - English user interface, reports, and contributor documentation.
 
-## Full platform foundation
+## Production web platform
 
 The `platform/` directory is the production-oriented evolution path for free
 accounts, permanent tracking, and open-source collaboration:
@@ -196,7 +218,7 @@ The deterministic matrix remains canonical when Gemini is enabled.
 ## Project structure
 
 ```text
-careerproof-agent/
+Interview_Thread_AI/
 ├── app/
 │   ├── agent.py                 # Google ADK entry point
 │   ├── schemas.py               # validated public request contract
@@ -256,8 +278,8 @@ Use `streamlit_app.py` as the entry point. The application is fully useful witho
 ### Docker
 
 ```bash
-docker build -t careerstorymap-agent .
-docker run --rm -p 8501:8501 careerstorymap-agent
+docker build -t interviewthread .
+docker run --rm -p 8501:8501 interviewthread
 ```
 
 ### Multi-user platform
@@ -265,16 +287,21 @@ docker run --rm -p 8501:8501 careerstorymap-agent
 Use `platform/docker-compose.yml` for local evaluation. For public production,
 use managed PostgreSQL, reviewed schema migrations, encrypted backups, a
 rate-limiting proxy, and an asynchronous document queue before enabling open
-registration. The Streamlit version remains the reference implementation and
-feature incubator.
+registration. The Next.js workspace is the public product. The Streamlit
+version remains a legacy reference implementation and feature incubator.
 
 ## Community maintenance
 
 - Start with an issue for scoring, data-flow, or architecture changes.
-- Use the [closed-beta and release-gate system](docs/product_iteration.md) for staged, reversible product changes.
+- Join the [founding beta](https://interviewthreadai.com/en/beta) to test the
+  hosted product, or follow the [beta testing guide](docs/BETA_TESTING.md) to
+  submit reproducible feedback.
+- Use the [beta and release-gate system](docs/product_iteration.md) for staged,
+  reversible product changes.
 - Use synthetic resumes and job descriptions in tests and reports.
 - Follow the evidence and privacy rules in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Review project decisions in [GOVERNANCE.md](GOVERNANCE.md).
+- Track public changes in [CHANGELOG.md](CHANGELOG.md).
 - Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## Origins and attribution

@@ -1,6 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/weiyu1029/CareerStoryMap-agent/security/advisories/new
+    url: https://github.com/weiyu1029/Interview_Thread_AI/security/advisories/new
     about: Report security and privacy problems privately.
-
+  - name: Founding beta
+    url: https://interviewthreadai.com/en/beta
+    about: Apply to test the hosted resume-to-mock-interview workflow.
+  - name: Private product feedback
+    url: https://interviewthreadai.com/en/contact
+    about: Share feedback without publishing career data in a GitHub issue.

@@ -1,10 +1,10 @@
-# CareerStoryMap Platform
+# InterviewThread Platform
 
-This directory is the production-oriented evolution path for CareerStoryMap. The
-root Streamlit application remains the simplest public reference deployment;
-the platform adds a professional web client and a multi-tenant API for accounts,
-permanent history, shared workspaces, and usage controls. Every feature is free
-and open source.
+This directory contains the production-oriented InterviewThread platform. The
+Next.js workspace powers the public product; the root Streamlit application is
+retained as a legacy local reference. The platform adds accounts, permanent
+history, shared workspaces, and usage controls. Every current feature is open
+source.
 
 ## Stack
 
@@ -15,7 +15,8 @@ and open source.
 
 ## Local start
 
-1. Copy `.env.example` to `.env` and replace `CAREERPROOF_JWT_SECRET`.
+1. Copy `.env.example` to `.env` and replace the legacy compatibility variable
+   `CAREERPROOF_JWT_SECRET`.
 2. Run `docker compose up --build` from this directory.
 3. Open `http://localhost:3000`; API documentation is at
    `http://localhost:8000/docs`.

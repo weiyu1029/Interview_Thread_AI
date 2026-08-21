@@ -1,6 +1,15 @@
-# Contributing to CareerStoryMap Agent
+# Contributing to InterviewThread
 
-Thank you for helping make evidence-grounded career tools available to more people.
+Thank you for helping make evidence-grounded interview preparation available to
+more people.
+
+## Ways to contribute
+
+- Join the [founding beta](https://interviewthreadai.com/en/beta) and follow the
+  [beta testing guide](docs/BETA_TESTING.md).
+- Report a reproducible bug using synthetic resume and job-description data.
+- Improve accessibility, localization, interview realism, documentation, or tests.
+- Review an issue labeled `good first issue`, `help wanted`, or `beta-feedback`.
 
 ## Before you start
 
@@ -32,17 +41,28 @@ Run the quality gates:
 make check
 ```
 
-For the account-backed platform, copy `platform/.env.example`, install
-`platform/api/requirements.txt`, and run the web and API checks described in
-`platform/README.md`. Never use a production database or a real model key in a
-test fixture.
+The production interface is the Next.js workspace. Run it locally with:
+
+```bash
+cd platform/web
+npm ci
+npm run dev
+```
+
+Run its quality gates with `npm run lint` and `npm run test`. For the optional
+FastAPI service, copy `platform/.env.example`, install
+`platform/api/requirements.txt`, and follow `platform/README.md`. The root
+Streamlit application is a legacy reference implementation, not the canonical
+hosted interface. Never use a production database or a real model key in a test
+fixture.
 
 ## Pull request expectations
 
 1. Link the issue your PR addresses.
 2. Keep the change focused and explain the user impact.
 3. Add or update tests for matching, scoring, privacy, or parsing behavior.
-4. Update English documentation when behavior or configuration changes.
+4. Update English documentation and affected locale copy when behavior or
+   configuration changes.
 5. Include before/after screenshots for visible UI changes.
 6. Confirm that no candidate data or credentials are committed.
 

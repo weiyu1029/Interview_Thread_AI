@@ -6,7 +6,7 @@ InterviewThread ships a structured interview question bank that can be filtered 
 
 | Source | Included use | License |
 | --- | --- | --- |
-| [InterviewThread Community Question Bank](https://github.com/weiyu1029/careerproof-agent) | 75 original, evidence-grounded role questions | MIT |
+| [InterviewThread Community Question Bank](https://github.com/weiyu1029/Interview_Thread_AI) | 75 original, evidence-grounded role questions | MIT |
 | [The System Design Primer](https://github.com/donnemartin/system-design-primer) | 10 attributed and adapted system-design prompts | CC BY 4.0 |
 | [Front-end Developer Interview Questions](https://github.com/h5bp/front-end-developer-interview-questions) | 8 selected and adapted front-end prompts | MIT |
 | [JavaScript Questions](https://github.com/lydiahallie/javascript-questions) | 8 JavaScript concepts adapted into spoken interview prompts | MIT |
@@ -25,4 +25,3 @@ New question contributions must include:
 6. No claim that a company is guaranteed to ask the question.
 
 Add structured records in `platform/web/app/interview-question-bank.ts`, update `THIRD_PARTY_NOTICES.md` when a new external source is bundled, and add tests for filtering and source metadata.
-

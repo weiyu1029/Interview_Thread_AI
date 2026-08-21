@@ -163,11 +163,11 @@ test("publishes an opt-in closed-beta lifecycle without blocking public tools", 
   assert.match(chinese, /在全面開放前，一起把 InterviewThread 測好/);
   assert.match(chinese, /登入後申請/);
 
-  const [route, application, database, migration, iteration] = await Promise.all([
+  const [route, application, database, schema, iteration] = await Promise.all([
     readFile(new URL("../app/api/beta/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/BetaApplication.tsx", import.meta.url), "utf8"),
     readFile(new URL("../db/index.ts", import.meta.url), "utf8"),
-    readFile(new URL("../drizzle/0001_lonely_vector.sql", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
     readFile(new URL("../../../docs/product_iteration.md", import.meta.url), "utf8"),
   ]);
   assert.match(route, /termsAccepted/);
@@ -178,7 +178,7 @@ test("publishes an opt-in closed-beta lifecycle without blocking public tools", 
   assert.match(database, /beta_participants/);
   assert.match(database, /feedback_context/);
   assert.match(database, /beta_application_withdrawn/);
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS `beta_participants`/);
+  assert.match(schema, /sqliteTable\("beta_participants"/);
   assert.match(iteration, /Closed beta/);
   assert.match(iteration, /Release gates/);
   assert.match(iteration, /S0 — Stop/);
@@ -441,20 +441,20 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(globals, /\.hero-title--long/);
   assert.match(globals, /\[lang="ko"\] \.hero-title/);
-  assert.match(layout, /interviewthread-20260820-v2/);
-  assert.match(layout, /\/favicon\.ico\?v=/);
-  assert.match(layout, /\/icon-192\.png\?v=/);
-  assert.match(layout, /\/icon-512\.png\?v=/);
-  assert.match(layout, /\/favicon-32x32\.png/);
-  assert.match(layout, /\/apple-touch-icon\.png/);
+  assert.match(layout, /\/interviewthread-favicon-v6\.ico/);
+  assert.match(layout, /\/interviewthread-favicon-32-v6\.png/);
+  assert.match(layout, /\/interviewthread-icon-192-v6\.png/);
+  assert.match(layout, /\/interviewthread-icon-512-v6\.png/);
+  assert.match(layout, /\/interviewthread-apple-v6\.png/);
+  assert.match(layout, /\/interviewthread-site-v6\.webmanifest/);
   assert.match(layout, /msapplication-TileImage/);
   assert.match(layout, /logo: \{/);
   assert.match(oauthProviders, /provider === "linkedin"/);
   assert.match(oauthProviders, /\/auth\/linkedin\/callback/);
   assert.match(oauthSecurity, /callbackPath\(provider\)/);
   assert.match(linkedinCallback, /provider: "linkedin"/);
-  assert.match(manifest, /\/icon-192\.png/);
-  assert.match(manifest, /\/icon-512\.png/);
+  assert.match(manifest, /\/interviewthread-icon-192-v6\.png/);
+  assert.match(manifest, /\/interviewthread-icon-512-v6\.png/);
   assert.match(
     globals,
     /\.hero \.hero-actions\s*\{[^}]*margin-top:\s*clamp\(46px,\s*4\.2vw,\s*56px\)/s,
@@ -623,7 +623,15 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(mobileNav, /Escape/);
   assert.match(
     globals,
-    /@media \(max-width: 1480px\)[\s\S]*?\.topbar > \.locale-control,[\s\S]*?\.topbar > \.account-link\s*\{\s*display: none;/,
+    /@media \(max-width: 1480px\)[\s\S]*?\.topnav \.topnav-secondary\s*\{\s*display: none;[\s\S]*?\.topbar \.mobile-nav\s*\{\s*display: block;/,
+  );
+  assert.match(
+    globals,
+    /@media \(max-width: 1180px\)[\s\S]*?\.topbar > \.account-link\s*\{\s*display: none;/,
+  );
+  assert.match(
+    globals,
+    /@media \(max-width: 820px\)[\s\S]*?\.topnav,[\s\S]*?\.topbar > \.locale-control\s*\{\s*display: none;/,
   );
   for (const publicSurface of [layout, page, readme, strategy, brandGuide]) {
     assert.doesNotMatch(publicSurface, /CareerProof/);

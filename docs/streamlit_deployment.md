@@ -1,6 +1,11 @@
-# Public Deployment Guide
+# Legacy Streamlit Deployment Guide
 
-## Recommended first release: Streamlit Community Cloud
+The public InterviewThread product runs at
+[interviewthreadai.com](https://interviewthreadai.com). This guide is for
+self-hosters who want to evaluate the original Streamlit reference
+implementation; it is not the production deployment guide.
+
+## Streamlit Community Cloud
 
 Use the existing Streamlit application for the open-source MVP. It keeps deployment simple, supports public testing, and makes the deterministic Evidence Guard available without charging the project owner for model calls.
 
@@ -14,7 +19,7 @@ streamlit_app.py
 
 1. Push the repository to GitHub.
 2. Open [Streamlit Community Cloud](https://share.streamlit.io/).
-3. Create an app from `weiyu1029/careerproof-agent`.
+3. Create an app from `weiyu1029/Interview_Thread_AI`.
 4. Select the production branch.
 5. Set the main file path to `streamlit_app.py`.
 6. Deploy without a model key for deterministic public access.
@@ -51,14 +56,14 @@ Verify these paths before release:
 ## Docker deployment
 
 ```bash
-docker build -t careerstorymap-agent .
-docker run --rm -p 8501:8501 careerstorymap-agent
+docker build -t interviewthread .
+docker run --rm -p 8501:8501 interviewthread
 ```
 
 Pass a server key only when the deployment has appropriate controls:
 
 ```bash
-docker run --rm -p 8501:8501 -e GOOGLE_API_KEY careerstorymap-agent
+docker run --rm -p 8501:8501 -e GOOGLE_API_KEY interviewthread
 ```
 
 ## Privacy and operations checklist

@@ -1,4 +1,4 @@
-Feature: CareerStoryMap Agent
+Feature: InterviewThread
 
   Scenario: Decode a job description
     Given a candidate provides a job description

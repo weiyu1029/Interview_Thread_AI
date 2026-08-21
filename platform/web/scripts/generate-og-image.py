@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the CareerStoryMap social preview with the web brand type system."""
+"""Generate the InterviewThread social preview with the web brand type system."""
 
 from pathlib import Path
 
@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "public" / "og-careerstorymap.png"
+OUTPUT = ROOT / "public" / "og-interviewthread.png"
 WIDTH, HEIGHT = 1200, 630
 
 PAPER = "#F5F4F0"
@@ -93,7 +93,7 @@ def generate() -> None:
     draw.arc((70, 66, 100, 96), start=38, end=320, fill=WHITE, width=3)
     draw.text((76, 71), "CS", font=font(15, "Bold"), fill=MIST)
     draw.ellipse((96, 69, 102, 75), fill=WHITE)
-    draw.text((124, 66), "CareerStoryMap", font=font(25, "SemiBold"), fill=INK)
+    draw.text((124, 66), "InterviewThread", font=font(25, "SemiBold"), fill=INK)
     text_with_tracking(
         draw,
         (125, 95),

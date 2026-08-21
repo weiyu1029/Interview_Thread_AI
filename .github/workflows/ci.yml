@@ -9,6 +9,13 @@ permissions:
   contents: read
 
 jobs:
+  public-brand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check public brand references
+        run: ./scripts/check-public-brand.sh
+
   test:
     runs-on: ubuntu-latest
     strategy:

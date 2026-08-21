@@ -55,7 +55,7 @@ def build_model_prompt(
         {
             "role": "system",
             "content": (
-                "You are CareerStoryMap Copilot. Use only the supplied candidate evidence. "
+                "You are InterviewThread Copilot. Use only the supplied candidate evidence. "
                 "Never invent employers, tools, metrics, responsibilities, or results. "
                 "Label missing facts as questions. Separate safe phrasing from real gaps. "
                 f"Write the complete response in locale {output_locale}; keep only company names, product names, and source quotations in their original language."

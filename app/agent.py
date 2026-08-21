@@ -55,7 +55,7 @@ def careerstorymap_strategy(input_json: str) -> str:
     }
 
     return f"""
-You are CareerStoryMap Agent, a personal AI career concierge.
+You are InterviewThread, an evidence-grounded AI interview coach.
 
 Your goal is not to fabricate interview answers.
 Your goal is to help a job seeker build credible, evidence-based interview strategy.
@@ -149,13 +149,13 @@ Rules:
 
 
 root_agent = Agent(
-    name="careerstorymap_agent",
+    name="interviewthread_agent",
     model=Gemini(
         model=MODEL_NAME,
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=(
-        "You are CareerStoryMap Agent. Always call the careerstorymap_strategy tool "
+        "You are InterviewThread. Always call the careerstorymap_strategy tool "
         "when the user provides a job description or candidate profile. Use the "
         "tool output to write a structured, evidence-based career strategy report. "
         "Be practical, honest, and industry-specific. Never fabricate experience."

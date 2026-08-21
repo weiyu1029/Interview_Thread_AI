@@ -1,0 +1,44 @@
+name: Translation or localization report
+description: Report unclear, clipped, untranslated, or culturally awkward copy.
+title: "i18n: "
+labels: [localization]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for improving InterviewThread for more people. Do not include
+        a real resume, job description, interview transcript, or personal data.
+  - type: input
+    id: language
+    attributes:
+      label: Language and region
+      placeholder: "Example: Traditional Chinese (Taiwan)"
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page or product area
+      placeholder: "Example: /zh-tw, Mock Interview"
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text or display problem
+      description: Quote only interface copy; remove all personal information.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording or layout
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: "Example: Safari 18, iPhone 15"
+    validations:
+      required: true

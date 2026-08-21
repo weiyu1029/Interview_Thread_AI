@@ -20,14 +20,14 @@ from app.tools.tracker import (
     upsert_tracker_row,
 )
 
-APP_TITLE = "CareerStoryMap Agent"
-APP_SUBTITLE = "AI Career Concierge for Evidence-Based Interview Strategy"
+APP_TITLE = "InterviewThread"
+APP_SUBTITLE = "Evidence-grounded AI mock interview preparation"
 DEFAULT_MODEL = "gemini-2.5-flash"
 FALLBACK_MODEL = "gemini-flash-latest"
 
 
 st.set_page_config(
-    page_title="CareerStoryMap Agent",
+    page_title="InterviewThread",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -138,7 +138,7 @@ def build_prompt(
     keyword_analysis = analyze_keywords(clean_jd, clean_profile, additional_terms)
 
     prompt = f"""
-You are CareerStoryMap Agent, a personal AI career concierge.
+You are InterviewThread, an evidence-grounded AI interview coach.
 
 Your goal is not to fabricate interview answers.
 Your goal is to help a job seeker build credible, evidence-based interview strategy.
@@ -270,7 +270,7 @@ def deterministic_report(
     report = f"""
 ## Executive Summary
 
-CareerStoryMap detected **{ctx['matched_industry']}** as the most relevant industry context and **{signals.get('role_family')}** as the likely role family. The evidence-fit score is **{keyword_analysis['overall_score']}/100 ({keyword_analysis['grade']})**. {keyword_analysis['verdict']}
+InterviewThread detected **{ctx['matched_industry']}** as the most relevant industry context and **{signals.get('role_family')}** as the likely role family. The evidence-fit score is **{keyword_analysis['overall_score']}/100 ({keyword_analysis['grade']})**. {keyword_analysis['verdict']}
 
 This report was created by the deterministic Evidence Guard. It measures transparent keyword and proof coverage; it does not claim to reproduce a proprietary ATS score.
 
@@ -413,7 +413,7 @@ def keyword_match_dataframe(analysis: dict[str, Any]) -> pd.DataFrame:
 def render_keyword_analysis(analysis: dict[str, Any]) -> None:
     st.markdown("### Transparent keyword and evidence match")
     st.caption(
-        "Evidence-fit is a transparent CareerStoryMap measure, not a prediction of any "
+        "Evidence-fit is a transparent InterviewThread measure, not a prediction of any "
         "employer's proprietary ATS score. Required keywords receive more weight than preferred ones."
     )
     m1, m2, m3, m4 = st.columns(4)
@@ -449,7 +449,7 @@ def render_keyword_analysis(analysis: dict[str, Any]) -> None:
 
 def render_sidebar() -> None:
     with st.sidebar:
-        st.title("CareerStoryMap")
+        st.title("InterviewThread")
         st.caption("Open-source, evidence-grounded career intelligence.")
         st.divider()
         st.subheader("Optional AI enrichment")
@@ -486,7 +486,7 @@ def render_sidebar() -> None:
         )
         st.link_button(
             "View the open-source project",
-            "https://github.com/weiyu1029/CareerStoryMap-agent",
+            "https://github.com/weiyu1029/Interview_Thread_AI",
             width="stretch",
         )
 
@@ -532,12 +532,12 @@ def tab_strategy() -> None:
         value=False,
         disabled=not has_api_key(),
         help=(
-            "When enabled, CareerStoryMap sends PII-redacted JD and resume text to Google Gemini. "
+            "When enabled, InterviewThread sends PII-redacted JD and resume text to Google Gemini. "
             "The deterministic keyword and evidence matrix remains canonical."
         ),
     )
     st.caption(
-        "CareerStoryMap never adds an unsupported keyword to your resume. It separates safe wording changes from real skill gaps."
+        "InterviewThread never adds an unsupported keyword to your resume. It separates safe wording changes from real skill gaps."
     )
 
     if st.button("Analyze role and build strategy", type="primary", width="stretch"):
@@ -643,7 +643,7 @@ def tab_strategy() -> None:
                 st.download_button(
                     "Download strategy (Markdown)",
                     st.session_state.last_report,
-                    file_name="careerstorymap_interview_proof_pack.md",
+                    file_name="interviewthread_interview_proof_pack.md",
                     mime="text/markdown",
                     width="stretch",
                 )
@@ -651,7 +651,7 @@ def tab_strategy() -> None:
                 st.download_button(
                     "Download match data (JSON)",
                     json.dumps(keyword_analysis, indent=2),
-                    file_name="careerstorymap_evidence_map.json",
+                    file_name="interviewthread_evidence_map.json",
                     mime="application/json",
                     width="stretch",
                 )
@@ -662,7 +662,7 @@ def deterministic_copilot_answer(question: str) -> str:
     analysis = context.get("keyword_analysis", {})
     matches = analysis.get("matches", [])
     if not matches:
-        return "Generate a CareerStoryMap strategy first so I can answer from its evidence matrix."
+        return "Generate an InterviewThread strategy first so I can answer from its evidence matrix."
 
     strong = [item for item in matches if item["status"] == "Strong"]
     partial = [item for item in matches if item["status"] == "Partial"]
@@ -706,7 +706,7 @@ def deterministic_copilot_answer(question: str) -> str:
 
 
 def tab_copilot() -> None:
-    st.subheader("Interactive CareerStoryMap Copilot")
+    st.subheader("Interactive InterviewThread Copilot")
     st.caption(
         "Ask follow-up questions about your generated report, role fit, stories, gaps, or interview prep. "
         "Gemini is used only if you enabled optional enrichment in Strategy Builder; otherwise the copilot stays deterministic."
@@ -714,14 +714,14 @@ def tab_copilot() -> None:
 
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Hi, I'm CareerStoryMap Copilot. Generate a strategy report first, then ask me how to improve your stories, evidence, or interview plan."}
+            {"role": "assistant", "content": "Hi, I'm InterviewThread Copilot. Generate a strategy report first, then ask me how to improve your stories, evidence, or interview plan."}
         ]
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    user_msg = st.chat_input("Ask CareerStoryMap Copilot...")
+    user_msg = st.chat_input("Ask InterviewThread Copilot...")
     if not user_msg:
         return
 
@@ -739,7 +739,7 @@ def tab_copilot() -> None:
     }
 
     copilot_prompt = f"""
-You are CareerStoryMap Copilot, a concise but strategic career advisor.
+You are InterviewThread Copilot, a concise but strategic career advisor.
 
 User question:
 {safe_question}
@@ -747,14 +747,14 @@ User question:
 Current candidate / role context:
 {json.dumps(safe_inputs, indent=2)}
 
-Current CareerStoryMap report:
+Current InterviewThread report:
 {safe_context}
 
 Answer with practical, evidence-based guidance. Do not fabricate experience. If information is missing, ask for it or state the gap.
 """.strip()
 
     with st.chat_message("assistant"):
-        with st.spinner("CareerStoryMap Copilot is thinking..."):
+        with st.spinner("InterviewThread Copilot is thinking..."):
             if has_api_key() and st.session_state.get("ai_consent", False):
                 try:
                     answer = gemini_report(copilot_prompt, st.session_state.get("model_name", DEFAULT_MODEL))
@@ -868,7 +868,7 @@ def tab_tracker() -> None:
             st.success("Role saved. Existing company+role entries are updated, not duplicated.")
 
     if not st.session_state.tracker_rows:
-        st.info("Analyze a role, then save it here—or import a previous CareerStoryMap tracker CSV.")
+        st.info("Analyze a role, then save it here—or import a previous InterviewThread tracker CSV.")
         return
 
     tracker_frame = pd.DataFrame(
@@ -896,7 +896,7 @@ def tab_tracker() -> None:
     st.download_button(
         "Download tracker CSV",
         edited_frame.to_csv(index=False),
-        file_name="careerstorymap_application_tracker.csv",
+        file_name="interviewthread_application_tracker.csv",
         mime="text/csv",
         width="stretch",
     )
@@ -923,7 +923,7 @@ def tab_research() -> None:
     combined = "\n".join(df.astype(str).fillna("").head(100).agg(" | ".join, axis=1).tolist())
     clean_combined, _ = redact_with_counts(combined)
     prompt = f"""
-You are analyzing early market research for CareerStoryMap Agent.
+You are analyzing early market research for InterviewThread.
 
 Summarize the survey responses into:
 1. Target user segments

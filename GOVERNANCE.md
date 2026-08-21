@@ -1,6 +1,6 @@
 # Governance
 
-CareerStoryMap Agent uses a maintainer-led, community-informed governance model.
+InterviewThread uses a maintainer-led, community-informed governance model.
 
 ## Roles
 
@@ -30,4 +30,3 @@ Role changes are based on sustained, constructive participation. Maintainers may
 ## Releases
 
 Maintainers use semantic versioning where practical. Breaking scoring or data-contract changes require release notes and a migration path.
-

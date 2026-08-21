@@ -1,4 +1,4 @@
-project_name: careerstorymap-agent
+project_name: interviewthread
 agent_directory: app
 region: us-east1
 a2a: true

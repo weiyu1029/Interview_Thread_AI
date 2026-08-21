@@ -8,7 +8,7 @@
   interview stories you can defend.**
 - Supporting line: **Find the thread. Own the interview.**
 - Domain: [interviewthreadai.com](https://interviewthreadai.com)
-- Source: [weiyu1029/careerproof-agent](https://github.com/weiyu1029/careerproof-agent)
+- Source: [weiyu1029/Interview_Thread_AI](https://github.com/weiyu1029/Interview_Thread_AI)
 
 ## Public naming rule
 
@@ -33,8 +33,9 @@ project owner controls it. Do not publish an unverified handle or create a
 - Mist blue: `#E7ECEF`
 - Muted slate: `#69737D`
 
-Use the connected IT thread mark with the product wordmark. Keep typography sans-serif,
-clear, and restrained. Do not use emoji as interface decoration.
+Use the connected IT thread mark with the product wordmark. Use an elegant,
+serif-first type system with readable fallbacks for scripts that require them.
+Keep hierarchy clear and restrained. Do not use emoji as interface decoration.
 
 ## Voice
 

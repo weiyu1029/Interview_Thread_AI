@@ -24,14 +24,28 @@ body:
     id: version
     attributes:
       label: Version or commit
+      description: Use the version shown in the footer or the Git commit, when available.
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, device, and language
+      placeholder: "Example: Chrome 140, Windows 11, English"
+    validations:
+      required: true
   - type: dropdown
     id: mode
     attributes:
-      label: Processing mode
+      label: Product area
       options:
+        - Production web
+        - Sign-in or OAuth
+        - Document upload
+        - Evidence Map
+        - Mock interview
+        - Voice input or playback
+        - Localization
         - Deterministic Evidence Guard
         - Gemini enrichment
         - ADK agent
     validations:
       required: true
-

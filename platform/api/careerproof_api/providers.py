@@ -23,7 +23,7 @@ class ProviderDefinition:
 
 DEFAULT_PROVIDERS = (
     ProviderDefinition(
-        "deterministic", "CareerStoryMap Evidence Engine", "deterministic", None, False, True, False,
+        "deterministic", "InterviewThread Evidence Engine", "deterministic", None, False, True, False,
         ("evidence-engine-v1",), "Transparent scoring and story scaffolds without an external model.",
     ),
     ProviderDefinition(
@@ -52,7 +52,7 @@ DEFAULT_PROVIDERS = (
     ),
     ProviderDefinition(
         "gemini", "Google Gemini", "gemini", None, True, False, False,
-        ("gemini-2.5-flash",), "Optional hosted provider retained for existing CareerStoryMap users.",
+        ("gemini-2.5-flash",), "Optional hosted provider retained for existing InterviewThread users.",
     ),
 )
 
@@ -127,4 +127,3 @@ async def generate_text(
         response.raise_for_status()
         body = response.json()
     return str(body["choices"][0]["message"]["content"])
-
