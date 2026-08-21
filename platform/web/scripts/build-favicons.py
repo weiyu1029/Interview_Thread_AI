@@ -78,6 +78,10 @@ def main() -> None:
         "interviewthread-apple-v4.png": 180,
         "interviewthread-icon-192-v4.png": 192,
         "interviewthread-icon-512-v4.png": 512,
+        "interviewthread-favicon-32-v5.png": 32,
+        "interviewthread-apple-v5.png": 180,
+        "interviewthread-icon-192-v5.png": 192,
+        "interviewthread-icon-512-v5.png": 512,
     }
     for filename, size in outputs.items():
         master.resize((size, size), Image.Resampling.LANCZOS).save(
@@ -91,6 +95,11 @@ def main() -> None:
     )
     master.save(
         PUBLIC / "interviewthread-favicon-v4.ico",
+        format="ICO",
+        sizes=[(16, 16), (32, 32), (48, 48)],
+    )
+    master.save(
+        PUBLIC / "interviewthread-favicon-v5.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
     )

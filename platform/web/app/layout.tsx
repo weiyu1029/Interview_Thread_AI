@@ -6,6 +6,7 @@ import {
 import { headers } from "next/headers";
 import { LANGUAGES, localeToPath, RTL_LOCALES } from "./i18n";
 import { languageAlternates } from "./intl-routing";
+import FaviconSync from "./FaviconSync";
 import "./globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -33,16 +34,16 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const favicon = new URL("/interviewthread-favicon-v4.ico", origin).toString();
+  const favicon = new URL("/interviewthread-favicon-v5.ico", origin).toString();
   const favicon32 = new URL(
-    "/interviewthread-favicon-32-v4.png",
+    "/interviewthread-favicon-32-v5.png",
     origin,
   ).toString();
-  const icon192 = new URL("/interviewthread-icon-192-v4.png", origin).toString();
-  const icon512 = new URL("/interviewthread-icon-512-v4.png", origin).toString();
-  const appleIcon = new URL("/interviewthread-apple-v4.png", origin).toString();
+  const icon192 = new URL("/interviewthread-icon-192-v5.png", origin).toString();
+  const icon512 = new URL("/interviewthread-icon-512-v5.png", origin).toString();
+  const appleIcon = new URL("/interviewthread-apple-v5.png", origin).toString();
   const manifest = new URL(
-    "/interviewthread-site-v4.webmanifest",
+    "/interviewthread-site-v5.webmanifest",
     origin,
   ).toString();
   const title = "InterviewThread — AI mock interview preparation";
@@ -226,6 +227,7 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        <FaviconSync />
         {children}
       </body>
     </html>
