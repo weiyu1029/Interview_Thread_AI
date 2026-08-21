@@ -33,7 +33,18 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const assetVersion = "interviewthread-20260821-wave-v3";
+  const favicon = new URL("/interviewthread-favicon-v4.ico", origin).toString();
+  const favicon32 = new URL(
+    "/interviewthread-favicon-32-v4.png",
+    origin,
+  ).toString();
+  const icon192 = new URL("/interviewthread-icon-192-v4.png", origin).toString();
+  const icon512 = new URL("/interviewthread-icon-512-v4.png", origin).toString();
+  const appleIcon = new URL("/interviewthread-apple-v4.png", origin).toString();
+  const manifest = new URL(
+    "/interviewthread-site-v4.webmanifest",
+    origin,
+  ).toString();
   const title = "InterviewThread — AI mock interview preparation";
   const description =
     "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence.";
@@ -64,47 +75,42 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     applicationName: "InterviewThread",
     category: "career technology",
-    manifest: `/site.webmanifest?v=${assetVersion}`,
+    manifest,
     icons: {
       icon: [
         {
-          url: `/favicon.ico?v=${assetVersion}`,
+          url: favicon,
           sizes: "any",
         },
         {
-          url: `/favicon-16x16.png?v=${assetVersion}`,
-          sizes: "16x16",
-          type: "image/png",
-        },
-        {
-          url: `/favicon-32x32.png?v=${assetVersion}`,
+          url: favicon32,
           sizes: "32x32",
           type: "image/png",
         },
         {
-          url: `/icon-192.png?v=${assetVersion}`,
+          url: icon192,
           sizes: "192x192",
           type: "image/png",
         },
         {
-          url: `/icon-512.png?v=${assetVersion}`,
+          url: icon512,
           sizes: "512x512",
           type: "image/png",
         },
       ],
       apple: [
         {
-          url: `/apple-touch-icon.png?v=${assetVersion}`,
+          url: appleIcon,
           sizes: "180x180",
           type: "image/png",
         },
       ],
-      shortcut: [`/favicon.ico?v=${assetVersion}`],
+      shortcut: [favicon],
     },
     other: {
-      "msapplication-config": `/browserconfig.xml?v=${assetVersion}`,
+      "msapplication-config": "/browserconfig.xml",
       "msapplication-TileColor": "#f4f3ef",
-      "msapplication-TileImage": `/icon-192.png?v=${assetVersion}`,
+      "msapplication-TileImage": icon192,
     },
     robots: {
       index: true,

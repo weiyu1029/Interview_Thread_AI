@@ -72,6 +72,12 @@ def main() -> None:
         "icon-192.png": 192,
         "icon-512.png": 512,
         "icon.png": 512,
+        # Physical, versioned filenames force browser shells that cache a
+        # favicon by URL (and ignore query strings) to fetch the brand mark.
+        "interviewthread-favicon-32-v4.png": 32,
+        "interviewthread-apple-v4.png": 180,
+        "interviewthread-icon-192-v4.png": 192,
+        "interviewthread-icon-512-v4.png": 512,
     }
     for filename, size in outputs.items():
         master.resize((size, size), Image.Resampling.LANCZOS).save(
@@ -80,6 +86,11 @@ def main() -> None:
         )
     master.save(
         PUBLIC / "favicon.ico",
+        format="ICO",
+        sizes=[(16, 16), (32, 32), (48, 48)],
+    )
+    master.save(
+        PUBLIC / "interviewthread-favicon-v4.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
     )
