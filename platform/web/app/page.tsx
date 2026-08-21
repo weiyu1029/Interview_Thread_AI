@@ -77,15 +77,18 @@ import {
 } from "./interview-speech";
 import { normalizeTtsText } from "./interview-tts";
 import {
+  buildInterviewSession,
+  InterviewDifficultyMode,
+  InterviewPracticeGoal,
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
   InterviewQuestionDifficulty,
   InterviewQuestionLens,
+  InterviewSessionSize,
   InterviewQuestionTrack,
   OpenInterviewQuestion,
   OPEN_INTERVIEW_QUESTIONS,
   openInterviewQuestionSource,
-  questionsForInterviewRole,
 } from "./interview-question-bank";
 import {
   technicalResourcesForPersona,
@@ -139,7 +142,13 @@ type RadarAlert = {
   createdAt: string;
   tracked: boolean;
 };
-type ApprovedSourceId = "greenhouse" | "lever" | "lever-eu" | "ashby";
+type ApprovedSourceId =
+  | "greenhouse"
+  | "lever"
+  | "lever-eu"
+  | "ashby"
+  | "workable"
+  | "recruitee";
 type ApprovedSourceMeta = {
   id: ApprovedSourceId;
   name: string;
@@ -150,6 +159,9 @@ type ApprovedSourceMeta = {
   retrievedAt: string;
   coverage: string;
   detailCoverage?: string;
+  returnedCount: number;
+  isComplete: boolean;
+  lowerBound?: number;
 };
 type Job = {
   id: string;
@@ -192,6 +204,15 @@ type RankedJob = Job & {
   story: string;
   strengths: string[];
   gaps: string[];
+};
+type MarketRow = {
+  industry: string;
+  role: string;
+  openings: number;
+  remoteCount: number;
+  knownWorkStyleCount: number;
+  remote: number;
+  change: number | null;
 };
 type WorkspaceView =
   | "Analyze"
@@ -910,14 +931,22 @@ function interviewCopyFor(locale: LocaleCode): InterviewCopy {
 }
 const JOB_SOURCE_STATUS = [
   {
-    name: "Employer ATS APIs",
+    name: "Official employer ATS feeds",
     access: "Available now",
-    detail: "Greenhouse, Lever, Lever EU, and Ashby published-job APIs",
+    detail:
+      "Greenhouse, Lever, Lever EU, Ashby, Workable, and Recruitee public published-job APIs",
   },
   {
-    name: "Adzuna",
-    access: "Key required",
-    detail: "Live counts and listings when configured",
+    name: "Official labor-market statistics",
+    access: "Planned official layer",
+    detail:
+      "BLS JOLTS, Eurostat Job Vacancy Statistics, and Jobs and Skills Australia are tracked separately from job postings",
+  },
+  {
+    name: "CareerOneStop · USAJOBS · SmartRecruiters · Adzuna",
+    access: "Key or agreement required",
+    detail:
+      "Enabled only after official credentials and attribution requirements are configured",
   },
   {
     name: "LinkedIn · Indeed · Handshake",
@@ -925,6 +954,175 @@ const JOB_SOURCE_STATUS = [
     detail: "No scraping; official agreement or user-supplied content",
   },
 ];
+const APPROVED_SOURCE_PLACEHOLDERS: Record<ApprovedSourceId, string> = {
+  greenhouse: "https://boards.greenhouse.io/company",
+  lever: "https://jobs.lever.co/company",
+  "lever-eu": "https://jobs.eu.lever.co/company",
+  ashby: "https://jobs.ashbyhq.com/company",
+  workable: "https://apply.workable.com/company",
+  recruitee: "https://company.recruitee.com",
+};
+
+type MeasurementCopy = {
+  notConnected: string;
+  notScanned: string;
+  notAnalyzed: string;
+  unavailable: string;
+  noPublishedRoles: string;
+  currentDevice: string;
+  totalTracked: string;
+  activeRoles: string;
+  interviews: string;
+  offers: string;
+  noneYet: string;
+  sampleOnly: string;
+  priorSnapshotNeeded: string;
+  addEvidence: string;
+  connectSource: string;
+};
+
+const MEASUREMENT_COPY: Partial<Record<LocaleCode, MeasurementCopy>> = {
+  en: {
+    notConnected: "Not connected",
+    notScanned: "Not scanned",
+    notAnalyzed: "Not analyzed",
+    unavailable: "Unavailable",
+    noPublishedRoles: "No published roles",
+    currentDevice: "This device",
+    totalTracked: "Total tracked",
+    activeRoles: "In progress",
+    interviews: "Interviewing",
+    offers: "Offers",
+    noneYet: "None yet",
+    sampleOnly: "Interactive example — not live market statistics",
+    priorSnapshotNeeded: "A prior comparable snapshot is required",
+    addEvidence: "Add evidence and run the analysis to calculate this metric.",
+    connectSource: "Connect an official source to measure current published roles.",
+  },
+  "zh-TW": {
+    notConnected: "尚未連接",
+    notScanned: "尚未掃描",
+    notAnalyzed: "尚未分析",
+    unavailable: "資料不足",
+    noPublishedRoles: "沒有已刊登職缺",
+    currentDevice: "此裝置",
+    totalTracked: "追蹤總數",
+    activeRoles: "進行中",
+    interviews: "面試中",
+    offers: "錄取邀請",
+    noneYet: "目前沒有",
+    sampleOnly: "互動示範資料，並非即時市場統計",
+    priorSnapshotNeeded: "需要前一期可比較快照",
+    addEvidence: "請先加入履歷證據並完成分析，才能計算此指標。",
+    connectSource: "連接官方資料源後，才能統計目前已刊登職缺。",
+  },
+  "zh-CN": {
+    notConnected: "尚未连接",
+    notScanned: "尚未扫描",
+    notAnalyzed: "尚未分析",
+    unavailable: "数据不足",
+    noPublishedRoles: "没有已发布职位",
+    currentDevice: "此设备",
+    totalTracked: "追踪总数",
+    activeRoles: "进行中",
+    interviews: "面试中",
+    offers: "录用邀请",
+    noneYet: "目前没有",
+    sampleOnly: "交互示例数据，并非实时市场统计",
+    priorSnapshotNeeded: "需要上一期可比快照",
+    addEvidence: "请先添加履历证据并完成分析，才能计算此指标。",
+    connectSource: "连接官方数据源后，才能统计当前已发布职位。",
+  },
+  ja: {
+    notConnected: "未接続",
+    notScanned: "未スキャン",
+    notAnalyzed: "未分析",
+    unavailable: "データ不足",
+    noPublishedRoles: "公開中の求人なし",
+    currentDevice: "この端末",
+    totalTracked: "追跡中の合計",
+    activeRoles: "進行中",
+    interviews: "面接中",
+    offers: "オファー",
+    noneYet: "まだありません",
+    sampleOnly: "操作例であり、リアルタイム市場統計ではありません",
+    priorSnapshotNeeded: "比較可能な前回データが必要です",
+    addEvidence: "証拠を追加して分析を実行すると計算できます。",
+    connectSource: "公式ソースを接続すると公開求人を集計できます。",
+  },
+  ko: {
+    notConnected: "연결되지 않음",
+    notScanned: "스캔 전",
+    notAnalyzed: "분석 전",
+    unavailable: "데이터 부족",
+    noPublishedRoles: "게시된 채용 공고 없음",
+    currentDevice: "이 기기",
+    totalTracked: "전체 추적",
+    activeRoles: "진행 중",
+    interviews: "면접 중",
+    offers: "오퍼",
+    noneYet: "아직 없음",
+    sampleOnly: "인터랙티브 예시이며 실시간 시장 통계가 아닙니다",
+    priorSnapshotNeeded: "비교 가능한 이전 스냅샷이 필요합니다",
+    addEvidence: "증거를 추가하고 분석을 실행하면 계산할 수 있습니다.",
+    connectSource: "공식 소스를 연결하면 게시된 공고를 집계할 수 있습니다.",
+  },
+  es: {
+    notConnected: "Sin conectar",
+    notScanned: "Sin analizar",
+    notAnalyzed: "Aún no analizado",
+    unavailable: "Datos insuficientes",
+    noPublishedRoles: "No hay puestos publicados",
+    currentDevice: "Este dispositivo",
+    totalTracked: "Total seguido",
+    activeRoles: "En curso",
+    interviews: "En entrevistas",
+    offers: "Ofertas",
+    noneYet: "Todavía ninguno",
+    sampleOnly: "Ejemplo interactivo; no son estadísticas de mercado en tiempo real",
+    priorSnapshotNeeded: "Se necesita una instantánea anterior comparable",
+    addEvidence: "Añade evidencia y ejecuta el análisis para calcular esta métrica.",
+    connectSource: "Conecta una fuente oficial para medir los puestos publicados.",
+  },
+  fr: {
+    notConnected: "Non connecté",
+    notScanned: "Non analysé",
+    notAnalyzed: "Pas encore analysé",
+    unavailable: "Données insuffisantes",
+    noPublishedRoles: "Aucun poste publié",
+    currentDevice: "Cet appareil",
+    totalTracked: "Total suivi",
+    activeRoles: "En cours",
+    interviews: "En entretien",
+    offers: "Offres",
+    noneYet: "Aucun pour le moment",
+    sampleOnly: "Exemple interactif, pas des statistiques de marché en temps réel",
+    priorSnapshotNeeded: "Un instantané comparable antérieur est requis",
+    addEvidence: "Ajoutez des preuves et lancez l’analyse pour calculer cet indicateur.",
+    connectSource: "Connectez une source officielle pour mesurer les postes publiés.",
+  },
+  de: {
+    notConnected: "Nicht verbunden",
+    notScanned: "Nicht geprüft",
+    notAnalyzed: "Noch nicht analysiert",
+    unavailable: "Nicht genügend Daten",
+    noPublishedRoles: "Keine veröffentlichten Stellen",
+    currentDevice: "Dieses Gerät",
+    totalTracked: "Insgesamt verfolgt",
+    activeRoles: "In Bearbeitung",
+    interviews: "Im Interview",
+    offers: "Angebote",
+    noneYet: "Noch keine",
+    sampleOnly: "Interaktives Beispiel, keine Echtzeit-Marktstatistik",
+    priorSnapshotNeeded: "Ein vergleichbarer früherer Datenstand ist erforderlich",
+    addEvidence: "Füge Nachweise hinzu und starte die Analyse, um diese Kennzahl zu berechnen.",
+    connectSource: "Verbinde eine offizielle Quelle, um veröffentlichte Stellen zu messen.",
+  },
+};
+
+function measurementCopyFor(locale: LocaleCode): MeasurementCopy {
+  return MEASUREMENT_COPY[locale] || MEASUREMENT_COPY.en!;
+}
 const REGIONS = [
   "Worldwide",
   "North America",
@@ -1172,15 +1370,6 @@ const MARKET_BASE = [
     remote: 32,
   },
 ];
-const REGION_FACTORS: Record<string, number> = {
-  Worldwide: 1,
-  "North America": 0.38,
-  Europe: 0.27,
-  "Asia-Pacific": 0.25,
-  "Latin America": 0.07,
-  "Middle East & Africa": 0.06,
-};
-
 function includesPhrase(text: string, phrase: string) {
   const escaped = phrase
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -2246,7 +2435,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resourcesIntro:
         "依目前面試官的決策重點推薦。只提供外部連結，不複製第三方題目；開啟前請確認帳號、價格與隱私條款。",
       questionBank: "開源面試題庫",
-      questionBankIntro: "依面試官角色、題型、回答階段、難度與追問焦點選題；L1、L2、L3 每個組合都有題目，且保留來源與授權。",
+      questionBankIntro: "超過 1,000 題可追溯題庫，由系統依面試官、練習目標與近期紀錄自動組卷；L1、L2、L3 都有覆蓋，且保留來源與授權。",
       category: "題型分類",
       allCategories: "全部題型",
       focus: "追問焦點",
@@ -2278,7 +2467,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resourcesIntro:
         "按当前面试官的决策重点推荐。这里只提供外部链接，不复制第三方题目；打开前请确认账号、价格和隐私条款。",
       questionBank: "开源面试题库",
-      questionBankIntro: "按面试官角色、题型、回答阶段、难度和追问重点选题；L1、L2、L3 每种组合都有题目，并保留来源和授权。",
+      questionBankIntro: "超过 1,000 道可追溯题目，由系统按面试官、练习目标和近期记录自动组卷；L1、L2、L3 均有覆盖，并保留来源和授权。",
       category: "题型分类",
       allCategories: "全部题型",
       focus: "追问重点",
@@ -2309,7 +2498,7 @@ function interviewStudioUiFor(locale: LocaleCode) {
     resourcesIntro:
       "Selected for this interviewer’s decision criteria. We link out without copying third-party questions; external sites have their own accounts, pricing, privacy, and terms.",
     questionBank: "Open-source interview question bank",
-    questionBankIntro: "Filter by interviewer role, question type, answer stage, level, and follow-up focus. Every L1, L2, and L3 combination is covered, with source and license preserved.",
+    questionBankIntro: "A traceable bank of 1,000+ questions, automatically assembled by interviewer, practice goal, and recent history. L1, L2, and L3 are covered, with source and license preserved.",
     category: "Question type",
     allCategories: "All question types",
     focus: "Follow-up focus",
@@ -2363,6 +2552,105 @@ function interviewStudioUiFor(locale: LocaleCode) {
     vocabularyNote: flow.languageLocked,
     thinking: `${flow.nextQuestion}…`,
   };
+}
+
+function interviewSessionUiFor(locale: LocaleCode) {
+  if (locale === "zh-TW")
+    return {
+      title: "建立智慧練習場次",
+      intro: "不用從上千題逐題挑選。選擇目標、題數與挑戰程度，系統會依面試官、自身證據與近期練習自動組卷。",
+      goal: "這次想練什麼？",
+      goals: {
+        recommended: "依此面試官推薦",
+        "first-round": "第一輪適配",
+        behavioral: "行為故事",
+        technical: "技術深度",
+        leadership: "領導判斷",
+        pressure: "壓力追問",
+      },
+      length: "場次長度",
+      lengths: { 5: "快速 5 題", 10: "標準 10 題", 15: "完整 15 題" },
+      challenge: "挑戰程度",
+      challenges: {
+        adaptive: "自適應混合",
+        foundation: "基礎表達 · L1",
+        applied: "實務追問 · L2",
+        challenge: "高壓挑戰 · L3",
+      },
+      fineTune: "進階調整（可選）",
+      build: "開始這組練習",
+      another: "換一組題目",
+      ready: "練習場次已準備",
+      eligible: "題符合目前偏好",
+      coverage: "場次涵蓋",
+      fallback: "為補足場次題數，系統已自動加入相近題型。",
+      recent: "未練題不足，這組會重用最早練過的題目。",
+      preview: "第一題預覽",
+    };
+  if (locale === "zh-CN")
+    return {
+      title: "创建智能练习场次",
+      intro: "不必从上千道题逐题挑选。选择目标、题数和挑战程度，系统会按面试官、个人证据和近期练习自动组卷。",
+      goal: "这次想练什么？",
+      goals: {
+        recommended: "按此面试官推荐",
+        "first-round": "首轮匹配",
+        behavioral: "行为故事",
+        technical: "技术深度",
+        leadership: "领导判断",
+        pressure: "压力追问",
+      },
+      length: "场次长度",
+      lengths: { 5: "快速 5 题", 10: "标准 10 题", 15: "完整 15 题" },
+      challenge: "挑战程度",
+      challenges: {
+        adaptive: "自适应混合",
+        foundation: "基础表达 · L1",
+        applied: "实务追问 · L2",
+        challenge: "高压挑战 · L3",
+      },
+      fineTune: "高级调整（可选）",
+      build: "开始这组练习",
+      another: "换一组题目",
+      ready: "练习场次已准备",
+      eligible: "题符合当前偏好",
+      coverage: "场次覆盖",
+      fallback: "为补足场次题数，系统已自动加入相近题型。",
+      recent: "未练题不足，本组会重用最早练过的题目。",
+      preview: "第一题预览",
+    };
+  const english = {
+    title: "Build a smart practice session",
+    intro: "Do not search through 1,000+ questions one by one. Choose a goal, length, and challenge; InterviewThread builds a balanced session for this interviewer and avoids recent repeats.",
+    goal: "What do you want to practice?",
+    goals: {
+      recommended: "Recommended for this interviewer",
+      "first-round": "First-round fit",
+      behavioral: "Behavioral stories",
+      technical: "Technical depth",
+      leadership: "Leadership judgment",
+      pressure: "Pressure follow-ups",
+    },
+    length: "Session length",
+    lengths: { 5: "Quick · 5", 10: "Standard · 10", 15: "Full · 15" },
+    challenge: "Challenge",
+    challenges: {
+      adaptive: "Adaptive mix",
+      foundation: "Foundations · L1",
+      applied: "Applied follow-ups · L2",
+      challenge: "Pressure test · L3",
+    },
+    fineTune: "Fine-tune (optional)",
+    build: "Start this practice session",
+    another: "Build another mix",
+    ready: "Practice session ready",
+    eligible: "questions match these preferences",
+    coverage: "Session coverage",
+    fallback: "Nearby question types were added to complete this session.",
+    recent: "The unseen pool was too small, so the oldest practiced questions were reused.",
+    preview: "First-question preview",
+  };
+  return english;
 }
 
 function interviewScheduleUiFor(locale: LocaleCode) {
@@ -2686,6 +2974,9 @@ export default function Home({
     useState(true);
   const [walkthroughVoiceName, setWalkthroughVoiceName] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
+  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "complete">(
+    "idle",
+  );
   const [provider, setProvider] = useState("Evidence engine");
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadingDestination, setUploadingDestination] = useState<
@@ -2756,6 +3047,17 @@ export default function Home({
     useState("random");
   const [activeOpenQuestionId, setActiveOpenQuestionId] = useState("");
   const [questionShuffleIndex, setQuestionShuffleIndex] = useState(0);
+  const [interviewPracticeGoal, setInterviewPracticeGoal] =
+    useState<InterviewPracticeGoal>("recommended");
+  const [interviewDifficultyMode, setInterviewDifficultyMode] =
+    useState<InterviewDifficultyMode>("adaptive");
+  const [interviewSessionSize, setInterviewSessionSize] =
+    useState<InterviewSessionSize>(10);
+  const [interviewSessionQuestionIds, setInterviewSessionQuestionIds] =
+    useState<string[]>([]);
+  const [interviewSessionIndex, setInterviewSessionIndex] = useState(0);
+  const [recentInterviewQuestionIds, setRecentInterviewQuestionIds] =
+    useState<string[]>([]);
   const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([]);
   const [interviewAnswer, setInterviewAnswer] = useState("");
   const [interviewTurn, setInterviewTurn] = useState(0);
@@ -2783,6 +3085,7 @@ export default function Home({
     useState<LocaleCode | null>(null);
   const copy = copyFor(locale);
   const jobSearchUi = jobSearchCopyFor(locale);
+  const measurementUi = measurementCopyFor(locale);
   const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
   const accountLabels = accountCopyFor(locale);
@@ -2792,6 +3095,7 @@ export default function Home({
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
   const interviewStudioUi = interviewStudioUiFor(locale);
+  const interviewSessionUi = interviewSessionUiFor(locale);
   const technicalResourceUi = technicalResourceCopyFor(locale);
   const resourceAction = technicalResourceUi.action;
   const interviewScheduleUi = interviewScheduleUiFor(locale);
@@ -2870,6 +3174,9 @@ export default function Home({
       const savedInterview = window.localStorage.getItem(
         "aptograph-interview-session",
       );
+      const savedQuestionHistory = window.localStorage.getItem(
+        "interviewthread-question-history",
+      );
       const savedModelSettings = window.localStorage.getItem(
         "aptograph-model-settings",
       );
@@ -2921,6 +3228,23 @@ export default function Home({
           window.localStorage.removeItem("aptograph-story-radar-alerts");
         }
       }
+      if (savedQuestionHistory) {
+        try {
+          const history = JSON.parse(savedQuestionHistory);
+          if (Array.isArray(history))
+            setRecentInterviewQuestionIds(
+              history
+                .filter(
+                  (id): id is string =>
+                    typeof id === "string" &&
+                    OPEN_INTERVIEW_QUESTIONS.some((question) => question.id === id),
+                )
+                .slice(-200),
+            );
+        } catch {
+          window.localStorage.removeItem("interviewthread-question-history");
+        }
+      }
       if (savedInterview && !guestMode) {
         try {
           const session = JSON.parse(savedInterview) as {
@@ -2941,13 +3265,18 @@ export default function Home({
             questionLens?: InterviewQuestionLens | "all";
             selectedQuestionId?: string;
             activeQuestionId?: string;
+            practiceGoal?: InterviewPracticeGoal;
+            difficultyMode?: InterviewDifficultyMode;
+            sessionSize?: InterviewSessionSize;
+            sessionQuestionIds?: string[];
+            sessionIndex?: number;
           };
           if (INTERVIEW_PERSONAS.some((item) => item.id === session.persona))
             setInterviewPersona(session.persona as InterviewPersonaId);
           if (session.mode === "Coaching" || session.mode === "Realistic")
             setInterviewMode(session.mode);
           if (
-            session.version === 3 &&
+            (session.version === 3 || session.version === 4) &&
             session.locale ===
               (initialLocale ||
                 (savedLocale &&
@@ -3009,6 +3338,41 @@ export default function Home({
               )
             )
               setActiveOpenQuestionId(session.activeQuestionId || "");
+            if (
+              [
+                "recommended",
+                "first-round",
+                "behavioral",
+                "technical",
+                "leadership",
+                "pressure",
+              ].includes(session.practiceGoal || "")
+            )
+              setInterviewPracticeGoal(
+                session.practiceGoal || "recommended",
+              );
+            if (
+              ["adaptive", "foundation", "applied", "challenge"].includes(
+                session.difficultyMode || "",
+              )
+            )
+              setInterviewDifficultyMode(
+                session.difficultyMode || "adaptive",
+              );
+            if ([5, 10, 15].includes(Number(session.sessionSize)))
+              setInterviewSessionSize(session.sessionSize || 10);
+            if (Array.isArray(session.sessionQuestionIds))
+              setInterviewSessionQuestionIds(
+                session.sessionQuestionIds.filter((id) =>
+                  OPEN_INTERVIEW_QUESTIONS.some(
+                    (question) => question.id === id,
+                  ),
+                ),
+              );
+            if (Number.isInteger(session.sessionIndex))
+              setInterviewSessionIndex(
+                Math.max(0, Number(session.sessionIndex)),
+              );
           } else {
             window.localStorage.removeItem("aptograph-interview-session");
           }
@@ -3059,6 +3423,8 @@ export default function Home({
       setInterviewTurn(0);
       setInterviewTopicIndex(0);
       setActiveOpenQuestionId("");
+      setInterviewSessionQuestionIds([]);
+      setInterviewSessionIndex(0);
       setInterviewScores(null);
       setInterviewScoreHistory([]);
       setRealisticReviewOpen(false);
@@ -3090,7 +3456,7 @@ export default function Home({
     window.localStorage.setItem(
       "aptograph-interview-session",
       JSON.stringify({
-        version: 3,
+        version: 4,
         persona: interviewPersona,
         mode: interviewMode,
         messages: interviewMessages.slice(-12),
@@ -3106,6 +3472,11 @@ export default function Home({
         questionLens: interviewQuestionLens,
         selectedQuestionId: selectedOpenQuestionId,
         activeQuestionId: activeOpenQuestionId,
+        practiceGoal: interviewPracticeGoal,
+        difficultyMode: interviewDifficultyMode,
+        sessionSize: interviewSessionSize,
+        sessionQuestionIds: interviewSessionQuestionIds,
+        sessionIndex: interviewSessionIndex,
         locale,
       }),
     );
@@ -3118,6 +3489,11 @@ export default function Home({
     interviewQuestionDifficulty,
     interviewQuestionLens,
     interviewQuestionTrack,
+    interviewPracticeGoal,
+    interviewDifficultyMode,
+    interviewSessionSize,
+    interviewSessionQuestionIds,
+    interviewSessionIndex,
     interviewScores,
     interviewScoreHistory,
     interviewTopicIndex,
@@ -3128,6 +3504,14 @@ export default function Home({
     activeOpenQuestionId,
     selectedOpenQuestionId,
   ]);
+
+  useEffect(() => {
+    if (!preferencesLoaded.current) return;
+    window.localStorage.setItem(
+      "interviewthread-question-history",
+      JSON.stringify(recentInterviewQuestionIds.slice(-200)),
+    );
+  }, [recentInterviewQuestionIds]);
 
   useEffect(() => {
     if (!preferencesLoaded.current || guestMode) return;
@@ -3249,6 +3633,7 @@ export default function Home({
     setInterviewDuration(45);
     setInterviewStage("hiring-manager");
     setMatches(runMatch(SAMPLE_JD, SAMPLE_RESUME));
+    setAnalysisStatus("complete");
     setExampleLoaded(true);
     if (openAfterLoading) openWorkspace("Analyze");
   }
@@ -3284,12 +3669,12 @@ export default function Home({
             (item) => item.priority === "Required" && item.status === "Gap",
           ).length;
           const alertEligible =
+            analysisStatus === "complete" &&
             fit.storyFit >= radarThreshold &&
             proof.length >= 2 &&
             requiredGapCount === 0;
           return {
             ...normalizedJob,
-            trend: normalizedJob.trend || 0,
             match: fit.evidenceCoverage,
             storyFit: fit.storyFit,
             requiredCoverage: fit.requiredCoverage,
@@ -3297,10 +3682,16 @@ export default function Home({
             proofCount: proof.length,
             requiredGapCount,
             alertEligible,
-            alertReason: `${proof.length} proof-backed signals · ${requiredGapCount} unsupported must-haves · ${fit.outcomeStrength}% outcome strength`,
-            whyNow: normalizedJob.isLive
-              ? `New from ${normalizedJob.source || "an approved employer source"}; your evidence supports ${proof.length} of its strongest signals.`
-              : `${normalizedJob.trend && normalizedJob.trend > 0 ? `Demand signal +${normalizedJob.trend}%` : "Current demand signal"}; your profile carries ${proof.length} defensible proof points.`,
+            alertReason:
+              analysisStatus === "complete"
+                ? `${proof.length} proof-backed signals · ${requiredGapCount} unsupported must-haves · ${fit.outcomeStrength}% outcome strength`
+                : measurementUi.addEvidence,
+            whyNow:
+              analysisStatus !== "complete"
+                ? measurementUi.addEvidence
+                : normalizedJob.isLive
+                  ? `New from ${normalizedJob.source || "an approved employer source"}; your evidence supports ${proof.length} of its strongest signals.`
+                  : `${typeof normalizedJob.trend === "number" && normalizedJob.trend > 0 ? `Demand signal +${normalizedJob.trend}%` : "Example demand signal"}; your profile carries ${proof.length} defensible proof points.`,
             strengths: normalizedJob.isLive
               ? supported
               : normalizedJob.strengths || supported,
@@ -3314,7 +3705,7 @@ export default function Home({
                 "Add a verified story before tailoring this role.",
           };
         }),
-    [evidenceDocuments, radarThreshold, sourceJobs],
+    [analysisStatus, evidenceDocuments, measurementUi.addEvidence, radarThreshold, sourceJobs],
   );
   const jobSearchCapabilities = useMemo(
     () => getJobSearchCapabilities(rankedJobPool),
@@ -3369,7 +3760,7 @@ export default function Home({
   const proofQualifiedJobs = recommendedJobs.filter(
     (job) => job.alertEligible,
   );
-  const marketRows = useMemo(() => {
+  const marketRows = useMemo<MarketRow[]>(() => {
     if (sourceJobs) {
       const filtered = sourceJobs
         .filter((job) => country === "All countries" || job.country === country)
@@ -3382,22 +3773,26 @@ export default function Home({
         const group = job.department || job.industry || "Other";
         grouped.set(group, [...(grouped.get(group) || []), job]);
       });
-      return [...grouped.entries()].map(([group, jobs]) => ({
-        industry: group,
-        role: "Published roles",
-        openings: jobs.length,
-        change: 0,
-        remote: Math.round(
-          (jobs.filter((job) => job.workStyle === "Remote").length /
-            Math.max(jobs.length, 1)) *
-            100,
-        ),
-      }));
+      return [...grouped.entries()].map(([group, jobs]) => {
+        const remoteCount = jobs.filter(
+          (job) => job.workStyle === "Remote",
+        ).length;
+        const knownWorkStyleCount = jobs.filter((job) =>
+          ["Remote", "Hybrid", "On-site"].includes(job.workStyle),
+        ).length;
+        return {
+          industry: group,
+          role: "Published roles",
+          openings: jobs.length,
+          change: null,
+          remoteCount,
+          knownWorkStyleCount,
+          remote: knownWorkStyleCount
+            ? Math.round((remoteCount / knownWorkStyleCount) * 100)
+            : 0,
+        };
+      });
     }
-    const factor =
-      (REGION_FACTORS[region] || 1) * (country === "All countries" ? 1 : 0.24);
-    const countryShift =
-      country === "All countries" ? 0 : ((country.length % 5) - 2) * 0.7;
     return MARKET_BASE.filter(
       (item) => industry === "All industries" || item.industry === industry,
     )
@@ -3405,12 +3800,17 @@ export default function Home({
         (item) =>
           roleFamily === "All role families" || item.role === roleFamily,
       )
-      .map((item) => ({
-        ...item,
-        openings: Math.round(item.openings * factor),
-        change: Number((item.change + countryShift).toFixed(1)),
-      }));
-  }, [country, industry, region, roleFamily, sourceJobs]);
+      .map((item) => {
+        const openings = item.openings;
+        return {
+          ...item,
+          openings,
+          remoteCount: Math.round((openings * item.remote) / 100),
+          knownWorkStyleCount: openings,
+          change: item.change,
+        };
+      });
+  }, [country, industry, roleFamily, sourceJobs]);
   const totalOpenings = marketRows.reduce(
     (sum, item) => sum + item.openings,
     0,
@@ -3419,10 +3819,25 @@ export default function Home({
     ? marketRows.reduce((sum, item) => sum + item.change * item.openings, 0) /
       Math.max(totalOpenings, 1)
     : null;
-  const remoteShare = marketRows.length
-    ? marketRows.reduce((sum, item) => sum + item.remote, 0) / marketRows.length
-    : 0;
+  const knownWorkStyleCount = marketRows.reduce(
+    (sum, item) => sum + item.knownWorkStyleCount,
+    0,
+  );
+  const remoteShare = knownWorkStyleCount
+    ? (marketRows.reduce((sum, item) => sum + item.remoteCount, 0) /
+        knownWorkStyleCount) *
+      100
+    : null;
   const maxOpenings = Math.max(...marketRows.map((item) => item.openings), 1);
+  const analysisComplete = analysisStatus === "complete";
+  const liveSourceConnected = sourceMeta !== null;
+  const sourceRoleCountLabel = sourceMeta
+    ? sourceJobs?.length
+      ? sourceMeta.isComplete
+        ? String(sourceJobs.length)
+        : `${sourceMeta.lowerBound || sourceJobs.length}+`
+      : measurementUi.noPublishedRoles
+    : measurementUi.notConnected;
 
   function updateRegion(next: string) {
     setRegion(next);
@@ -3589,6 +4004,7 @@ export default function Home({
   async function runModelAnalysis() {
     const nextMatches = runMatch(jd, evidenceDocuments);
     setMatches(nextMatches);
+    setAnalysisStatus("complete");
     setModelInsight("");
     recordActivity("analysis_completed");
     if (selectedProvider.kind === "built-in") {
@@ -3650,6 +4066,7 @@ export default function Home({
           .join("\n\n");
         if (destination === "jd") setJd(text);
         else setResume(text);
+        setAnalysisStatus("idle");
       }
       setUploadMessage(
         [
@@ -3674,6 +4091,7 @@ export default function Home({
       ),
     );
     setExampleLoaded(false);
+    setAnalysisStatus("idle");
   }
   function addCandidateSource() {
     setCandidateSources((current) => [
@@ -3681,6 +4099,7 @@ export default function Home({
       { id: crypto.randomUUID(), url: "", text: "" },
     ]);
     setExampleLoaded(false);
+    setAnalysisStatus("idle");
   }
   function removeCandidateSource(id: string) {
     setCandidateSources((current) => {
@@ -3688,6 +4107,7 @@ export default function Home({
       return next.length ? next : [{ id: "source-1", url: "", text: "" }];
     });
     setExampleLoaded(false);
+    setAnalysisStatus("idle");
   }
   async function loadCandidateSourceFile(
     event: ChangeEvent<HTMLInputElement>,
@@ -3714,6 +4134,7 @@ export default function Home({
               : source,
           ),
         );
+        setAnalysisStatus("idle");
       }
       setUploadMessage(
         [
@@ -3752,8 +4173,8 @@ export default function Home({
           role: job.title,
           status: "Interested",
           source,
-          storyFit: job.storyFit,
-          story: job.story,
+          storyFit: analysisStatus === "complete" ? job.storyFit : undefined,
+          story: analysisStatus === "complete" ? job.story : undefined,
           sourceUrl: job.sourceUrl,
           trackedAt: new Date().toISOString(),
         },
@@ -3783,6 +4204,10 @@ export default function Home({
     );
   }
   async function scanStoryRadar() {
+    if (analysisStatus !== "complete") {
+      setRadarMessage(measurementUi.addEvidence);
+      return;
+    }
     const existingJobIds = new Set(radarAlerts.map((alert) => alert.jobId));
     const trackerIds = new Set(tracker.map((item) => item.id));
     const newlyQualified = proofQualifiedJobs.filter(
@@ -3921,16 +4346,7 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     stopInterviewSpeech();
-    const candidates = questionsForInterviewRole(
-      interviewPersona,
-      interviewQuestionTrack,
-      interviewQuestionDepth,
-      interviewQuestionDifficulty,
-      interviewQuestionLens,
-    );
-    const chosenQuestion =
-      candidates.find((item) => item.id === selectedOpenQuestionId) ||
-      candidates[questionShuffleIndex % Math.max(candidates.length, 1)];
+    const chosenQuestion = proposedInterviewQuestions[0];
     const plannedOpening = chosenQuestion
       ? openQuestionForInterview(chosenQuestion, matches, locale, 0)
       : questionForInterview(interviewPersona, 0, matches, locale, 0);
@@ -3942,8 +4358,15 @@ export default function Home({
     setInterviewTurn(chosenQuestion?.depth || 0);
     setInterviewTopicIndex(0);
     setActiveOpenQuestionId(chosenQuestion?.id || "");
-    if (selectedOpenQuestionId === "random")
-      setQuestionShuffleIndex((current) => current + 1);
+    setInterviewSessionQuestionIds(proposedInterviewSession.questionIds);
+    setInterviewSessionIndex(0);
+    if (chosenQuestion)
+      setRecentInterviewQuestionIds((current) =>
+        [...current.filter((id) => id !== chosenQuestion.id), chosenQuestion.id].slice(
+          -200,
+        ),
+      );
+    setQuestionShuffleIndex((current) => current + 1);
     setInterviewScores(null);
     setInterviewScoreHistory([]);
     setRealisticReviewOpen(false);
@@ -3968,6 +4391,8 @@ export default function Home({
     setInterviewTurn(0);
     setInterviewTopicIndex(0);
     setActiveOpenQuestionId("");
+    setInterviewSessionQuestionIds([]);
+    setInterviewSessionIndex(0);
     setInterviewScores(null);
     setInterviewScoreHistory([]);
     setRealisticReviewOpen(false);
@@ -4005,6 +4430,38 @@ export default function Home({
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     const next = nextInterviewCoordinates(forceNewTopic);
+    const nextSessionIndex = interviewSessionIndex + 1;
+    const queuedQuestion = OPEN_INTERVIEW_QUESTIONS.find(
+      (question) =>
+        question.id === interviewSessionQuestionIds[nextSessionIndex],
+    );
+    if (queuedQuestion) {
+      const queuedText = openQuestionForInterview(
+        queuedQuestion,
+        matches,
+        locale,
+        next.topicIndex,
+      );
+      setInterviewMessages((current) => [
+        ...current,
+        { role: "assistant", content: queuedText },
+      ]);
+      setInterviewSessionIndex(nextSessionIndex);
+      setActiveOpenQuestionId(queuedQuestion.id);
+      setInterviewTurn(queuedQuestion.depth);
+      setInterviewTopicIndex(next.topicIndex);
+      setInterviewAnswer("");
+      setVoiceInterim("");
+      setRecognitionConfidence(null);
+      setIsListening(false);
+      setRecentInterviewQuestionIds((current) =>
+        [...current.filter((id) => id !== queuedQuestion.id), queuedQuestion.id].slice(
+          -200,
+        ),
+      );
+      if (autoReadInterviewQuestions) scheduleInterviewSpeech(queuedText);
+      return;
+    }
     const nextQuestion = questionForInterview(
       interviewPersona,
       next.turn,
@@ -4556,17 +5013,24 @@ export default function Home({
           question.persona === interviewPersona && question.track === track,
       ),
   );
-  const filteredOpenQuestions = questionsForInterviewRole(
-    interviewPersona,
-    interviewQuestionTrack,
-    interviewQuestionDepth,
-    interviewQuestionDifficulty,
-    interviewQuestionLens,
-  );
+  const proposedInterviewSession = buildInterviewSession({
+    persona: interviewPersona,
+    goal: interviewPracticeGoal,
+    size: interviewSessionSize,
+    difficultyMode: interviewDifficultyMode,
+    track: interviewQuestionTrack,
+    depth: interviewQuestionDepth,
+    lens: interviewQuestionLens,
+    seed: questionShuffleIndex + 1,
+    recentlyPracticedIds: recentInterviewQuestionIds,
+  });
+  const proposedInterviewQuestions = proposedInterviewSession.questionIds
+    .map((id) => OPEN_INTERVIEW_QUESTIONS.find((question) => question.id === id))
+    .filter((question): question is OpenInterviewQuestion => Boolean(question));
   const previewOpenQuestion =
-    filteredOpenQuestions.find(
-      (question) => question.id === selectedOpenQuestionId,
-    ) || filteredOpenQuestions[0];
+    OPEN_INTERVIEW_QUESTIONS.find(
+      (question) => question.id === activeOpenQuestionId,
+    ) || proposedInterviewQuestions[0];
   const previewOpenQuestionText = previewOpenQuestion
     ? questionOnly(
         openQuestionForInterview(previewOpenQuestion, matches, locale, 0),
@@ -4785,6 +5249,24 @@ export default function Home({
     Offer: locale === "en" ? "Offer" : detail.matchedEvidence,
     Closed: locale === "en" ? "Closed" : detail.verifyClose,
   };
+  const trackerStatusCounts = Object.fromEntries(
+    Object.keys(trackerStatusLabels).map((status) => [
+      status,
+      tracker.filter((item) => item.status === status).length,
+    ]),
+  ) as Record<string, number>;
+  const activeTrackerCount = tracker.filter((item) =>
+    ["Interested", "Preparing", "Applied", "Interviewing"].includes(
+      item.status,
+    ),
+  ).length;
+  const trackerStageEntries = Object.entries(trackerStatusLabels)
+    .map(([status, label]) => ({
+      status,
+      label,
+      count: trackerStatusCounts[status] || 0,
+    }))
+    .filter((item) => item.count > 0);
   const faqSchema = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -5376,6 +5858,7 @@ export default function Home({
                       onChange={(event) => {
                         setResume(event.target.value);
                         setExampleLoaded(false);
+                        setAnalysisStatus("idle");
                       }}
                       placeholder={detail.resumeEvidence}
                     />
@@ -5388,6 +5871,7 @@ export default function Home({
                       multiple
                       onChange={(event) => {
                         setExampleLoaded(false);
+                        setAnalysisStatus("idle");
                         loadFile(event, "resume");
                       }}
                     />
@@ -5430,6 +5914,7 @@ export default function Home({
                       onChange={(event) => {
                         setJd(event.target.value);
                         setExampleLoaded(false);
+                        setAnalysisStatus("idle");
                       }}
                       placeholder={detail.jobDescription}
                     />
@@ -5442,6 +5927,7 @@ export default function Home({
                       multiple
                       onChange={(event) => {
                         setExampleLoaded(false);
+                        setAnalysisStatus("idle");
                         loadFile(event, "jd");
                       }}
                     />
@@ -6063,6 +6549,8 @@ export default function Home({
                       setInterviewQuestionLens("all");
                       setSelectedOpenQuestionId("random");
                       setActiveOpenQuestionId("");
+                      setInterviewSessionQuestionIds([]);
+                      setInterviewSessionIndex(0);
                       setInterviewScores(null);
                       setInterviewScoreHistory([]);
                       setRealisticReviewOpen(false);
@@ -6112,7 +6600,10 @@ export default function Home({
                   type="button"
                   className="button primary"
                   onClick={startInterview}
-                  disabled={interviewThinking || !filteredOpenQuestions.length}
+                  disabled={
+                    interviewThinking ||
+                    !proposedInterviewSession.questionIds.length
+                  }
                 >
                   {interviewMessages.length ? interview.restart : interview.start}
                 </button>
@@ -6131,129 +6622,219 @@ export default function Home({
                     <p>{interviewStudioUi.questionBankIntro}</p>
                   </div>
                   <span className="status-pill light">
-                    {filteredOpenQuestions.length} {interviewStudioUi.questionsAvailable}
-                    {" · "}
-                    {OPEN_INTERVIEW_QUESTIONS.length} {interviewStudioUi.totalQuestions}
+                    {OPEN_INTERVIEW_QUESTIONS.length}{" "}
+                    {interviewStudioUi.totalQuestions}
                   </span>
                 </div>
-                <div className="open-question-filters">
-                  <label>
-                    <span>{interviewStudioUi.category}</span>
-                    <select
-                      value={interviewQuestionTrack}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionTrack(
-                          event.target.value as InterviewQuestionTrack | "all",
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">
-                        {interviewStudioUi.allCategories}
-                      </option>
-                      {availableInterviewQuestionTracks.map((track) => (
-                        <option value={track} key={track}>
-                          {questionTrackLabelFor(locale, track)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>{interviewStudioUi.focus}</span>
-                    <select
-                      value={interviewQuestionLens}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionLens(
-                          event.target.value as InterviewQuestionLens | "all",
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">{interviewStudioUi.allFocuses}</option>
-                      {INTERVIEW_QUESTION_LENSES.map((lens) => (
-                        <option value={lens} key={lens}>
-                          {questionLensLabelFor(locale, lens)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>{interviewStudioUi.stage}</span>
-                    <select
-                      value={interviewQuestionDepth}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionDepth(
-                          event.target.value === "all"
-                            ? "all"
-                            : (Number(event.target.value) as OpenInterviewQuestion["depth"]),
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">{interviewStudioUi.allStages}</option>
-                      {interviewFlow.stages.map((stage, index) => (
-                        <option value={index} key={stage}>
-                          {index + 1}. {stage}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>{interviewStudioUi.difficulty}</span>
-                    <select
-                      value={interviewQuestionDifficulty}
-                      disabled={interviewThinking}
-                      onChange={(event) => {
-                        setInterviewQuestionDifficulty(
-                          event.target.value === "all"
-                            ? "all"
-                            : (Number(event.target.value) as InterviewQuestionDifficulty),
-                        );
-                        setSelectedOpenQuestionId("random");
-                      }}
-                    >
-                      <option value="all">
-                        {interviewStudioUi.allDifficulties}
-                      </option>
-                      {[1, 2, 3].map((level) => (
-                        <option value={level} key={level}>
-                          L{level}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="open-question-picker">
-                    <span>{interviewStudioUi.chooseQuestion}</span>
-                    <select
-                      value={selectedOpenQuestionId}
-                      disabled={!filteredOpenQuestions.length || interviewThinking}
-                      onChange={(event) =>
-                        setSelectedOpenQuestionId(event.target.value)
-                      }
-                    >
-                      <option value="random">
-                        {interviewStudioUi.randomQuestion}
-                      </option>
-                      {filteredOpenQuestions.map((question) => (
-                        <option value={question.id} key={question.id}>
-                          L{question.difficulty}
-                          {question.lens
-                            ? ` · ${questionLensLabelFor(locale, question.lens)}`
-                            : ""}
-                          {" · "}
-                          {questionOnly(
-                            openQuestionForInterview(question, matches, locale, 0),
+                <div className="smart-session-builder">
+                  <div className="smart-session-controls">
+                    <div>
+                      <h4>{interviewSessionUi.title}</h4>
+                      <p>{interviewSessionUi.intro}</p>
+                    </div>
+                    <fieldset>
+                      <legend>{interviewSessionUi.goal}</legend>
+                      <div className="session-choice-grid goals">
+                        {(
+                          [
+                            "recommended",
+                            "first-round",
+                            "behavioral",
+                            "technical",
+                            "leadership",
+                            "pressure",
+                          ] as InterviewPracticeGoal[]
+                        ).map((goal) => (
+                          <label key={goal}>
+                            <input
+                              type="radio"
+                              name="interview-practice-goal"
+                              value={goal}
+                              checked={interviewPracticeGoal === goal}
+                              disabled={interviewThinking}
+                              onChange={() => setInterviewPracticeGoal(goal)}
+                            />
+                            <span>{interviewSessionUi.goals[goal]}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <div className="session-compact-options">
+                      <fieldset>
+                        <legend>{interviewSessionUi.length}</legend>
+                        <div className="session-choice-grid compact">
+                          {([5, 10, 15] as InterviewSessionSize[]).map(
+                            (size) => (
+                              <label key={size}>
+                                <input
+                                  type="radio"
+                                  name="interview-session-size"
+                                  value={size}
+                                  checked={interviewSessionSize === size}
+                                  disabled={interviewThinking}
+                                  onChange={() => setInterviewSessionSize(size)}
+                                />
+                                <span>{interviewSessionUi.lengths[size]}</span>
+                              </label>
+                            ),
                           )}
-                        </option>
+                        </div>
+                      </fieldset>
+                      <fieldset>
+                        <legend>{interviewSessionUi.challenge}</legend>
+                        <div className="session-choice-grid compact">
+                          {(
+                            [
+                              "adaptive",
+                              "foundation",
+                              "applied",
+                              "challenge",
+                            ] as InterviewDifficultyMode[]
+                          ).map((mode) => (
+                            <label key={mode}>
+                              <input
+                                type="radio"
+                                name="interview-difficulty-mode"
+                                value={mode}
+                                checked={interviewDifficultyMode === mode}
+                                disabled={interviewThinking}
+                                onChange={() =>
+                                  setInterviewDifficultyMode(mode)
+                                }
+                              />
+                              <span>{interviewSessionUi.challenges[mode]}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    </div>
+                  </div>
+                  <aside className="smart-session-summary" aria-live="polite">
+                    <span>{interviewSessionUi.ready}</span>
+                    <strong>{proposedInterviewQuestions.length}</strong>
+                    <p>
+                      {proposedInterviewSession.eligibleCount}{" "}
+                      {interviewSessionUi.eligible}
+                    </p>
+                    <div className="session-coverage-chips">
+                      {proposedInterviewSession.coverage.tracks.map((track) => (
+                        <i key={track}>{questionTrackLabelFor(locale, track)}</i>
                       ))}
-                    </select>
-                  </label>
+                      {proposedInterviewSession.coverage.difficulties.map(
+                        (difficulty) => <i key={difficulty}>L{difficulty}</i>,
+                      )}
+                      <i>
+                        {proposedInterviewSession.coverage.depths.length}{" "}
+                        {interviewStudioUi.stage}
+                      </i>
+                    </div>
+                    {proposedInterviewSession.usedFallback && (
+                      <small>{interviewSessionUi.fallback}</small>
+                    )}
+                    {proposedInterviewSession.reusedRecentQuestions && (
+                      <small>{interviewSessionUi.recent}</small>
+                    )}
+                    <div className="session-builder-actions">
+                      <button
+                        type="button"
+                        className="button primary"
+                        onClick={startInterview}
+                        disabled={
+                          interviewThinking ||
+                          !proposedInterviewSession.questionIds.length
+                        }
+                      >
+                        {interviewSessionUi.build}
+                      </button>
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => {
+                          setActiveOpenQuestionId("");
+                          setQuestionShuffleIndex((current) => current + 1);
+                        }}
+                        disabled={interviewThinking}
+                      >
+                        {interviewSessionUi.another}
+                      </button>
+                    </div>
+                  </aside>
                 </div>
+                <details className="open-question-advanced">
+                  <summary>{interviewSessionUi.fineTune}</summary>
+                  <div className="open-question-filters">
+                    <label>
+                      <span>{interviewStudioUi.category}</span>
+                      <select
+                        value={interviewQuestionTrack}
+                        disabled={interviewThinking}
+                        onChange={(event) => {
+                          setInterviewQuestionTrack(
+                            event.target.value as InterviewQuestionTrack | "all",
+                          );
+                          setInterviewQuestionLens("all");
+                          setSelectedOpenQuestionId("random");
+                        }}
+                      >
+                        <option value="all">
+                          {interviewStudioUi.allCategories}
+                        </option>
+                        {availableInterviewQuestionTracks.map((track) => (
+                          <option value={track} key={track}>
+                            {questionTrackLabelFor(locale, track)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>{interviewStudioUi.focus}</span>
+                      <select
+                        value={interviewQuestionLens}
+                        disabled={interviewThinking}
+                        onChange={(event) => {
+                          setInterviewQuestionLens(
+                            event.target.value as InterviewQuestionLens | "all",
+                          );
+                          setSelectedOpenQuestionId("random");
+                        }}
+                      >
+                        <option value="all">{interviewStudioUi.allFocuses}</option>
+                        {INTERVIEW_QUESTION_LENSES.map((lens) => (
+                          <option value={lens} key={lens}>
+                            {questionLensLabelFor(locale, lens)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>{interviewStudioUi.stage}</span>
+                      <select
+                        value={interviewQuestionDepth}
+                        disabled={interviewThinking}
+                        onChange={(event) => {
+                          setInterviewQuestionDepth(
+                            event.target.value === "all"
+                              ? "all"
+                              : (Number(event.target.value) as OpenInterviewQuestion["depth"]),
+                          );
+                          setSelectedOpenQuestionId("random");
+                        }}
+                      >
+                        <option value="all">{interviewStudioUi.allStages}</option>
+                        {interviewFlow.stages.map((stage, index) => (
+                          <option value={index} key={stage}>
+                            {index + 1}. {stage}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </details>
                 {previewOpenQuestion && previewOpenQuestionSource ? (
                   <article className="open-question-preview" aria-live="polite">
+                    <span className="open-question-preview-label">
+                      {interviewSessionUi.preview}
+                    </span>
                     <div>
                       <span>
                         {questionTrackLabelFor(locale, previewOpenQuestion.track)}
@@ -6821,7 +7402,7 @@ export default function Home({
                     </h3>
                     <p>
                       {locale === "en"
-                        ? "Read-only access to published jobs through documented Greenhouse, Lever, and Ashby APIs. No page scraping and no automatic application."
+                        ? "Read-only access through six documented employer APIs: Greenhouse, Lever, Ashby, Workable, and Recruitee. No page scraping and no automatic application."
                         : detail.sourcePolicy}
                     </p>
                   </div>
@@ -6844,6 +7425,8 @@ export default function Home({
                       <option value="lever">Lever</option>
                       <option value="lever-eu">Lever EU</option>
                       <option value="ashby">Ashby</option>
+                      <option value="workable">Workable</option>
+                      <option value="recruitee">Recruitee</option>
                     </select>
                   </label>
                   <label className="source-reference">
@@ -6855,7 +7438,7 @@ export default function Home({
                     <input
                       value={sourceReference}
                       onChange={(event) => setSourceReference(event.target.value)}
-                      placeholder="https://boards.greenhouse.io/company"
+                      placeholder={APPROVED_SOURCE_PLACEHOLDERS[approvedSource]}
                       inputMode="url"
                       required
                     />
@@ -6880,7 +7463,7 @@ export default function Home({
                     <div>
                       <b>{sourceMeta.employer}</b>
                       <span>
-                        {sourceJobs?.length || 0} {locale === "en" ? "published roles" : detail.exampleOpenings} · {sourceMeta.name}
+                        {sourceRoleCountLabel} {sourceJobs?.length ? (locale === "en" ? "published roles" : detail.results) : ""} · {sourceMeta.name}
                       </span>
                       {sourceMeta.detailCoverage && (
                         <small>{locale === "en" ? sourceMeta.detailCoverage : detail.sourcePolicy}</small>
@@ -7124,6 +7707,7 @@ export default function Home({
                     className="button primary"
                     type="button"
                     onClick={scanStoryRadar}
+                    disabled={!analysisComplete || recommendedJobs.length === 0}
                   >
                     {locale === "en" ? "Scan proof-qualified roles" : detail.analyzeRole}
                   </button>
@@ -7131,11 +7715,23 @@ export default function Home({
                 <div className="radar-status" role="status">
                   <div>
                     <span>{locale === "en" ? "Qualified now" : detail.matchedEvidence}</span>
-                    <b>{proofQualifiedJobs.length}</b>
+                    <b>
+                      {!analysisComplete
+                        ? measurementUi.notAnalyzed
+                        : !radarMessage
+                          ? measurementUi.notScanned
+                          : proofQualifiedJobs.length}
+                    </b>
                   </div>
                   <div>
                     <span>{locale === "en" ? "Highest story fit" : detail.readiness}</span>
-                    <b>{recommendedJobs[0]?.storyFit || 0}%</b>
+                    <b>
+                      {!analysisComplete
+                        ? measurementUi.notAnalyzed
+                        : recommendedJobs[0]
+                          ? `${recommendedJobs[0].storyFit}%`
+                          : measurementUi.unavailable}
+                    </b>
                   </div>
                   <div>
                     <span>{locale === "en" ? "Notification access" : copy.feedback}</span>
@@ -7195,7 +7791,9 @@ export default function Home({
                 <div>
                   <span>{detail.evidenceProfile}</span>
                   <b>
-                    {strongCount} {detail.signalsReviewed}
+                    {analysisComplete
+                      ? `${strongCount} ${detail.signalsReviewed}`
+                      : measurementUi.notAnalyzed}
                   </b>
                 </div>
                 <div>
@@ -7223,9 +7821,19 @@ export default function Home({
                   recommendedJobs.map((job) => (
                     <article className="job-card" key={job.id}>
                       <div className="job-score">
-                        <strong>{job.storyFit}</strong>
-                        <span>{locale === "en" ? "Story fit" : detail.readiness}</span>
-                        <small>{job.match}% {detail.evidenceCoverage}</small>
+                        <strong>{analysisComplete ? job.storyFit : "—"}</strong>
+                        <span>
+                          {analysisComplete
+                            ? locale === "en"
+                              ? "Story fit"
+                              : detail.readiness
+                            : measurementUi.notAnalyzed}
+                        </span>
+                        <small>
+                          {analysisComplete
+                            ? `${job.match}% ${detail.evidenceCoverage}`
+                            : measurementUi.addEvidence}
+                        </small>
                       </div>
                       <div className="job-body">
                         <div className="job-heading">
@@ -7272,38 +7880,48 @@ export default function Home({
                               <span className="trend live">
                                 {locale === "en" ? "Published" : detail.checked}
                               </span>
-                            ) : (
+                            ) : typeof job.trend === "number" ? (
                               <span
                                 className={
-                                  (job.trend || 0) >= 0
+                                  job.trend >= 0
                                     ? "trend up"
                                     : "trend down"
                                 }
                               >
-                                {(job.trend || 0) >= 0 ? "+" : ""}
-                                {job.trend || 0}% {copy.market}
+                                {job.trend >= 0 ? "+" : ""}
+                                {job.trend}% {copy.market}
                               </span>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                         <div className="story-callout">
                           <span>{detail.bestStory}</span>
                           <p>
-                            {locale === "en"
-                              ? job.story
-                              : `${detail.bestStory}: ${job.strengths.join(", ")}`}
+                            {!analysisComplete
+                              ? measurementUi.addEvidence
+                              : locale === "en"
+                                ? job.story
+                                : `${detail.bestStory}: ${job.strengths.join(", ")}`}
                           </p>
-                          <small>{locale === "en" ? job.whyNow : detail.sourcePolicy}</small>
+                          <small>
+                            {analysisComplete
+                              ? locale === "en"
+                                ? job.whyNow
+                                : detail.sourcePolicy
+                              : measurementUi.notAnalyzed}
+                          </small>
                         </div>
                         <div className="story-fit-breakdown">
                           <div>
                             <span>{detail.matchedEvidence}</span>
-                            <b>{job.match}%</b>
+                            <b>{analysisComplete ? `${job.match}%` : "—"}</b>
                           </div>
                           <div>
                             <span>{detail.requiredMatch}</span>
                             <b>
-                              {job.requiredCoverage === null
+                              {!analysisComplete
+                                ? "—"
+                                : job.requiredCoverage === null
                                 ? locale === "en"
                                   ? "Not specified"
                                   : "—"
@@ -7312,24 +7930,34 @@ export default function Home({
                           </div>
                           <div>
                             <span>{interview.outcome}</span>
-                            <b>{job.outcomeStrength}%</b>
+                            <b>
+                              {analysisComplete ? `${job.outcomeStrength}%` : "—"}
+                            </b>
                           </div>
-                          <p>{locale === "en" ? job.alertReason : detail.sourcePolicy}</p>
+                          <p>
+                            {analysisComplete
+                              ? locale === "en"
+                                ? job.alertReason
+                                : detail.sourcePolicy
+                              : measurementUi.addEvidence}
+                          </p>
                         </div>
-                        <div className="job-signals">
-                          <div>
-                            <span>{detail.matchedEvidence}</span>
-                            {job.strengths.map((item) => (
-                              <b key={item}>{item}</b>
-                            ))}
+                        {analysisComplete && (
+                          <div className="job-signals">
+                            <div>
+                              <span>{detail.matchedEvidence}</span>
+                              {job.strengths.map((item) => (
+                                <b key={item}>{item}</b>
+                              ))}
+                            </div>
+                            <div className="gap-signals">
+                              <span>{detail.verifyClose}</span>
+                              {job.gaps.map((item) => (
+                                <b key={item}>{item}</b>
+                              ))}
+                            </div>
                           </div>
-                          <div className="gap-signals">
-                            <span>{detail.verifyClose}</span>
-                            {job.gaps.map((item) => (
-                              <b key={item}>{item}</b>
-                            ))}
-                          </div>
-                        </div>
+                        )}
                         <div className="job-actions">
                           {(job.applyUrl || job.sourceUrl) && (
                             <a
@@ -7360,6 +7988,7 @@ export default function Home({
                               setMatches(
                                 runMatch(job.description, evidenceDocuments),
                               );
+                              setAnalysisStatus("complete");
                               openWorkspace("Analyze");
                             }}
                           >
@@ -7405,7 +8034,7 @@ export default function Home({
                     : detail.sourcePolicy
                   : locale === "en"
                     ? "These values demonstrate the interaction and are not live labor-market totals. Production replaces them with source, coverage, methodology, retrieval time, and comparable snapshots."
-                    : detail.sourcePolicy}
+                    : measurementUi.sampleOnly}
               </p>
               <div className="source-grid">
                 {JOB_SOURCE_STATUS.map((source) => (
@@ -7428,6 +8057,7 @@ export default function Home({
                   <select
                     value={region}
                     onChange={(event) => updateRegion(event.target.value)}
+                    disabled={!liveSourceConnected}
                   >
                     {REGIONS.map((item) => (
                       <option key={item} value={item}>
@@ -7443,6 +8073,7 @@ export default function Home({
                   <select
                     value={country}
                     onChange={(event) => setCountry(event.target.value)}
+                    disabled={!liveSourceConnected}
                   >
                     {COUNTRIES[region].map((item) => (
                       <option key={item} value={item}>
@@ -7471,6 +8102,7 @@ export default function Home({
                   <select
                     value={roleFamily}
                     onChange={(event) => setRoleFamily(event.target.value)}
+                    disabled={liveSourceConnected}
                   >
                     <option value="All role families">
                       {detail.roleFamily}
@@ -7489,17 +8121,13 @@ export default function Home({
                   <select
                     value={timeRange}
                     onChange={(event) => setTimeRange(event.target.value)}
+                    disabled
                   >
-                    {[
-                      "Last 30 days",
-                      "Last 3 months",
-                      "Last 6 months",
-                      "Last 12 months",
-                    ].map((item) => (
-                      <option key={item} value={item}>
-                        {timeRangeLabelFor(locale, item)}
-                      </option>
-                    ))}
+                    <option value={timeRange}>
+                      {sourceMeta
+                        ? measurementUi.priorSnapshotNeeded
+                        : measurementUi.sampleOnly}
+                    </option>
                   </select>
                 </label>
               </div>
@@ -7508,7 +8136,13 @@ export default function Home({
                   <span>
                     {detail.exampleOpenings}
                   </span>
-                  <b>{compactNumber(totalOpenings, locale)}</b>
+                  <b>
+                    {totalOpenings
+                      ? compactNumber(totalOpenings, locale)
+                      : sourceMeta
+                        ? measurementUi.noPublishedRoles
+                        : measurementUi.unavailable}
+                  </b>
                   <small>
                     {sourceMeta?.employer ||
                       (country === "All countries"
@@ -7528,22 +8162,35 @@ export default function Home({
                   )}
                   <small>
                     {weightedChange === null
-                      ? detail.exampleSnapshot
+                      ? sourceMeta
+                        ? measurementUi.priorSnapshotNeeded
+                        : measurementUi.sampleOnly
                       : timeRangeLabelFor(locale, timeRange)}
                   </small>
                 </article>
                 <article>
                   <span>{detail.remoteShare}</span>
-                  <b>{remoteShare.toFixed(0)}%</b>
-                  <small>{detail.results}</small>
+                  <b>{remoteShare === null ? "—" : `${remoteShare.toFixed(0)}%`}</b>
+                  <small>
+                    {remoteShare === null
+                      ? measurementUi.unavailable
+                      : detail.results}
+                  </small>
                 </article>
                 <article>
                   <span>{detail.coverage}</span>
-                  <b>{marketRows.length}</b>
-                  <small>{detail.coverage}</small>
+                  <b>{sourceMeta ? sourceRoleCountLabel : "—"}</b>
+                  <small>
+                    {sourceMeta
+                      ? sourceMeta.isComplete
+                        ? sourceMeta.coverage
+                        : `${sourceMeta.coverage} · lower bound`
+                      : measurementUi.notConnected}
+                  </small>
                 </article>
               </div>
-              <div className="market-layout">
+              {marketRows.length ? (
+                <div className="market-layout">
                 <section className="chart-card">
                   <div className="chart-heading">
                     <div>
@@ -7556,7 +8203,11 @@ export default function Home({
                           : detail.sourcePolicy}
                       </p>
                     </div>
-                    <span>{timeRangeLabelFor(locale, timeRange)}</span>
+                    <span>
+                      {sourceMeta
+                        ? new Date(sourceMeta.retrievedAt).toLocaleDateString(locale)
+                        : detail.exampleSnapshot}
+                    </span>
                   </div>
                   <div className="bar-chart">
                     {marketRows.map((item) => (
@@ -7578,7 +8229,7 @@ export default function Home({
                         <strong>
                           {totalOpenings
                             ? ((item.openings / totalOpenings) * 100).toFixed(1)
-                            : "0.0"}
+                            : "—"}
                           %
                         </strong>
                       </div>
@@ -7589,11 +8240,11 @@ export default function Home({
                   <div
                     className="donut"
                     style={{
-                      background: `conic-gradient(var(--accent) 0 ${remoteShare}%, var(--accent-soft) ${remoteShare}% 100%)`,
+                      background: `conic-gradient(var(--accent) 0 ${remoteShare || 0}%, var(--accent-soft) ${remoteShare || 0}% 100%)`,
                     }}
                   >
                     <div>
-                      <b>{remoteShare.toFixed(0)}%</b>
+                      <b>{remoteShare === null ? "—" : `${remoteShare.toFixed(0)}%`}</b>
                       <span>{detail.remoteShare}</span>
                     </div>
                   </div>
@@ -7601,24 +8252,42 @@ export default function Home({
                   <div className="ratio-list">
                     {marketRows
                       .slice()
-                      .sort((a, b) => b.change - a.change)
+                      .sort((a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity))
                       .map((item) => (
                         <article key={item.industry}>
                           <span>{marketValueFor(locale, item.industry)}</span>
-                          <b
-                            className={
-                              item.change >= 0 ? "positive" : "negative"
-                            }
-                          >
-                            {item.change >= 0 ? "+" : ""}
-                            {item.change}%
-                          </b>
+                          {item.change === null ? (
+                            <b>—</b>
+                          ) : (
+                            <b
+                              className={
+                                item.change >= 0 ? "positive" : "negative"
+                              }
+                            >
+                              {item.change >= 0 ? "+" : ""}
+                              {item.change}%
+                            </b>
+                          )}
                         </article>
                       ))}
                   </div>
                   <small>{detail.liveNote}</small>
                 </section>
-              </div>
+                </div>
+              ) : (
+                <section className="market-empty-state" role="status">
+                  <b>
+                    {sourceMeta
+                      ? measurementUi.noPublishedRoles
+                      : jobSearchUi.noMatchesTitle}
+                  </b>
+                  <p>
+                    {sourceMeta
+                      ? `${sourceMeta.name} · ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}`
+                      : jobSearchUi.noMatchesBody}
+                  </p>
+                </section>
+              )}
             </>
           )}
 
@@ -7631,6 +8300,34 @@ export default function Home({
                 </div>
                 <span className="status-pill light">{detail.privateTitle}</span>
               </div>
+              <section className="tracker-overview" aria-label={detail.trackerTitle}>
+                <div className="tracker-overview-heading">
+                  <b>{detail.trackerTitle}</b>
+                  <span>{measurementUi.currentDevice}</span>
+                </div>
+                <div className="tracker-summary-grid">
+                  {[
+                    [measurementUi.totalTracked, tracker.length],
+                    [measurementUi.activeRoles, activeTrackerCount],
+                    [measurementUi.interviews, trackerStatusCounts.Interviewing || 0],
+                    [measurementUi.offers, trackerStatusCounts.Offer || 0],
+                  ].map(([label, value]) => (
+                    <article key={String(label)}>
+                      <span>{label}</span>
+                      <b>{Number(value) > 0 ? value : measurementUi.noneYet}</b>
+                    </article>
+                  ))}
+                </div>
+                {trackerStageEntries.length > 0 && (
+                  <div className="tracker-stage-strip">
+                    {trackerStageEntries.map((item) => (
+                      <span key={item.status}>
+                        <b>{item.count}</b> {item.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </section>
               <form className="tracker-form" onSubmit={addTrackerItem}>
                 <label>
                   <span>{locale === "en" ? "Company" : detail.product}</span>
@@ -7668,7 +8365,7 @@ export default function Home({
                           {item.source
                             ? ` · ${locale === "en" ? item.source : detail.source}`
                             : ""}
-                          {item.storyFit
+                          {item.storyFit !== undefined
                             ? ` · ${item.storyFit}% ${locale === "en" ? "story fit" : detail.readiness}`
                             : ""}
                         </p>
@@ -7708,7 +8405,10 @@ export default function Home({
                     </article>
                   ))
                 ) : (
-                  <p className="empty-state">{copy.heroBody}</p>
+                  <div className="empty-state tracker-empty-state">
+                    <b>{measurementUi.noneYet}</b>
+                    <p>{measurementUi.connectSource}</p>
+                  </div>
                 )}
               </div>
             </>
@@ -7733,10 +8433,10 @@ export default function Home({
               <div className="chat-context">
                 <span>{detail.evidenceWorkspace}</span>
                 <b>
-                  {strongCount} {detail.signalsReviewed} ·{" "}
-                  {matches.filter((item) => item.status === "Gap").length}{" "}
-                  {copy.feedback} · {recommendedJobs.length}{" "}
-                  {copy.recommendations}
+                  {analysisComplete
+                    ? `${strongCount} ${detail.signalsReviewed} · ${matches.filter((item) => item.status === "Gap").length} ${copy.feedback}`
+                    : measurementUi.notAnalyzed}{" "}
+                  · {recommendedJobs.length} {copy.recommendations}
                 </b>
               </div>
               <div className="chat-panel">

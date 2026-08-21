@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildInterviewSession,
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
   OPEN_INTERVIEW_QUESTIONS,
@@ -34,10 +35,10 @@ function normalized(value) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
 }
 
-test("bundles at least 500 unique, fully attributed interview questions", () => {
+test("bundles at least 1,000 unique, fully attributed interview questions", () => {
   assert.ok(
-    OPEN_INTERVIEW_QUESTIONS.length >= 500,
-    `expected at least 500 questions, received ${OPEN_INTERVIEW_QUESTIONS.length}`,
+    OPEN_INTERVIEW_QUESTIONS.length >= 1_000,
+    `expected at least 1,000 questions, received ${OPEN_INTERVIEW_QUESTIONS.length}`,
   );
 
   const questionIds = new Set();
@@ -277,12 +278,80 @@ test("keeps imported prompts concrete instead of generic coaching instructions",
   assert.ok(
     imported.every(
       (question) =>
-        question.prompt?.includes("?") || question.prompt?.endsWith("."),
+        Boolean(question.prompt?.trim()) &&
+        (question.prompt?.includes("?") ||
+          question.prompt?.endsWith(".") ||
+          /^(?:briefly|create|implement|using|write|design|explain|compare)\b/i.test(
+            question.prompt || "",
+          )),
     ),
   );
   assert.ok(
     imported.some((question) =>
       question.prompt?.includes("Design a URL-shortening service"),
     ),
+  );
+});
+
+test("imports all 103 pinned MIT questions from 30 Seconds of Interviews", () => {
+  const imported = OPEN_INTERVIEW_QUESTIONS.filter(
+    (question) => question.sourceId === "30-seconds-interviews",
+  );
+  assert.equal(imported.length, 103);
+  assert.ok(imported.every((question) => question.persona === "technical"));
+  assert.ok(
+    imported.every((question) =>
+      ["technical", "frontend", "javascript"].includes(question.track),
+    ),
+  );
+});
+
+test("builds deterministic, balanced sessions without duplicate questions", () => {
+  const config = {
+    persona: "hiring-manager",
+    goal: "recommended",
+    size: 10,
+    difficultyMode: "adaptive",
+    seed: 91,
+  };
+  const first = buildInterviewSession(config);
+  const repeated = buildInterviewSession(config);
+  const different = buildInterviewSession({ ...config, seed: 92 });
+
+  assert.equal(first.questionIds.length, 10);
+  assert.equal(new Set(first.questionIds).size, 10);
+  assert.deepEqual(repeated.questionIds, first.questionIds);
+  assert.notDeepEqual(different.questionIds, first.questionIds);
+  assert.ok(first.coverage.depths.length >= 3);
+  assert.deepEqual(first.coverage.difficulties, [1, 2, 3]);
+});
+
+test("avoids recent questions and safely broadens an overly narrow preference", () => {
+  const first = buildInterviewSession({
+    persona: "technical",
+    goal: "technical",
+    size: 15,
+    difficultyMode: "adaptive",
+    track: "frontend",
+    lens: "pressure",
+    seed: 7,
+  });
+  assert.equal(first.questionIds.length, 15);
+  assert.equal(first.usedFallback, true);
+
+  const next = buildInterviewSession({
+    persona: "technical",
+    goal: "technical",
+    size: 15,
+    difficultyMode: "adaptive",
+    track: "frontend",
+    lens: "pressure",
+    seed: 8,
+    recentlyPracticedIds: first.questionIds,
+  });
+  assert.equal(next.questionIds.length, 15);
+  assert.equal(
+    next.questionIds.some((id) => first.questionIds.includes(id)),
+    false,
   );
 });

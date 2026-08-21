@@ -1,6 +1,12 @@
 import { enrichJobSearchMetadata } from "../../job-search.ts";
 
-type ProviderId = "greenhouse" | "lever" | "lever-eu" | "ashby";
+type ProviderId =
+  | "greenhouse"
+  | "lever"
+  | "lever-eu"
+  | "ashby"
+  | "workable"
+  | "recruitee";
 
 type SourceDefinition = {
   id: ProviderId;
@@ -33,6 +39,18 @@ const SOURCES: Record<ProviderId, SourceDefinition> = {
     name: "Ashby Job Postings API",
     docsUrl: "https://developers.ashbyhq.com/docs/public-job-posting-api",
     access: "Public API for currently published and listed employer jobs.",
+  },
+  workable: {
+    id: "workable",
+    name: "Workable Public Jobs API",
+    docsUrl: "https://workable.readme.io/reference/jobs-1",
+    access: "Public GET API for employer-published jobs; no candidate data or application submission.",
+  },
+  recruitee: {
+    id: "recruitee",
+    name: "Recruitee Careers Site API",
+    docsUrl: "https://docs.recruitee.com/reference/offers",
+    access: "Public careers-site GET API for published offers; no candidate submission.",
   },
 };
 
@@ -141,11 +159,22 @@ function inferCountry(location: string): string {
 }
 
 function normalizeWorkStyle(value: unknown, fallback: string): string {
-  const text = `${cleanText(value)} ${fallback}`.toLowerCase();
+  const text = `${cleanText(value)} ${fallback}`.toLowerCase().replace(/_/g, " ");
   if (text.includes("hybrid")) return "Hybrid";
   if (text.includes("remote")) return "Remote";
   if (text.includes("onsite") || text.includes("on-site") || text.includes("on site")) return "On-site";
   return "Unspecified";
+}
+
+function normalizeEmploymentType(value: unknown): string | undefined {
+  const text = cleanText(value).toLowerCase().replace(/[_-]+/g, " ");
+  if (!text) return undefined;
+  if (text.includes("full time") || text.includes("fulltime")) return "Full-time";
+  if (text.includes("part time") || text.includes("parttime")) return "Part-time";
+  if (text.includes("intern")) return "Internship";
+  if (text.includes("contract") || text.includes("freelance")) return "Contract";
+  if (text.includes("temporary") || text.includes("seasonal")) return "Temporary";
+  return undefined;
 }
 
 function parseReference(provider: ProviderId, rawReference: string): string {
@@ -178,10 +207,26 @@ function parseReference(provider: ProviderId, rawReference: string): string {
         : new Set(["jobs.eu.lever.co", "api.eu.lever.co"]);
     if (!expectedHosts.has(host)) throw new Error("That URL is not on the selected official Lever instance.");
     account = host.startsWith("api.") ? parts[2] || "" : parts[0] || "";
-  } else {
+  } else if (provider === "ashby") {
     const allowed = new Set(["jobs.ashbyhq.com", "api.ashbyhq.com"]);
     if (!allowed.has(host)) throw new Error("That URL is not an official Ashby job board.");
     account = host === "api.ashbyhq.com" ? parts[2] || "" : parts[0] || "";
+  } else if (provider === "workable") {
+    if (!host.endsWith(".workable.com") && host !== "workable.com") {
+      throw new Error("That URL is not an official Workable careers page.");
+    }
+    if (host === "www.workable.com" || host === "workable.com") {
+      account = parts[0] === "api" && parts[1] === "accounts" ? parts[2] || "" : parts[0] || "";
+    } else if (host === "apply.workable.com") {
+      account = parts[0] || "";
+    } else {
+      account = host.split(".")[0] || "";
+    }
+  } else {
+    if (!host.endsWith(".recruitee.com")) {
+      throw new Error("That URL is not an official Recruitee careers site.");
+    }
+    account = host.split(".")[0] || "";
   }
 
   if (!ACCOUNT_PATTERN.test(account)) throw new Error("The job-board identifier in that URL is invalid.");
@@ -205,7 +250,13 @@ function sourceUrl(
   if (provider === "lever-eu") {
     return `https://api.eu.lever.co/v0/postings/${safe}?mode=json&limit=${MAX_JOBS}`;
   }
-  return `https://api.ashbyhq.com/posting-api/job-board/${safe}?includeCompensation=true`;
+  if (provider === "ashby") {
+    return `https://api.ashbyhq.com/posting-api/job-board/${safe}?includeCompensation=true`;
+  }
+  if (provider === "workable") {
+    return `https://www.workable.com/api/accounts/${safe}?details=true`;
+  }
+  return `https://${account}.recruitee.com/api/offers/`;
 }
 
 async function fetchOfficialJson(url: string): Promise<unknown> {
@@ -319,13 +370,95 @@ function normalizeAshby(payload: unknown, account: string) {
     });
 }
 
+function normalizeWorkable(payload: unknown, account: string) {
+  const jobs = Array.isArray((payload as { jobs?: unknown[] })?.jobs)
+    ? (payload as { jobs: Record<string, unknown>[] }).jobs
+    : [];
+  const company = cleanText((payload as { name?: unknown })?.name) || humanizeAccount(account);
+  return jobs.slice(0, MAX_JOBS).map((item, index) => {
+    const location = [item.city, item.state, item.country].map(cleanText).filter(Boolean).join(", ");
+    const department = cleanText(item.department || item.function) || "Other";
+    const description = cleanText(item.description);
+    const postingUrl = cleanText(item.application_url || item.shortlink || item.url);
+    return enrichJobSearchMetadata({
+      id: `workable:${account}:${cleanText(item.shortcode || item.code) || index}`,
+      source: "Workable",
+      title: cleanText(item.title) || "Untitled role",
+      company,
+      description,
+      department,
+      industry: cleanText(item.industry) || department,
+      country: countryName(item.country),
+      city: cleanText(item.city) || location || "Location not specified",
+      region: "Worldwide",
+      workStyle: normalizeWorkStyle(
+        item.workplace_type,
+        `${item.telecommuting ? "remote" : ""} ${location} ${description.slice(0, 500)}`,
+      ),
+      sourceUrl: postingUrl,
+      applyUrl: cleanText(item.url || item.application_url || item.shortlink),
+      publishedAt: cleanText(item.published_on || item.created_at),
+      employmentType: normalizeEmploymentType(item.employment_type),
+    });
+  });
+}
+
+function normalizeRecruitee(payload: unknown, account: string) {
+  const jobs = Array.isArray((payload as { offers?: unknown[] })?.offers)
+    ? (payload as { offers: Record<string, unknown>[] }).offers
+    : [];
+  const company = humanizeAccount(account);
+  return jobs.slice(0, MAX_JOBS).map((item, index) => {
+    const locations = Array.isArray(item.locations)
+      ? (item.locations as Record<string, unknown>[])
+      : [];
+    const primaryLocation = locations[0] || {};
+    const location =
+      cleanText(primaryLocation.name) ||
+      [item.city, item.state, item.country].map(cleanText).filter(Boolean).join(", ") ||
+      cleanText(item.location);
+    const department = cleanText(item.department) || "Other";
+    const description = cleanText(`${item.description || ""} ${item.requirements || ""}`);
+    const sourceUrl = cleanText(item.careers_url || item.url);
+    const remoteHint = item.remote ? "remote" : item.hybrid ? "hybrid" : item.on_site ? "on-site" : "";
+    return enrichJobSearchMetadata({
+      id: `recruitee:${account}:${cleanText(item.id || item.guid || item.slug) || index}`,
+      source: "Recruitee",
+      title: cleanText(item.title) || "Untitled role",
+      company,
+      description,
+      department,
+      industry: department,
+      country: countryName(primaryLocation.country || item.country_code || item.country),
+      city: cleanText(primaryLocation.city || item.city) || location || "Location not specified",
+      region: "Worldwide",
+      workStyle: normalizeWorkStyle(remoteHint, `${location} ${description.slice(0, 500)}`),
+      sourceUrl,
+      applyUrl: cleanText(item.careers_apply_url) || sourceUrl,
+      publishedAt: cleanText(item.published_at || item.created_at),
+      employmentType: normalizeEmploymentType(
+        item.employment_type_code || item.employment_type,
+      ),
+    });
+  });
+}
+
+function providerResultCount(provider: ProviderId, payload: unknown): number | null {
+  if (provider === "lever" || provider === "lever-eu") {
+    return Array.isArray(payload) ? payload.length : null;
+  }
+  const key = provider === "recruitee" ? "offers" : "jobs";
+  const rows = (payload as Record<string, unknown> | null)?.[key];
+  return Array.isArray(rows) ? rows.length : null;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const provider = url.searchParams.get("provider") as ProviderId | null;
   const reference = url.searchParams.get("reference") || "";
   if (!provider || !(provider in SOURCES)) {
     return Response.json(
-      { error: "Choose Greenhouse, Lever, Lever EU, or Ashby." },
+      { error: "Choose Greenhouse, Lever, Lever EU, Ashby, Workable, or Recruitee." },
       { status: 400 },
     );
   }
@@ -358,17 +491,29 @@ export async function GET(request: Request) {
         ? normalizeGreenhouse(payload, account)
         : provider === "ashby"
           ? normalizeAshby(payload, account)
-          : normalizeLever(payload, account, provider);
+          : provider === "workable"
+            ? normalizeWorkable(payload, account)
+            : provider === "recruitee"
+              ? normalizeRecruitee(payload, account)
+              : normalizeLever(payload, account, provider);
     const retrievedAt = new Date().toISOString();
+    const providerCount = providerResultCount(provider, payload);
+    const isComplete = providerCount !== null && providerCount < MAX_JOBS;
     return Response.json(
       {
         source: {
           ...SOURCES[provider],
           account,
-          employer: humanizeAccount(account),
+          employer:
+            provider === "workable"
+              ? cleanText((payload as { name?: unknown })?.name) || humanizeAccount(account)
+              : humanizeAccount(account),
           retrievedAt,
           coverage: "One employer's published public job board",
           detailCoverage,
+          returnedCount: jobs.length,
+          isComplete,
+          lowerBound: isComplete ? undefined : jobs.length,
         },
         jobs,
         count: jobs.length,

@@ -533,7 +533,7 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /event\.resultIndex/);
   assert.match(page, /bestSpeechVoice/);
   assert.match(page, /questionOnly/);
-  assert.match(page, /version: 3/);
+  assert.match(page, /version: 4/);
   assert.match(page, /See guidance and answer signals after every response/i);
   assert.match(page, /No hints or live scores/i);
   assert.match(page, /changeInterviewMode/);
@@ -570,11 +570,19 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Greenhouse/i);
   assert.match(page, /Lever EU/i);
   assert.match(page, /Ashby/i);
+  assert.match(page, /Workable/i);
+  assert.match(page, /Recruitee/i);
   assert.match(page, /No page scraping and no automatic application/i);
+  assert.match(page, /analysisStatus/);
+  assert.match(page, /tracker-summary-grid/);
+  assert.match(page, /No published roles/i);
+  assert.doesNotMatch(page, /trend:\s*normalizedJob\.trend\s*\|\|\s*0/);
   const jobsRoute = await readFile(new URL("../app/api/jobs/route.ts", import.meta.url), "utf8");
   assert.match(jobsRoute, /includeGreenhouseContent/);
   assert.match(jobsRoute, /lightweight listing/);
   assert.match(jobsRoute, /detailCoverage/);
+  assert.match(jobsRoute, /normalizeWorkable/);
+  assert.match(jobsRoute, /normalizeRecruitee/);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
   assert.equal(i18n.match(/\["[^"]+",\s*"[^"]+"\]/g)?.length, 40);
   assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);

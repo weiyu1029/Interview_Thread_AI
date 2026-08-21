@@ -1,4 +1,5 @@
 import type { InterviewPersonaId } from "./interview-speech";
+import { THIRTY_SECONDS_INTERVIEW_QUESTIONS } from "./30-seconds-interview-questions.generated.ts";
 
 export type InterviewQuestionTrack =
   | "role-fit"
@@ -24,7 +25,8 @@ export type OpenInterviewQuestionSourceId =
   | "interviewthread"
   | "system-design-primer"
   | "frontend-interview-questions"
-  | "javascript-questions";
+  | "javascript-questions"
+  | "30-seconds-interviews";
 
 export type OpenInterviewQuestionSource = {
   id: OpenInterviewQuestionSourceId;
@@ -87,6 +89,15 @@ export const OPEN_INTERVIEW_QUESTION_SOURCES: readonly OpenInterviewQuestionSour
     licenseHref:
       "https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE",
     note: "JavaScript concepts adapted into interviewer-style questions.",
+  },
+  {
+    id: "30-seconds-interviews",
+    name: "30 Seconds of Interviews",
+    href: "https://github.com/Chalarangelo/30-seconds-of-interviews",
+    license: "MIT",
+    licenseHref:
+      "https://github.com/Chalarangelo/30-seconds-of-interviews/blob/master/LICENSE",
+    note: "103 reviewed web-development questions imported from the archived MIT-licensed source at a pinned commit and tagged for spoken practice.",
   },
 ] as const;
 
@@ -257,11 +268,36 @@ const JAVASCRIPT_QUESTIONS: readonly OpenInterviewQuestion[] = [
   topic: topic as string,
 }));
 
+function thirtySecondsTrack(tags: readonly string[]): InterviewQuestionTrack {
+  if (tags.includes("javascript") || tags.includes("node")) return "javascript";
+  if (
+    tags.includes("accessibility") ||
+    tags.includes("css") ||
+    tags.includes("html") ||
+    tags.includes("react")
+  )
+    return "frontend";
+  return "technical";
+}
+
+const THIRTY_SECONDS_QUESTIONS: readonly OpenInterviewQuestion[] =
+  THIRTY_SECONDS_INTERVIEW_QUESTIONS.map((question, index) => ({
+    id: `30-seconds-interviews-${question.name}-${index + 1}`,
+    persona: "technical",
+    track: thirtySecondsTrack(question.tags),
+    depth: (index % 5) as OpenInterviewQuestion["depth"],
+    difficulty: Math.min(3, Math.max(1, question.expertise + 1)) as InterviewQuestionDifficulty,
+    sourceId: "30-seconds-interviews",
+    prompt: question.question,
+    topic: question.tags.join(" · ") || "web development",
+  }));
+
 export const OPEN_INTERVIEW_QUESTIONS: readonly OpenInterviewQuestion[] = [
   ...COMMUNITY_QUESTIONS,
   ...SYSTEM_DESIGN_QUESTIONS,
   ...FRONTEND_QUESTIONS,
   ...JAVASCRIPT_QUESTIONS,
+  ...THIRTY_SECONDS_QUESTIONS,
 ];
 
 export const INTERVIEW_QUESTION_TRACKS: readonly InterviewQuestionTrack[] = [
@@ -298,4 +334,178 @@ export function questionsForInterviewRole(
       (difficulty === "all" || question.difficulty === difficulty) &&
       (lens === "all" || question.lens === lens),
   );
+}
+
+export type InterviewPracticeGoal =
+  | "recommended"
+  | "first-round"
+  | "behavioral"
+  | "technical"
+  | "leadership"
+  | "pressure";
+
+export type InterviewDifficultyMode =
+  | "adaptive"
+  | "foundation"
+  | "applied"
+  | "challenge";
+
+export type InterviewSessionSize = 5 | 10 | 15;
+
+export type InterviewSessionConfig = {
+  persona: InterviewPersonaId;
+  goal: InterviewPracticeGoal;
+  size: InterviewSessionSize;
+  difficultyMode: InterviewDifficultyMode;
+  track?: InterviewQuestionTrack | "all";
+  depth?: OpenInterviewQuestion["depth"] | "all";
+  lens?: InterviewQuestionLens | "all";
+  seed?: number;
+  recentlyPracticedIds?: readonly string[];
+};
+
+export type InterviewSessionPlan = {
+  questionIds: string[];
+  eligibleCount: number;
+  usedFallback: boolean;
+  reusedRecentQuestions: boolean;
+  coverage: {
+    tracks: InterviewQuestionTrack[];
+    depths: OpenInterviewQuestion["depth"][];
+    difficulties: InterviewQuestionDifficulty[];
+    lenses: InterviewQuestionLens[];
+  };
+};
+
+function seededRandom(seed: number) {
+  let state = (seed >>> 0) || 0x6d2b79f5;
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
+  };
+}
+
+function shuffled<T>(items: readonly T[], seed: number) {
+  const result = [...items];
+  const random = seededRandom(seed);
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+}
+
+function goalScore(question: OpenInterviewQuestion, goal: InterviewPracticeGoal) {
+  if (goal === "first-round")
+    return question.track === "role-fit" ? 8 : question.difficulty === 1 ? 2 : 0;
+  if (goal === "behavioral")
+    return question.track === "behavioral" || question.lens === "evidence" ? 8 : 0;
+  if (goal === "technical")
+    return ["technical", "frontend", "javascript", "system-design"].includes(
+      question.track,
+    )
+      ? 8
+      : 0;
+  if (goal === "leadership")
+    return question.track === "leadership" || question.lens === "judgment" ? 8 : 0;
+  if (goal === "pressure")
+    return question.lens === "pressure" || question.difficulty === 3 ? 8 : 0;
+  return 2;
+}
+
+function targetDifficulty(
+  mode: InterviewDifficultyMode,
+  index: number,
+): InterviewQuestionDifficulty {
+  if (mode === "foundation") return 1;
+  if (mode === "applied") return 2;
+  if (mode === "challenge") return 3;
+  return ([1, 2, 2, 3, 1] as const)[index % 5];
+}
+
+/**
+ * Builds a deterministic, balanced practice queue. Exact filters are treated
+ * as preferences so a narrow combination can still produce a complete
+ * session. Recently practiced rows are excluded until the remaining pool is
+ * too small, then the oldest history is relaxed explicitly in the result.
+ */
+export function buildInterviewSession(
+  config: InterviewSessionConfig,
+): InterviewSessionPlan {
+  const personaPool = OPEN_INTERVIEW_QUESTIONS.filter(
+    (question) => question.persona === config.persona,
+  );
+  const track = config.track ?? "all";
+  const depth = config.depth ?? "all";
+  const lens = config.lens ?? "all";
+  const preferred = personaPool.filter(
+    (question) =>
+      (track === "all" || question.track === track) &&
+      (depth === "all" || question.depth === depth) &&
+      (lens === "all" || question.lens === lens),
+  );
+  const recent = new Set((config.recentlyPracticedIds ?? []).slice(-200));
+  const unseen = personaPool.filter((question) => !recent.has(question.id));
+  const reusedRecentQuestions = unseen.length < config.size;
+  const selectionPool = reusedRecentQuestions ? personaPool : unseen;
+  const randomOrder = shuffled(selectionPool, config.seed ?? 1);
+  const selected: OpenInterviewQuestion[] = [];
+  const selectedIds = new Set<string>();
+  const seedOffset = Math.abs(config.seed ?? 1);
+
+  for (let slot = 0; slot < Math.min(config.size, randomOrder.length); slot += 1) {
+    const wantedDifficulty = targetDifficulty(config.difficultyMode, slot);
+    const wantedDepth = (slot + seedOffset) % 5;
+    const wantedLens =
+      INTERVIEW_QUESTION_LENSES[
+        (slot + seedOffset) % INTERVIEW_QUESTION_LENSES.length
+      ];
+    let best: OpenInterviewQuestion | undefined;
+    let bestScore = Number.NEGATIVE_INFINITY;
+
+    for (const question of randomOrder) {
+      if (selectedIds.has(question.id)) continue;
+      let score = goalScore(question, config.goal);
+      if (question.difficulty === wantedDifficulty) score += 6;
+      if (question.depth === wantedDepth) score += 4;
+      if (question.lens === wantedLens) score += 3;
+      if (track !== "all" && question.track === track) score += 7;
+      if (depth !== "all" && question.depth === depth) score += 7;
+      if (lens !== "all" && question.lens === lens) score += 7;
+      if (!selected.some((item) => item.track === question.track)) score += 2;
+      if (!selected.some((item) => item.depth === question.depth)) score += 2;
+      if (score > bestScore) {
+        best = question;
+        bestScore = score;
+      }
+    }
+
+    if (!best) break;
+    selected.push(best);
+    selectedIds.add(best.id);
+  }
+
+  return {
+    questionIds: selected.map((question) => question.id),
+    eligibleCount: preferred.length,
+    usedFallback: selected.some((question) => !preferred.includes(question)),
+    reusedRecentQuestions,
+    coverage: {
+      tracks: [...new Set(selected.map((question) => question.track))],
+      depths: [...new Set(selected.map((question) => question.depth))].sort(),
+      difficulties: [
+        ...new Set(selected.map((question) => question.difficulty)),
+      ].sort(),
+      lenses: [
+        ...new Set(
+          selected
+            .map((question) => question.lens)
+            .filter((value): value is InterviewQuestionLens => Boolean(value)),
+        ),
+      ],
+    },
+  };
 }

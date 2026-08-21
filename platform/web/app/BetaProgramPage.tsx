@@ -30,7 +30,15 @@ export async function BetaProgramPage({ locale }: { locale: LocaleCode }) {
       </section>
 
       <section className="beta-stage-grid" aria-label={copy.title}>
-        {copy.stages.map(([title, description], index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><h2>{title}</h2><p>{description}</p></article>)}
+        {copy.stages.map(([title, description], index) => (
+          <article key={title}>
+            <span aria-label={`${index + 1} / ${copy.stages.length}`}>
+              {index + 1} / {copy.stages.length}
+            </span>
+            <h2>{title}</h2>
+            <p>{description}</p>
+          </article>
+        ))}
       </section>
 
       <section id="beta-application" className="beta-application-section">
