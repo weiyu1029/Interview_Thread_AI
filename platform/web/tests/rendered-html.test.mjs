@@ -403,9 +403,14 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.doesNotMatch(journeyLabelCss, /ellipsis|overflow:\s*hidden/);
   assert.match(globals, /\.hero-title--long/);
   assert.match(globals, /\[lang="ko"\] \.hero-title/);
-  assert.match(layout, /\/icon\.png\?v=interviewthread-20260820/);
+  assert.match(layout, /interviewthread-20260820-v2/);
+  assert.match(layout, /\/favicon\.ico\?v=/);
+  assert.match(layout, /\/icon-192\.png\?v=/);
+  assert.match(layout, /\/icon-512\.png\?v=/);
   assert.match(layout, /\/favicon-32x32\.png/);
   assert.match(layout, /\/apple-touch-icon\.png/);
+  assert.match(layout, /msapplication-TileImage/);
+  assert.match(layout, /logo: \{/);
   assert.match(manifest, /\/icon-192\.png/);
   assert.match(manifest, /\/icon-512\.png/);
   assert.match(
@@ -781,7 +786,7 @@ test("server-renders every searchable InterviewThread page", async () => {
   }
 });
 
-test("search pages emit route-specific metadata without the homepage social card", async () => {
+test("search pages emit route-specific metadata with the InterviewThread social card", async () => {
   const examples = [
     ["/en/ai-mock-interview", "AI Mock Interview", "Rehearse with evidence-grounded AI interviewers"],
     ["/en/career-market-insights", "Market Insights", "Explore job openings, momentum"],
@@ -793,6 +798,7 @@ test("search pages emit route-specific metadata without the homepage social card
     assert.match(html, new RegExp(`name="description" content="${description}`));
     assert.match(html, new RegExp(`property="og:title" content="${title} \\| InterviewThread"`));
     assert.match(html, new RegExp(`name="twitter:title" content="${title} \\| InterviewThread"`));
+    assert.match(html, /og-interviewthread\.png/);
     assert.doesNotMatch(html, /og-careerstorymap\.png/);
   }
 });

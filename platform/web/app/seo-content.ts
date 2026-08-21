@@ -448,13 +448,20 @@ export function metadataFor(key: SeoPageKey): Metadata {
       url: page.path,
       title: `${page.navLabel} | InterviewThread`,
       description: page.description,
-      images: [],
+      images: [
+        {
+          url: "/og-interviewthread.png",
+          width: 1200,
+          height: 630,
+          alt: "InterviewThread AI mock interview practice",
+        },
+      ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${page.navLabel} | InterviewThread`,
       description: page.description,
-      images: [],
+      images: ["/og-interviewthread.png"],
     },
   };
 }

@@ -33,6 +33,7 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
+  const assetVersion = "interviewthread-20260820-v2";
   const title = "InterviewThread — AI mock interview preparation";
   const description =
     "Build truthful interview stories and practice realistic, role-specific questions with AI feedback grounded in your evidence.";
@@ -64,28 +65,47 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     applicationName: "InterviewThread",
     category: "career technology",
-    manifest: "/site.webmanifest",
+    manifest: `/site.webmanifest?v=${assetVersion}`,
     icons: {
       icon: [
         {
-          url: "/icon.png?v=interviewthread-20260820",
-          sizes: "512x512",
+          url: `/favicon.ico?v=${assetVersion}`,
+          sizes: "any",
+        },
+        {
+          url: `/favicon-16x16.png?v=${assetVersion}`,
+          sizes: "16x16",
           type: "image/png",
         },
         {
-          url: "/favicon-32x32.png?v=interviewthread-20260820",
+          url: `/favicon-32x32.png?v=${assetVersion}`,
           sizes: "32x32",
+          type: "image/png",
+        },
+        {
+          url: `/icon-192.png?v=${assetVersion}`,
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          url: `/icon-512.png?v=${assetVersion}`,
+          sizes: "512x512",
           type: "image/png",
         },
       ],
       apple: [
         {
-          url: "/apple-touch-icon.png?v=interviewthread-20260820",
+          url: `/apple-touch-icon.png?v=${assetVersion}`,
           sizes: "180x180",
           type: "image/png",
         },
       ],
-      shortcut: ["/icon.png?v=interviewthread-20260820"],
+      shortcut: [`/favicon.ico?v=${assetVersion}`],
+    },
+    other: {
+      "msapplication-config": `/browserconfig.xml?v=${assetVersion}`,
+      "msapplication-TileColor": "#f4f3ef",
+      "msapplication-TileImage": `/icon-192.png?v=${assetVersion}`,
     },
     robots: {
       index: true,
@@ -126,6 +146,8 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const origin = await requestOrigin();
+  const logo = new URL("/icon-512.png", origin).toString();
+  const previewImage = new URL("/og-interviewthread.png", origin).toString();
   const documentLocaleMap = Object.fromEntries(
     LANGUAGES.map(([locale]) => [localeToPath(locale), locale]),
   );
@@ -138,6 +160,13 @@ export default async function RootLayout({
       name: "InterviewThread",
       slogan: "Find the thread. Own the interview.",
       url: origin,
+      logo: {
+        "@type": "ImageObject",
+        url: logo,
+        width: 512,
+        height: 512,
+      },
+      image: previewImage,
       sameAs: ["https://github.com/weiyu1029/careerproof-agent"],
     },
     {
@@ -148,6 +177,7 @@ export default async function RootLayout({
       operatingSystem: "Web",
       description:
         "Upload a real resume and job description to practice realistic interview questions with truthful, role-specific feedback.",
+      image: previewImage,
       featureList: [
         "Resume-to-job-description evidence map",
         "Three strongest role-match proofs",
@@ -178,6 +208,7 @@ export default async function RootLayout({
       url: origin,
       description:
         "Open-source interview preparation grounded in evidence a candidate can defend.",
+      image: previewImage,
       inLanguage: LANGUAGES.map(([code]) => code),
     },
   ];

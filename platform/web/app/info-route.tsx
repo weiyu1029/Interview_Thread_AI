@@ -42,6 +42,20 @@ export async function informationMetadata(
       title: `${title} | InterviewThread`,
       description: copy.description,
       locale: localeOpenGraph(locale),
+      images: [
+        {
+          url: "/og-interviewthread.png",
+          width: 1200,
+          height: 630,
+          alt: "InterviewThread AI mock interview practice",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | InterviewThread`,
+      description: copy.description,
+      images: ["/og-interviewthread.png"],
     },
   };
 }
@@ -55,4 +69,3 @@ export async function renderInformationRoute(
   if (!locale) notFound();
   return <InformationPage locale={locale} pageKey={pageKey} />;
 }
-
