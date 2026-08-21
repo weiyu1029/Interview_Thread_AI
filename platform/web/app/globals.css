@@ -3160,11 +3160,87 @@ input:focus {
   border: 1px solid var(--line);
   border-radius: 11px;
 }
+.recommendation-search {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #f7f7f5;
+}
+.recommendation-filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px 0;
+}
+.filter-result-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+}
+.filter-result-summary strong {
+  font-size: 15px;
+}
+.filter-result-summary small {
+  color: var(--muted);
+  font-size: 14px;
+}
+.job-source-kind {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #bdc9d0;
+  border-radius: 999px;
+  color: var(--accent-deep);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.job-source-kind.live {
+  border-color: #9eb9ad;
+  color: var(--positive);
+  background: var(--positive-soft);
+}
+.filter-reset {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 7px 11px;
+  border: 1px solid #b8c4cc;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 730;
+  cursor: pointer;
+}
+.filter-reset:disabled {
+  opacity: 0.48;
+  cursor: default;
+}
 .recommendation-filters {
-  grid-template-columns: 1.5fr repeat(2, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 0;
+  border-radius: 0;
 }
 .recommendation-filters .wide {
   grid-column: span 2;
+}
+.recommendation-filters label,
+.recommendation-filters input,
+.recommendation-filters select {
+  min-width: 0;
+}
+.filter-data-note {
+  margin: -4px 16px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
 }
 .story-radar {
   margin-top: 16px;
@@ -3465,6 +3541,44 @@ input:focus {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+.job-metadata {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+.job-metadata span {
+  padding: 4px 7px;
+  border: 1px solid #d2d9de;
+  border-radius: 999px;
+  background: #f7f8f8;
+  color: #566b79;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.job-metadata .description-missing {
+  border-color: #d7b3a5;
+  color: var(--negative);
+  background: var(--negative-soft);
+}
+.empty-search-state {
+  padding: 30px 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: center;
+  background: #fafaf8;
+}
+.empty-search-state h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+.empty-search-state p {
+  max-width: 560px;
+  margin: 0 auto 16px;
+  color: var(--muted);
+  line-height: 1.55;
 }
 .job-badges {
   display: flex;
@@ -6024,6 +6138,14 @@ input:focus {
   }
   .recommendation-filters .wide {
     grid-column: 1;
+  }
+  .recommendation-filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .filter-reset {
+    width: 100%;
   }
   .story-radar-heading {
     flex-direction: column;

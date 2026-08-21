@@ -49,6 +49,20 @@ import {
   workStyleLabelFor,
 } from "./market-localization";
 import {
+  EMPLOYMENT_TYPES,
+  enrichJobSearchMetadata,
+  filterAndRankJobs,
+  JOB_SEARCH_INDUSTRIES,
+  jobSearchCapabilities as getJobSearchCapabilities,
+  SENIORITY_LEVELS,
+} from "./job-search";
+import {
+  allCountriesLabelFor,
+  type JobSearchCopy,
+  jobIndustryLabelFor,
+  jobSearchCopyFor,
+} from "./job-search-copy";
+import {
   bestSpeechVoice,
   INTERVIEW_DEPTH_COUNT,
   InterviewPersonaId,
@@ -145,6 +159,12 @@ type Job = {
   applyUrl?: string;
   publishedAt?: string;
   compensation?: string;
+  employmentType?: string;
+  seniority?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  latitude?: number;
+  longitude?: number;
   isLive?: boolean;
   trend?: number;
   story?: string;
@@ -154,7 +174,7 @@ type Job = {
 type RankedJob = Job & {
   match: number;
   storyFit: number;
-  requiredCoverage: number;
+  requiredCoverage: number | null;
   outcomeStrength: number;
   proofCount: number;
   requiredGapCount: number;
@@ -966,15 +986,33 @@ const REGIONS = [
   "Latin America",
   "Middle East & Africa",
 ];
-const INDUSTRIES = [
-  "All industries",
-  "Technology",
-  "Financial services",
-  "Healthcare",
-  "Consumer",
-  "Climate & energy",
-  "Professional services",
-];
+const INDUSTRIES = [...JOB_SEARCH_INDUSTRIES];
+
+function employmentTypeLabel(value: string, labels: JobSearchCopy) {
+  return (
+    {
+      "All employment types": labels.allEmploymentTypes,
+      "Full-time": labels.fullTime,
+      "Part-time": labels.partTime,
+      Contract: labels.contract,
+      Internship: labels.internship,
+      Temporary: labels.temporary,
+    }[value] || value
+  );
+}
+
+function seniorityLabel(value: string, labels: JobSearchCopy) {
+  return (
+    {
+      "All experience levels": labels.allExperienceLevels,
+      "Internship & entry level": labels.entryLevel,
+      "Mid level": labels.midLevel,
+      Senior: labels.senior,
+      "Lead & manager": labels.leadManager,
+      Executive: labels.executive,
+    }[value] || value
+  );
+}
 const COUNTRIES: Record<string, string[]> = {
   Worldwide: [
     "All countries",
@@ -1036,6 +1074,8 @@ const JOBS: Job[] = [
     city: "New York",
     workStyle: "Hybrid",
     industry: "Consumer",
+    employmentType: "Full-time",
+    seniority: "Senior",
     trend: 12,
     description:
       "Use SQL and experimentation to understand customer behavior, define product KPIs, build dashboards, and influence cross-functional product decisions.",
@@ -1053,6 +1093,8 @@ const JOBS: Job[] = [
     city: "London",
     workStyle: "Remote",
     industry: "Healthcare",
+    employmentType: "Full-time",
+    seniority: "Mid level",
     trend: 8,
     description:
       "Build SQL reporting, validate data quality, automate operational dashboards, and communicate findings to healthcare stakeholders.",
@@ -1070,6 +1112,8 @@ const JOBS: Job[] = [
     city: "Singapore",
     workStyle: "Hybrid",
     industry: "Technology",
+    employmentType: "Full-time",
+    seniority: "Mid level",
     trend: 17,
     description:
       "Analyze product adoption with SQL, Python, experimentation and stakeholder-ready data visualization for regional product teams.",
@@ -1087,6 +1131,8 @@ const JOBS: Job[] = [
     city: "Taipei",
     workStyle: "On-site",
     industry: "Climate & energy",
+    employmentType: "Full-time",
+    seniority: "Lead & manager",
     trend: 6,
     description:
       "Lead process improvement, operational reporting, SQL analysis, data validation and cross-functional planning for energy operations.",
@@ -1104,6 +1150,8 @@ const JOBS: Job[] = [
     city: "São Paulo",
     workStyle: "Remote",
     industry: "Financial services",
+    employmentType: "Full-time",
+    seniority: "Mid level",
     trend: -3,
     description:
       "Use SQL, experimentation, statistics and dashboards to improve acquisition decisions with product and marketing stakeholders.",
@@ -1121,6 +1169,8 @@ const JOBS: Job[] = [
     city: "Dubai",
     workStyle: "Hybrid",
     industry: "Professional services",
+    employmentType: "Contract",
+    seniority: "Senior",
     trend: 4,
     description:
       "Apply SQL, data quality controls, stakeholder management and executive reporting to improve risk decisions across client programs.",
@@ -1304,7 +1354,7 @@ function coverageFor(matches: Match[], priority?: Match["priority"]) {
   const filtered = priority
     ? matches.filter((item) => item.priority === priority)
     : matches;
-  if (!filtered.length) return scoreMatches(matches);
+  if (!filtered.length) return priority ? null : scoreMatches(matches);
   return Math.round(
     filtered.reduce((sum, item) => sum + item.score, 0) / filtered.length,
   );
@@ -1336,9 +1386,11 @@ function storyFitFor(matches: Match[]) {
     requiredCoverage,
     outcomeStrength,
     storyFit: Math.round(
-      evidenceCoverage * 0.5 +
-        requiredCoverage * 0.3 +
-        outcomeStrength * 0.2,
+      requiredCoverage === null
+        ? evidenceCoverage * 0.7 + outcomeStrength * 0.3
+        : evidenceCoverage * 0.5 +
+            requiredCoverage * 0.3 +
+            outcomeStrength * 0.2,
     ),
   };
 }
@@ -2539,9 +2591,16 @@ export default function Home({
   const [roleQuery, setRoleQuery] = useState("");
   const [region, setRegion] = useState("Worldwide");
   const [country, setCountry] = useState("All countries");
-  const [radius, setRadius] = useState("Worldwide");
   const [workStyle, setWorkStyle] = useState("All work styles");
   const [industry, setIndustry] = useState("All industries");
+  const [employmentType, setEmploymentType] = useState(
+    "All employment types",
+  );
+  const [seniority, setSeniority] = useState("All experience levels");
+  const [datePosted, setDatePosted] = useState("Any time");
+  const [jobSort, setJobSort] = useState<
+    "story-fit" | "newest" | "fewest-gaps" | "title"
+  >("story-fit");
   const [roleFamily, setRoleFamily] = useState("All role families");
   const [timeRange, setTimeRange] = useState("Last 30 days");
   const [approvedSource, setApprovedSource] =
@@ -2607,6 +2666,7 @@ export default function Home({
   const [suggestedLocale, setSuggestedLocale] =
     useState<LocaleCode | null>(null);
   const copy = copyFor(locale);
+  const jobSearchUi = jobSearchCopyFor(locale);
   const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
   const accountLabels = accountCopyFor(locale);
@@ -3050,32 +3110,14 @@ export default function Home({
   const strongCount = matches.filter(
     (item) => item.status === "Strong evidence",
   ).length;
-  const recommendedJobs = useMemo<RankedJob[]>(
+  const rankedJobPool = useMemo<RankedJob[]>(
     () =>
-      (sourceJobs || JOBS)
-        .filter((job) => region === "Worldwide" || job.region === region)
-        .filter((job) => country === "All countries" || job.country === country)
-        .filter(
-          (job) =>
-            workStyle === "All work styles" || job.workStyle === workStyle,
-        )
-        .filter(
-          (job) => industry === "All industries" || job.industry === industry,
-        )
-        .filter(
-          (job) =>
-            !roleQuery.trim() ||
-            `${job.title} ${job.description}`
-              .toLowerCase()
-              .includes(
-                roleQuery
-                  .trim()
-                  .toLowerCase()
-                  .replace("product analyst", "product"),
-              ),
-        )
-        .map((job) => {
-          const evidence = runMatch(job.description, evidenceDocuments);
+      (sourceJobs || JOBS).map((job) => {
+          const normalizedJob = enrichJobSearchMetadata(job);
+          const evidence = runMatch(
+            normalizedJob.description,
+            evidenceDocuments,
+          );
           const fit = storyFitFor(evidence);
           const supported = evidence
             .filter((item) => item.status !== "Gap")
@@ -3100,8 +3142,8 @@ export default function Home({
             proof.length >= 2 &&
             requiredGapCount === 0;
           return {
-            ...job,
-            trend: job.trend || 0,
+            ...normalizedJob,
+            trend: normalizedJob.trend || 0,
             match: fit.evidenceCoverage,
             storyFit: fit.storyFit,
             requiredCoverage: fit.requiredCoverage,
@@ -3110,29 +3152,74 @@ export default function Home({
             requiredGapCount,
             alertEligible,
             alertReason: `${proof.length} proof-backed signals · ${requiredGapCount} unsupported must-haves · ${fit.outcomeStrength}% outcome strength`,
-            whyNow: job.isLive
-              ? `New from ${job.source || "an approved employer source"}; your evidence supports ${proof.length} of its strongest signals.`
-              : `${job.trend && job.trend > 0 ? `Demand signal +${job.trend}%` : "Current demand signal"}; your profile carries ${proof.length} defensible proof points.`,
-            strengths: job.isLive ? supported : job.strengths || supported,
-            gaps: job.isLive ? gaps : job.gaps || gaps,
-            story: job.isLive
+            whyNow: normalizedJob.isLive
+              ? `New from ${normalizedJob.source || "an approved employer source"}; your evidence supports ${proof.length} of its strongest signals.`
+              : `${normalizedJob.trend && normalizedJob.trend > 0 ? `Demand signal +${normalizedJob.trend}%` : "Current demand signal"}; your profile carries ${proof.length} defensible proof points.`,
+            strengths: normalizedJob.isLive
+              ? supported
+              : normalizedJob.strengths || supported,
+            gaps: normalizedJob.isLive
+              ? gaps
+              : normalizedJob.gaps || gaps,
+            story: normalizedJob.isLive
               ? storyEvidence?.evidence ||
                 "Add a verified result that supports the strongest matched requirement."
-              : job.story || "Add a verified story before tailoring this role.",
+              : normalizedJob.story ||
+                "Add a verified story before tailoring this role.",
           };
-        })
-        .sort((a, b) => b.storyFit - a.storyFit),
+        }),
+    [evidenceDocuments, radarThreshold, sourceJobs],
+  );
+  const jobSearchCapabilities = useMemo(
+    () => getJobSearchCapabilities(rankedJobPool),
+    [rankedJobPool],
+  );
+  const postedWithinDays =
+    datePosted === "Past 24 hours"
+      ? 1
+      : datePosted === "Past week"
+        ? 7
+        : datePosted === "Past month"
+          ? 30
+          : undefined;
+  const recommendedJobs = useMemo<RankedJob[]>(
+    () =>
+      filterAndRankJobs(rankedJobPool, {
+        roleQuery,
+        region,
+        country,
+        workStyle,
+        industry,
+        employmentType,
+        seniority,
+        postedWithinDays,
+        sourceKind: sourceJobs ? "live" : "example",
+        sortBy: jobSort,
+      }),
     [
       country,
+      employmentType,
       industry,
-      radarThreshold,
+      jobSort,
+      postedWithinDays,
+      rankedJobPool,
       region,
-      evidenceDocuments,
       roleQuery,
+      seniority,
       sourceJobs,
       workStyle,
     ],
   );
+  const activeRecommendationFilterCount = [
+    roleQuery.trim(),
+    region !== "Worldwide",
+    country !== "All countries",
+    workStyle !== "All work styles",
+    industry !== "All industries",
+    employmentType !== "All employment types",
+    seniority !== "All experience levels",
+    datePosted !== "Any time",
+  ].filter(Boolean).length;
   const proofQualifiedJobs = recommendedJobs.filter(
     (job) => job.alertEligible,
   );
@@ -3195,6 +3282,17 @@ export default function Home({
     setRegion(next);
     setCountry("All countries");
   }
+  function clearRecommendationFilters() {
+    setRoleQuery("");
+    setRegion("Worldwide");
+    setCountry("All countries");
+    setWorkStyle("All work styles");
+    setIndustry("All industries");
+    setEmploymentType("All employment types");
+    setSeniority("All experience levels");
+    setDatePosted("Any time");
+    setJobSort("story-fit");
+  }
   async function connectApprovedSource(event: FormEvent) {
     event.preventDefault();
     if (!sourceReference.trim()) return;
@@ -3216,6 +3314,10 @@ export default function Home({
       }
       setSourceMeta(payload.source);
       setSourceJobs(payload.jobs.map((job) => ({ ...job, isLive: true })));
+      if (!payload.jobs.some((job) => Boolean(job.publishedAt))) {
+        setDatePosted("Any time");
+        if (jobSort === "newest") setJobSort("story-fit");
+      }
     } catch (error) {
       setSourceMeta(null);
       setSourceJobs(null);
@@ -3230,6 +3332,8 @@ export default function Home({
     setSourceJobs(null);
     setSourceMeta(null);
     setSourceError("");
+    setDatePosted("Any time");
+    if (jobSort === "newest") setJobSort("story-fit");
   }
   function selectProvider(nextProvider: string) {
     const definition =
@@ -6478,86 +6582,167 @@ export default function Home({
                   </div>
                 )}
               </section>
-              <div className="filter-grid recommendation-filters">
-                <label className="wide">
-                  <span>{detail.roleOrSkill}</span>
-                  <input
-                    value={roleQuery}
-                    onChange={(event) => setRoleQuery(event.target.value)}
-                    placeholder="Product analyst, SQL, healthcare"
-                  />
-                </label>
-                <label>
-                  <span>{detail.region}</span>
-                  <select
-                    value={region}
-                    onChange={(event) => updateRegion(event.target.value)}
+              <section className="recommendation-search" aria-label={detail.searchScope}>
+                <div className="recommendation-filter-toolbar">
+                  <div className="filter-result-summary" aria-live="polite">
+                    <span className={`job-source-kind ${sourceJobs ? "live" : "example"}`}>
+                      {sourceJobs
+                        ? jobSearchUi.sourceLabelLive
+                        : jobSearchUi.sourceLabelExample}
+                    </span>
+                    <strong>
+                      {recommendedJobs.length} {detail.results}
+                    </strong>
+                    {activeRecommendationFilterCount > 0 && (
+                      <small>
+                        {activeRecommendationFilterCount} {jobSearchUi.activeFilters}
+                      </small>
+                    )}
+                  </div>
+                  <button
+                    className="filter-reset"
+                    type="button"
+                    onClick={clearRecommendationFilters}
+                    disabled={activeRecommendationFilterCount === 0 && jobSort === "story-fit"}
                   >
-                    {REGIONS.map((item) => (
-                      <option key={item} value={item}>
-                        {item === "Worldwide"
-                          ? copy.worldwide
-                          : regionLabelFor(locale, item)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  <span>{detail.country}</span>
-                  <select
-                    value={country}
-                    onChange={(event) => setCountry(event.target.value)}
-                  >
-                    {COUNTRIES[region].map((item) => (
-                      <option key={item} value={item}>
-                        {item === "All countries"
-                          ? detail.country
-                          : countryLabelFor(locale, item)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  <span>{detail.radius}</span>
-                  <select
-                    value={radius}
-                    onChange={(event) => setRadius(event.target.value)}
-                  >
-                    <option value="Worldwide">{copy.worldwide}</option>
-                    <option>25 km</option>
-                    <option>50 km</option>
-                    <option>100 km</option>
-                    <option>250 km</option>
-                  </select>
-                </label>
-                <label>
-                  <span>{detail.workStyle}</span>
-                  <select
-                    value={workStyle}
-                    onChange={(event) => setWorkStyle(event.target.value)}
-                  >
-                    <option value="All work styles">{detail.workStyle}</option>
-                    <option value="Remote">{workStyleLabelFor(locale, "Remote")}</option>
-                    <option value="Hybrid">{workStyleLabelFor(locale, "Hybrid")}</option>
-                    <option value="On-site">{workStyleLabelFor(locale, "On-site")}</option>
-                  </select>
-                </label>
-                <label>
-                  <span>{detail.industry}</span>
-                  <select
-                    value={industry}
-                    onChange={(event) => setIndustry(event.target.value)}
-                  >
-                    {INDUSTRIES.map((item) => (
-                      <option key={item} value={item}>
-                        {item === "All industries"
-                          ? detail.industry
-                          : marketValueFor(locale, item)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+                    {jobSearchUi.clearFilters}
+                  </button>
+                </div>
+                <div className="filter-grid recommendation-filters">
+                  <label className="wide">
+                    <span>{detail.roleOrSkill}</span>
+                    <input
+                      value={roleQuery}
+                      onChange={(event) => setRoleQuery(event.target.value)}
+                      placeholder={jobSearchUi.searchPlaceholder}
+                    />
+                  </label>
+                  <label>
+                    <span>{detail.region}</span>
+                    <select
+                      value={region}
+                      onChange={(event) => updateRegion(event.target.value)}
+                    >
+                      {REGIONS.map((item) => (
+                        <option key={item} value={item}>
+                          {item === "Worldwide"
+                            ? copy.worldwide
+                            : regionLabelFor(locale, item)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{detail.country}</span>
+                    <select
+                      value={country}
+                      onChange={(event) => setCountry(event.target.value)}
+                    >
+                      {COUNTRIES[region].map((item) => (
+                        <option key={item} value={item}>
+                          {item === "All countries"
+                            ? allCountriesLabelFor(locale)
+                            : countryLabelFor(locale, item)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{detail.workStyle}</span>
+                    <select
+                      value={workStyle}
+                      onChange={(event) => setWorkStyle(event.target.value)}
+                    >
+                      <option value="All work styles">{jobSearchUi.allWorkStyles}</option>
+                      <option value="Remote">{workStyleLabelFor(locale, "Remote")}</option>
+                      <option value="Hybrid">{workStyleLabelFor(locale, "Hybrid")}</option>
+                      <option value="On-site">{workStyleLabelFor(locale, "On-site")}</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>{detail.industry}</span>
+                    <select
+                      value={industry}
+                      onChange={(event) => setIndustry(event.target.value)}
+                    >
+                      {INDUSTRIES.map((item) => (
+                        <option key={item} value={item}>
+                          {jobIndustryLabelFor(locale, item)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {jobSearchCapabilities.employmentType && (
+                    <label>
+                      <span>{jobSearchUi.employmentType}</span>
+                      <select
+                        value={employmentType}
+                        onChange={(event) => setEmploymentType(event.target.value)}
+                      >
+                        {EMPLOYMENT_TYPES.map((item) => (
+                          <option key={item} value={item}>
+                            {employmentTypeLabel(item, jobSearchUi)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  {jobSearchCapabilities.seniority && (
+                    <label>
+                      <span>{jobSearchUi.experienceLevel}</span>
+                      <select
+                        value={seniority}
+                        onChange={(event) => setSeniority(event.target.value)}
+                      >
+                        {SENIORITY_LEVELS.map((item) => (
+                          <option key={item} value={item}>
+                            {seniorityLabel(item, jobSearchUi)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  {jobSearchCapabilities.datePosted && (
+                    <label>
+                      <span>{jobSearchUi.datePosted}</span>
+                      <select
+                        value={datePosted}
+                        onChange={(event) => setDatePosted(event.target.value)}
+                      >
+                        <option value="Any time">{jobSearchUi.anyTime}</option>
+                        <option value="Past 24 hours">{jobSearchUi.past24Hours}</option>
+                        <option value="Past week">{jobSearchUi.pastWeek}</option>
+                        <option value="Past month">{jobSearchUi.pastMonth}</option>
+                      </select>
+                    </label>
+                  )}
+                  <label>
+                    <span>{jobSearchUi.sortBy}</span>
+                    <select
+                      value={jobSort}
+                      onChange={(event) =>
+                        setJobSort(
+                          event.target.value as
+                            | "story-fit"
+                            | "newest"
+                            | "fewest-gaps"
+                            | "title",
+                        )
+                      }
+                    >
+                      <option value="story-fit">{jobSearchUi.bestStoryFit}</option>
+                      {jobSearchCapabilities.datePosted && (
+                        <option value="newest">{jobSearchUi.newest}</option>
+                      )}
+                      <option value="fewest-gaps">{jobSearchUi.fewestGaps}</option>
+                      <option value="title">A–Z</option>
+                    </select>
+                  </label>
+                </div>
+                {jobSearchCapabilities.datePosted && (
+                  <p className="filter-data-note">{jobSearchUi.liveOnlyDateHint}</p>
+                )}
+              </section>
               <section className="story-radar" aria-labelledby="story-radar-title">
                 <div className="story-radar-heading">
                   <div>
@@ -6706,7 +6891,14 @@ export default function Home({
                 <div>
                   <span>{detail.searchScope}</span>
                   <b>
-                    {country === "All countries" ? region : country} · {radius}
+                    {country === "All countries"
+                      ? region === "Worldwide"
+                        ? copy.worldwide
+                        : regionLabelFor(locale, region)
+                      : countryLabelFor(locale, country)}{" "}
+                    · {workStyle === "All work styles"
+                      ? jobSearchUi.allWorkStyles
+                      : workStyleLabelFor(locale, workStyle)}
                   </b>
                 </div>
                 <div>
@@ -6732,16 +6924,33 @@ export default function Home({
                             <h3>{job.title}</h3>
                             <span>
                               {job.city}, {countryLabelFor(locale, job.country)} ·{" "}
-                              {workStyleLabelFor(locale, job.workStyle)} · {marketValueFor(locale, job.industry)}
+                              {workStyleLabelFor(locale, job.workStyle)} · {jobIndustryLabelFor(locale, job.industry)}
                             </span>
-                            {job.source && (
-                              <small className="job-provenance">
-                                {job.isLive ? detail.liveNote : detail.exampleSnapshot} · {job.source}
-                                {job.publishedAt
-                                  ? ` · ${new Date(job.publishedAt).toLocaleDateString(locale)}`
-                                  : ""}
-                              </small>
-                            )}
+                            <small className="job-provenance">
+                              {job.isLive
+                                ? jobSearchUi.sourceLabelLive
+                                : jobSearchUi.sourceLabelExample}
+                              {job.source ? ` · ${job.source}` : ""}
+                              {job.publishedAt
+                                ? ` · ${new Date(job.publishedAt).toLocaleDateString(locale)}`
+                                : ""}
+                            </small>
+                            <div className="job-metadata">
+                              {job.employmentType && (
+                                <span>{employmentTypeLabel(job.employmentType, jobSearchUi)}</span>
+                              )}
+                              {job.seniority && (
+                                <span>{seniorityLabel(job.seniority, jobSearchUi)}</span>
+                              )}
+                              {job.compensation && <span>{job.compensation}</span>}
+                              {!job.description && (
+                                <span className="description-missing">
+                                  {locale === "en"
+                                    ? "Description unavailable"
+                                    : detail.sourcePolicy}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="job-badges">
                             {job.alertEligible && (
@@ -6783,7 +6992,13 @@ export default function Home({
                           </div>
                           <div>
                             <span>{detail.requiredMatch}</span>
-                            <b>{job.requiredCoverage}%</b>
+                            <b>
+                              {job.requiredCoverage === null
+                                ? locale === "en"
+                                  ? "Not specified"
+                                  : "—"
+                                : `${job.requiredCoverage}%`}
+                            </b>
                           </div>
                           <div>
                             <span>{interview.outcome}</span>
@@ -6806,10 +7021,10 @@ export default function Home({
                           </div>
                         </div>
                         <div className="job-actions">
-                          {job.sourceUrl && (
+                          {(job.applyUrl || job.sourceUrl) && (
                             <a
                               className="text-link source-link"
-                              href={job.sourceUrl}
+                              href={job.applyUrl || job.sourceUrl}
                               target="_blank"
                               rel="noreferrer"
                             >
@@ -6829,6 +7044,7 @@ export default function Home({
                           </button>
                           <button
                             className="button primary"
+                            disabled={!job.description}
                             onClick={() => {
                               setJd(job.description);
                               setMatches(
@@ -6844,7 +7060,17 @@ export default function Home({
                     </article>
                   ))
                 ) : (
-                  <p className="empty-state framed">{copy.heroBody}</p>
+                  <section className="empty-search-state" role="status">
+                    <h3>{jobSearchUi.noMatchesTitle}</h3>
+                    <p>{jobSearchUi.noMatchesBody}</p>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={clearRecommendationFilters}
+                    >
+                      {jobSearchUi.clearFilters}
+                    </button>
+                  </section>
                 )}
               </div>
             </>
@@ -6911,7 +7137,7 @@ export default function Home({
                     {COUNTRIES[region].map((item) => (
                       <option key={item} value={item}>
                         {item === "All countries"
-                          ? detail.country
+                          ? allCountriesLabelFor(locale)
                           : countryLabelFor(locale, item)}
                       </option>
                     ))}
@@ -6925,9 +7151,7 @@ export default function Home({
                   >
                     {INDUSTRIES.map((item) => (
                       <option key={item} value={item}>
-                        {item === "All industries"
-                          ? detail.industry
-                          : marketValueFor(locale, item)}
+                        {jobIndustryLabelFor(locale, item)}
                       </option>
                     ))}
                   </select>

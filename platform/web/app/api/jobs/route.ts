@@ -1,3 +1,5 @@
+import { enrichJobSearchMetadata } from "../../job-search.ts";
+
 type ProviderId = "greenhouse" | "lever" | "lever-eu" | "ashby";
 
 type SourceDefinition = {
@@ -75,6 +77,10 @@ function countryName(value: unknown): string {
     DEU: "Germany",
     FR: "France",
     FRA: "France",
+    NL: "Netherlands",
+    NLD: "Netherlands",
+    ES: "Spain",
+    ESP: "Spain",
     JP: "Japan",
     JPN: "Japan",
     KR: "South Korea",
@@ -89,8 +95,20 @@ function countryName(value: unknown): string {
     IND: "India",
     BR: "Brazil",
     BRA: "Brazil",
+    AR: "Argentina",
+    ARG: "Argentina",
+    CO: "Colombia",
+    COL: "Colombia",
     MX: "Mexico",
     MEX: "Mexico",
+    AE: "United Arab Emirates",
+    ARE: "United Arab Emirates",
+    SA: "Saudi Arabia",
+    SAU: "Saudi Arabia",
+    ZA: "South Africa",
+    ZAF: "South Africa",
+    KE: "Kenya",
+    KEN: "Kenya",
   };
   return names[normalized] || raw;
 }
@@ -100,6 +118,8 @@ function inferCountry(location: string): string {
     "United States",
     "United Kingdom",
     "Canada",
+    "Netherlands",
+    "Spain",
     "Germany",
     "France",
     "Japan",
@@ -109,7 +129,13 @@ function inferCountry(location: string): string {
     "Australia",
     "India",
     "Brazil",
+    "Argentina",
+    "Colombia",
     "Mexico",
+    "United Arab Emirates",
+    "Saudi Arabia",
+    "South Africa",
+    "Kenya",
   ];
   return known.find((item) => location.toLowerCase().includes(item.toLowerCase())) || "Unspecified";
 }
@@ -209,7 +235,7 @@ function normalizeGreenhouse(payload: unknown, account: string) {
     const department = cleanText(departments[0]?.name) || "Other";
     const description = cleanText(item.content);
     const url = cleanText(item.absolute_url);
-    return {
+    return enrichJobSearchMetadata({
       id: `greenhouse:${account}:${cleanText(item.id)}`,
       source: "Greenhouse",
       title: cleanText(item.title) || "Untitled role",
@@ -224,7 +250,7 @@ function normalizeGreenhouse(payload: unknown, account: string) {
       sourceUrl: url,
       applyUrl: url,
       publishedAt: cleanText(item.updated_at),
-    };
+    });
   });
 }
 
@@ -236,7 +262,7 @@ function normalizeLever(payload: unknown, account: string, provider: ProviderId)
     const location = cleanText(categories.location);
     const department = cleanText(categories.department || categories.team) || "Other";
     const description = cleanText(item.descriptionPlain || item.description);
-    return {
+    return enrichJobSearchMetadata({
       id: `${provider}:${account}:${cleanText(item.id)}`,
       source: provider === "lever-eu" ? "Lever EU" : "Lever",
       title: cleanText(item.text) || "Untitled role",
@@ -251,7 +277,7 @@ function normalizeLever(payload: unknown, account: string, provider: ProviderId)
       sourceUrl: cleanText(item.hostedUrl),
       applyUrl: cleanText(item.applyUrl),
       publishedAt: "",
-    };
+    });
   });
 }
 
@@ -273,7 +299,7 @@ function normalizeAshby(payload: unknown, account: string) {
       const description = cleanText(item.descriptionPlain || item.descriptionHtml);
       const jobUrl = cleanText(item.jobUrl);
       const compensation = (item.compensation || {}) as Record<string, unknown>;
-      return {
+      return enrichJobSearchMetadata({
         id: `ashby:${account}:${jobUrl || `${cleanText(item.title)}-${index}`}`,
         source: "Ashby",
         title: cleanText(item.title) || "Untitled role",
@@ -289,7 +315,7 @@ function normalizeAshby(payload: unknown, account: string) {
         applyUrl: cleanText(item.applyUrl),
         publishedAt: cleanText(item.publishedAt),
         compensation: cleanText(compensation.compensationTierSummary),
-      };
+      });
     });
 }
 
