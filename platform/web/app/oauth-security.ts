@@ -1,6 +1,6 @@
 import { safeReturnPath } from "./auth-paths";
 import type { LocaleCode } from "./i18n";
-import type { OAuthProvider } from "./oauth-providers";
+import { callbackPath, type OAuthProvider } from "./oauth-providers";
 
 export const AUTH_SESSION_COOKIE = "interviewthread_session";
 const OAUTH_STATE_MAX_AGE_SECONDS = 10 * 60;
@@ -87,7 +87,7 @@ export function stateCookie(
 ): string {
   return serializeCookie(oauthStateCookieName(provider), value, {
     maxAge: OAUTH_STATE_MAX_AGE_SECONDS,
-    path: `/api/auth/callback/${provider}`,
+    path: callbackPath(provider),
     secure,
   });
 }
@@ -98,7 +98,7 @@ export function clearStateCookie(
 ): string {
   return serializeCookie(oauthStateCookieName(provider), "", {
     maxAge: 0,
-    path: `/api/auth/callback/${provider}`,
+    path: callbackPath(provider),
     secure,
   });
 }

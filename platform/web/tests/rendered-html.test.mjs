@@ -358,7 +358,7 @@ test("localizes market filters while retaining canonical values", () => {
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
-  const [layout, page, globals, i18n, speech, seoPage, siteFooter, auth, appAuth, oauthSecurity, oauthCallback, brandMark, mobileNav, manifest, readme, strategy, brandGuide] = await Promise.all([
+  const [layout, page, globals, i18n, speech, seoPage, siteFooter, auth, appAuth, oauthProviders, oauthSecurity, oauthCallback, linkedinCallback, brandMark, mobileNav, manifest, readme, strategy, brandGuide] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -368,8 +368,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
     readFile(new URL("../app/SiteFooter.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/chatgpt-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/oauth-providers.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/oauth-security.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/auth/callback/[provider]/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/auth/linkedin/callback/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/BrandMark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobileNav.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/site.webmanifest", import.meta.url), "utf8"),
@@ -411,6 +413,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(layout, /\/apple-touch-icon\.png/);
   assert.match(layout, /msapplication-TileImage/);
   assert.match(layout, /logo: \{/);
+  assert.match(oauthProviders, /provider === "linkedin"/);
+  assert.match(oauthProviders, /\/auth\/linkedin\/callback/);
+  assert.match(oauthSecurity, /callbackPath\(provider\)/);
+  assert.match(linkedinCallback, /provider: "linkedin"/);
   assert.match(manifest, /\/icon-192\.png/);
   assert.match(manifest, /\/icon-512\.png/);
   assert.match(

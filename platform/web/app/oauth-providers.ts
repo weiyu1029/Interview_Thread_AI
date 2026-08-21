@@ -60,7 +60,13 @@ export function callbackUrl(request: Request, provider: OAuthProvider): string {
   const origin = configuredOrigin
     ? new URL(configuredOrigin).origin
     : new URL(request.url).origin;
-  return `${origin}/api/auth/callback/${provider}`;
+  return `${origin}${callbackPath(provider)}`;
+}
+
+export function callbackPath(provider: OAuthProvider): string {
+  return provider === "linkedin"
+    ? "/auth/linkedin/callback"
+    : `/api/auth/callback/${provider}`;
 }
 
 const providerMetadata = {
