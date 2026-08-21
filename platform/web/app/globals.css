@@ -3751,6 +3751,24 @@ input:focus {
   grid-template-columns: 1.5fr 0.75fr;
   gap: 14px;
 }
+.market-empty-state {
+  margin: 17px 0 0;
+  padding: 24px;
+  border: 1px dashed #b8c7cf;
+  border-radius: 11px;
+  background: #f7f8f8;
+  text-align: center;
+}
+.market-empty-state b,
+.market-empty-state p {
+  display: block;
+  margin: 0;
+}
+.market-empty-state p {
+  margin-top: 7px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .chart-card,
 .momentum-card,
 .ratio-card {
@@ -3895,6 +3913,70 @@ input:focus {
   background: #f7f7f5;
   border: 1px solid var(--line);
   border-radius: 11px;
+}
+.tracker-overview {
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #f7f8f8;
+}
+.tracker-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 11px;
+}
+.tracker-overview-heading span {
+  color: var(--muted);
+  font-size: 14px;
+}
+.tracker-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.tracker-summary-grid article {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #dce3e7;
+  border-radius: 8px;
+  background: #fff;
+}
+.tracker-summary-grid span,
+.tracker-summary-grid b {
+  display: block;
+}
+.tracker-summary-grid span {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 13px;
+}
+.tracker-summary-grid b {
+  margin-top: 4px;
+  font-size: 17px;
+}
+.tracker-stage-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.tracker-stage-strip span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 13px;
+}
+.tracker-empty-state {
+  padding: 24px;
+  text-align: center;
+}
+.tracker-empty-state p {
+  margin: 7px 0 0;
+  color: var(--muted);
 }
 .tracker-list {
   margin-top: 18px;
@@ -6478,6 +6560,9 @@ input:focus {
   .tracker-form {
     grid-template-columns: 1fr;
   }
+  .tracker-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
   .tracker-list article,
   .tracker-actions {
     align-items: stretch;
@@ -6647,6 +6732,9 @@ input:focus {
   }
 }
 @media (max-width: 360px) {
+  .tracker-summary-grid {
+    grid-template-columns: 1fr;
+  }
   .brand > span:last-child {
     max-width: 94px;
     font-size: 14px;
