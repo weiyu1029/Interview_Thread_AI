@@ -82,6 +82,10 @@ def main() -> None:
         "interviewthread-apple-v5.png": 180,
         "interviewthread-icon-192-v5.png": 192,
         "interviewthread-icon-512-v5.png": 512,
+        "interviewthread-favicon-32-v6.png": 32,
+        "interviewthread-apple-v6.png": 180,
+        "interviewthread-icon-192-v6.png": 192,
+        "interviewthread-icon-512-v6.png": 512,
     }
     for filename, size in outputs.items():
         master.resize((size, size), Image.Resampling.LANCZOS).save(
@@ -92,16 +96,25 @@ def main() -> None:
         PUBLIC / "favicon.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
+        bitmap_format="bmp",
     )
     master.save(
         PUBLIC / "interviewthread-favicon-v4.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
+        bitmap_format="bmp",
     )
     master.save(
         PUBLIC / "interviewthread-favicon-v5.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
+        bitmap_format="bmp",
+    )
+    master.save(
+        PUBLIC / "interviewthread-favicon-v6.ico",
+        format="ICO",
+        sizes=[(16, 16), (32, 32), (48, 48)],
+        bitmap_format="bmp",
     )
 
     # Next.js App Router emits automatic icon metadata for files under app/.
@@ -116,6 +129,7 @@ def main() -> None:
         app / "favicon.ico",
         format="ICO",
         sizes=[(16, 16), (32, 32), (48, 48)],
+        bitmap_format="bmp",
     )
 
 

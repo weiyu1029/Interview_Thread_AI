@@ -34,16 +34,16 @@ async function requestOrigin() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await requestOrigin();
-  const favicon = new URL("/interviewthread-favicon-v5.ico", origin).toString();
+  const favicon = new URL("/interviewthread-favicon-v6.ico", origin).toString();
   const favicon32 = new URL(
-    "/interviewthread-favicon-32-v5.png",
+    "/interviewthread-favicon-32-v6.png",
     origin,
   ).toString();
-  const icon192 = new URL("/interviewthread-icon-192-v5.png", origin).toString();
-  const icon512 = new URL("/interviewthread-icon-512-v5.png", origin).toString();
-  const appleIcon = new URL("/interviewthread-apple-v5.png", origin).toString();
+  const icon192 = new URL("/interviewthread-icon-192-v6.png", origin).toString();
+  const icon512 = new URL("/interviewthread-icon-512-v6.png", origin).toString();
+  const appleIcon = new URL("/interviewthread-apple-v6.png", origin).toString();
   const manifest = new URL(
-    "/interviewthread-site-v5.webmanifest",
+    "/interviewthread-site-v6.webmanifest",
     origin,
   ).toString();
   const title = "InterviewThread — AI mock interview preparation";

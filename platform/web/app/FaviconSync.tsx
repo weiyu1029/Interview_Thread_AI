@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const FAVICON_PATH = "/interviewthread-favicon-32-v5.png";
+const FAVICON_PATH = "/interviewthread-favicon-32-v6.png";
 
 export default function FaviconSync() {
   useEffect(() => {
