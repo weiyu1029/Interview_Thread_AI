@@ -394,12 +394,13 @@ test("localizes market filters while retaining canonical values", () => {
 });
 
 test("ships product metadata, multilingual speech, account auth, and a social card", async () => {
-  const [layout, page, globals, i18n, speech, seoPage, siteFooter, auth, appAuth, oauthProviders, oauthSecurity, oauthCallback, linkedinCallback, brandMark, mobileNav, manifest, readme, strategy, brandGuide] = await Promise.all([
+  const [layout, page, globals, i18n, speech, technicalResources, seoPage, siteFooter, auth, appAuth, oauthProviders, oauthSecurity, oauthCallback, linkedinCallback, brandMark, mobileNav, manifest, readme, strategy, brandGuide] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/i18n.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/interview-speech.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/technical-resources.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/SeoLandingPage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/SiteFooter.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/chatgpt-auth.ts", import.meta.url), "utf8"),
@@ -517,9 +518,10 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Cross-functional partner/i);
   assert.match(page, /Culture and values interviewer/i);
   assert.match(page, /Case breakdown/i);
-  assert.match(page, /LeetCode Explore/i);
-  assert.match(page, /Exercism/i);
-  assert.match(page, /System Design Primer/i);
+  assert.match(page, /technicalResourcesForPersona/);
+  assert.match(technicalResources, /LeetCode Problem Set/i);
+  assert.match(technicalResources, /Exercism/i);
+  assert.match(technicalResources, /System Design Primer/i);
   assert.match(page, /not a coach and not an AI assistant/i);
   assert.match(page, /SpeechRecognition/i);
   assert.match(page, /SpeechRecognitionPhrase/i);

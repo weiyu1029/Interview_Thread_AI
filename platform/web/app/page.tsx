@@ -87,6 +87,11 @@ import {
   questionsForInterviewRole,
 } from "./interview-question-bank";
 import {
+  technicalResourcesForPersona,
+  type TechnicalResourceTag,
+} from "./technical-resources";
+import { technicalResourceCopyFor } from "./technical-resource-copy";
+import {
   walkthroughCuesFor,
   walkthroughNarrationLabelFor,
   walkthroughTrackFor,
@@ -214,22 +219,7 @@ type InterviewPersona = {
   answerPattern: string;
   redFlags: string;
   prepChecklist: string[];
-  resourceTags: InterviewResourceTag[];
-};
-type InterviewResourceTag =
-  | "behavioral"
-  | "coding"
-  | "system-design"
-  | "frontend"
-  | "data-sql"
-  | "ml-ai"
-  | "security";
-type InterviewResource = {
-  name: string;
-  href: string;
-  tags: InterviewResourceTag[];
-  access: string;
-  bestFor: string;
+  resourceTags: TechnicalResourceTag[];
 };
 type InterviewCopy = {
   eyebrow: string;
@@ -491,7 +481,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Give a 60–90 second fit summary, then support each must-have with one proof point.",
     redFlags: "Long autobiography, unclear motivation, unsupported requirements, or avoidable logistics surprises.",
     prepChecklist: ["Must-have qualification map", "Why this role now", "Career transition explanation", "Availability and work authorization facts"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "recruiter",
@@ -503,7 +493,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Lead with target role, relevant scope, strongest proof, and a concise reason for the move.",
     redFlags: "Undefined target, title inflation, compensation surprises, or a story that changes under follow-up.",
     prepChecklist: ["Target-title sentence", "Scope and seniority examples", "Compensation range research", "Three recruiter-ready proof bullets"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "hiring-manager",
@@ -515,7 +505,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Use STAR-L: situation, task, your action, measurable result, and what you learned.",
     redFlags: "Team-only language, missing decisions, polished stories without numbers, or no reflection.",
     prepChecklist: ["Three JD-linked STAR stories", "Ownership boundaries", "Trade-off and failure story", "First-90-day hypothesis"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "functional-lead",
@@ -527,7 +517,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Explain your principle, show one applied example, name the trade-off, then generalize the lesson.",
     redFlags: "Tool memorization, no quality standard, weak prioritization, or expertise that cannot be taught.",
     prepChecklist: ["Core operating principles", "Quality-bar example", "Prioritization framework", "How you coach or document decisions"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "system-design"],
   },
   {
     id: "technical",
@@ -539,7 +529,14 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Clarify, state assumptions, propose a simple solution, test it, analyze trade-offs, then improve it.",
     redFlags: "Silent coding, premature optimization, no test cases, bluffing, or ignoring edge cases.",
     prepChecklist: ["Language and environment check", "Core data structures or SQL patterns", "Think-aloud practice", "Testing and complexity checklist"],
-    resourceTags: ["coding", "data-sql", "frontend"],
+    resourceTags: [
+      "coding",
+      "data-sql",
+      "data-science",
+      "frontend",
+      "backend",
+      "qa-testing",
+    ],
   },
   {
     id: "system-design",
@@ -551,7 +548,13 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Clarify requirements, estimate scale, draw the high-level design, deep-dive, then test failure modes.",
     redFlags: "Architecture before requirements, buzzword stacking, no numbers, or no failure and trade-off analysis.",
     prepChecklist: ["Requirements questions", "Back-of-envelope estimates", "Core component trade-offs", "Reliability and observability review"],
-    resourceTags: ["system-design", "ml-ai", "security"],
+    resourceTags: [
+      "system-design",
+      "backend",
+      "ml-ai",
+      "security",
+      "devops-cloud",
+    ],
   },
   {
     id: "portfolio",
@@ -563,7 +566,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Start with the problem and constraint, show two pivotal decisions, then prove the outcome and your contribution.",
     redFlags: "Pretty output without reasoning, confidential details, unclear ownership, or no evidence of iteration.",
     prepChecklist: ["Two-minute overview", "Three decision artifacts", "Before-and-after evidence", "Confidentiality-safe backup detail"],
-    resourceTags: ["frontend", "behavioral"],
+    resourceTags: ["frontend", "behavioral", "product-case"],
   },
   {
     id: "coo",
@@ -575,7 +578,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Show the broken operating system, your intervention, adoption controls, and the audited result.",
     redFlags: "Heroics instead of systems, no controls, fragile handoffs, or results that depend on one person.",
     prepChecklist: ["Process map", "Operating metric", "Risk and control example", "Scale and repeatability story"],
-    resourceTags: ["behavioral", "system-design"],
+    resourceTags: ["behavioral", "system-design", "devops-cloud"],
   },
   {
     id: "ceo",
@@ -587,7 +590,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "State your point of view first, support it with one business proof, then name the risk and next move.",
     redFlags: "Feature-level detail without business relevance, weak opinions, inflated impact, or long answers.",
     prepChecklist: ["Company thesis", "One high-leverage proof", "Contrarian but defensible view", "Executive 30-second answer"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "peer",
@@ -599,7 +602,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Describe the tension honestly, your behavior, the other person’s contribution, and what changed afterward.",
     redFlags: "Blaming, claiming all credit, fake conflict, or no evidence that feedback changed behavior.",
     prepChecklist: ["Conflict story", "Feedback received", "How you unblock others", "Working-style preferences"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "cross-functional",
@@ -611,7 +614,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Map incentives, show the disagreement, explain your influence mechanism, and prove the shared outcome.",
     redFlags: "Escalation as the first tool, one-sided empathy, missing decision owners, or weak follow-through.",
     prepChecklist: ["Stakeholder map", "Influence story", "Decision-document example", "Difficult handoff and recovery"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "customer",
@@ -623,7 +626,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Name the user problem, show how you learned it, explain the decision plainly, and close the feedback loop.",
     redFlags: "Solution-first thinking, jargon, dismissing feedback, or promising what the team cannot deliver.",
     prepChecklist: ["Customer discovery story", "Plain-language explanation", "Expectation reset example", "Feedback-to-roadmap proof"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "values",
@@ -635,7 +638,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Choose a real tension, name the value at stake, show the costly action, and explain the lasting behavior change.",
     redFlags: "Abstract values, perfect-hero stories, no cost or tension, or answers optimized to please the interviewer.",
     prepChecklist: ["Failure and learning story", "Ethical tension", "Inclusion in action", "Value you challenged constructively"],
-    resourceTags: ["behavioral"],
+    resourceTags: ["behavioral", "product-case"],
   },
   {
     id: "case",
@@ -647,7 +650,7 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     answerPattern: "Restate the objective, structure the problem, prioritize hypotheses, analyze evidence, and synthesize a decision.",
     redFlags: "Analysis before objective, hidden assumptions, no prioritization, or a conclusion disconnected from evidence.",
     prepChecklist: ["Clarifying questions", "Issue tree", "Mental-math checks", "One-minute recommendation"],
-    resourceTags: ["data-sql", "behavioral"],
+    resourceTags: ["data-sql", "data-science", "behavioral", "product-case"],
   },
   {
     id: "panel",
@@ -660,65 +663,6 @@ const INTERVIEW_PERSONAS: InterviewPersona[] = [
     redFlags: "Contradictory scope, changing numbers, overfitting to each interviewer, or defensive follow-ups.",
     prepChecklist: ["One-page evidence map", "Consistent numbers and ownership", "Short and deep answer versions", "Questions for each panelist"],
     resourceTags: ["behavioral", "coding", "system-design"],
-  },
-];
-
-const TECHNICAL_RESOURCES: InterviewResource[] = [
-  {
-    name: "LeetCode Explore",
-    href: "https://leetcode.com/explore/",
-    tags: ["coding"],
-    access: "External platform · mixed access",
-    bestFor: "Algorithms, data structures, and timed coding patterns",
-  },
-  {
-    name: "Exercism",
-    href: "https://exercism.org/tracks",
-    tags: ["coding"],
-    access: "Open source",
-    bestFor: "Language fluency, tests, and mentor feedback",
-  },
-  {
-    name: "System Design Primer",
-    href: "https://github.com/donnemartin/system-design-primer",
-    tags: ["system-design"],
-    access: "Open source · CC BY 4.0",
-    bestFor: "Scalability, trade-offs, design questions, and sample solutions",
-  },
-  {
-    name: "Tech Interview Handbook",
-    href: "https://github.com/yangshun/tech-interview-handbook",
-    tags: ["behavioral", "coding"],
-    access: "Open source",
-    bestFor: "Study plans, coding rounds, behavioral preparation, and checklists",
-  },
-  {
-    name: "Front End Interview Handbook",
-    href: "https://github.com/yangshun/front-end-interview-handbook",
-    tags: ["frontend", "system-design"],
-    access: "Open source",
-    bestFor: "HTML, CSS, JavaScript, browser knowledge, and front-end design",
-  },
-  {
-    name: "SQL Murder Mystery",
-    href: "https://github.com/NUKnightLab/sql-mysteries",
-    tags: ["data-sql"],
-    access: "Open source · MIT and CC BY-SA 4.0",
-    bestFor: "SQL joins, filtering, investigation, and query reasoning",
-  },
-  {
-    name: "Machine Learning Systems Design",
-    href: "https://github.com/chiphuyen/machine-learning-systems-design",
-    tags: ["ml-ai", "system-design"],
-    access: "Open repository · community answers",
-    bestFor: "ML problem framing, data, evaluation, serving, and trade-offs",
-  },
-  {
-    name: "OWASP NodeGoat",
-    href: "https://github.com/OWASP/NodeGoat",
-    tags: ["security"],
-    access: "Open source · Apache-2.0",
-    bestFor: "Web security risks, exploitation, remediation, and secure design",
   },
 ];
 
@@ -2297,8 +2241,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
       answerPattern: "最有力的回答方式",
       avoid: "常見扣分點",
       prep: "進入這關前先準備",
-      resources: "Technical Round 練習資源",
-      resourcesIntro: "依目前面試角色推薦；開啟外部網站前，請自行確認帳號、價格與隱私條款。",
+      resources: "本關推薦練習資源",
+      resourcesIntro:
+        "依目前面試官的決策重點推薦。只提供外部連結，不複製第三方題目；開啟前請確認帳號、價格與隱私條款。",
       questionBank: "開源面試題庫",
       questionBankIntro: "依面試官角色、題型、回答階段、難度與追問焦點選題；L1、L2、L3 每個組合都有題目，且保留來源與授權。",
       category: "題型分類",
@@ -2328,8 +2273,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
       answerPattern: "最有力的回答方式",
       avoid: "常见扣分点",
       prep: "进入这关前先准备",
-      resources: "Technical Round 练习资源",
-      resourcesIntro: "按当前面试角色推荐；打开外部网站前，请自行确认账号、价格与隐私条款。",
+      resources: "本轮推荐练习资源",
+      resourcesIntro:
+        "按当前面试官的决策重点推荐。这里只提供外部链接，不复制第三方题目；打开前请确认账号、价格和隐私条款。",
       questionBank: "开源面试题库",
       questionBankIntro: "按面试官角色、题型、回答阶段、难度和追问重点选题；L1、L2、L3 每种组合都有题目，并保留来源和授权。",
       category: "题型分类",
@@ -2358,8 +2304,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
     answerPattern: "Strong answer pattern",
     avoid: "Common red flags",
     prep: "Prepare before this round",
-    resources: "Technical-round practice",
-    resourcesIntro: "Selected for this interviewer. External sites have their own accounts, pricing, privacy, and terms.",
+    resources: "Recommended practice for this round",
+    resourcesIntro:
+      "Selected for this interviewer’s decision criteria. We link out without copying third-party questions; external sites have their own accounts, pricing, privacy, and terms.",
     questionBank: "Open-source interview question bank",
     questionBankIntro: "Filter by interviewer role, question type, answer stage, level, and follow-up focus. Every L1, L2, and L3 combination is covered, with source and license preserved.",
     category: "Question type",
@@ -2844,6 +2791,8 @@ export default function Home({
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
   const interviewStudioUi = interviewStudioUiFor(locale);
+  const technicalResourceUi = technicalResourceCopyFor(locale);
+  const resourceAction = technicalResourceUi.action;
   const interviewScheduleUi = interviewScheduleUiFor(locale);
   const evidenceSourceUi = evidenceSourceUiFor(locale);
   const optionalCareerSourceCopy = optionalCareerSourceCopyFor(locale);
@@ -4500,11 +4449,10 @@ export default function Home({
   const previewOpenQuestionSource = previewOpenQuestion
     ? openInterviewQuestionSource(previewOpenQuestion.sourceId)
     : null;
-  const selectedInterviewResources = TECHNICAL_RESOURCES.filter((resource) =>
-    resource.tags.some((tag) =>
-      selectedInterviewPersonaBase.resourceTags.includes(tag),
-    ),
-  ).slice(0, 5);
+  const selectedInterviewResources = technicalResourcesForPersona(
+    selectedInterviewPersonaBase.resourceTags,
+    6,
+  );
   const interviewProofs = matches.filter(
     (item) =>
       item.status !== "Gap" && item.evidence !== "No source evidence found.",
@@ -6318,7 +6266,12 @@ export default function Home({
                       {selectedInterviewPersona.label}
                     </h3>
                   </div>
-                  <p>{interviewStudioUi.resourcesIntro}</p>
+                  <div className="technical-round-library-summary">
+                    <b aria-live="polite">
+                      {selectedInterviewResources.length}
+                    </b>
+                    <p>{interviewStudioUi.resourcesIntro}</p>
+                  </div>
                 </div>
                 <div className="technical-resource-grid">
                   {selectedInterviewResources.map((resource) => (
@@ -6326,12 +6279,15 @@ export default function Home({
                       className="technical-resource-card"
                       href={resource.href}
                       target="_blank"
-                      rel="noreferrer"
-                      key={resource.name}
+                      rel="noopener noreferrer"
+                      key={resource.id}
+                      aria-label={`${resource.name} — ${resourceAction}; ${technicalResourceUi.opensNewTab}`}
                     >
-                      <span>
-                        {locale === "en" ? resource.access : detail.providerPreview}
-                      </span>
+                      <div className="technical-resource-meta" aria-hidden="true">
+                        <span>{resource.format.replaceAll("-", " ")}</span>
+                        <span>{resource.access}</span>
+                        {resource.license ? <span>{resource.license}</span> : null}
+                      </div>
                       <b>{resource.name}</b>
                       <p>
                         {locale === "en"
@@ -6339,9 +6295,8 @@ export default function Home({
                           : `${selectedInterviewPersona.label} · ${interviewStudioUi.prep}`}
                       </p>
                       <small>
-                        {locale === "en"
-                          ? "Open practice resource ↗"
-                          : `${detail.explore} ↗`}
+                        {resourceAction}
+                        <span aria-hidden="true"> ↗</span>
                       </small>
                     </a>
                   ))}

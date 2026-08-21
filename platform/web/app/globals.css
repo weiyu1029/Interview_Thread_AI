@@ -4355,7 +4355,24 @@ input:focus {
   border-radius: 2px;
   background: #e9f0f4;
 }
-.technical-round-library-heading > p {
+.technical-round-library-summary {
+  display: flex;
+  max-width: 520px;
+  align-items: flex-start;
+  gap: 10px;
+}
+.technical-round-library-summary > b {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border-radius: 999px;
+  background: #e4ebef;
+  color: var(--accent-deep);
+  font-size: 15px;
+}
+.technical-round-library-summary > p {
   max-width: 420px;
   margin: 0;
   color: var(--muted);
@@ -4364,15 +4381,15 @@ input:focus {
 }
 .technical-resource-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 9px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 11px;
   margin-top: 13px;
 }
 .technical-resource-card {
   display: flex;
   min-width: 0;
-  min-height: 132px;
-  padding: 12px;
+  min-height: 174px;
+  padding: 14px;
   flex-direction: column;
   border: 1px solid #d6dde1;
   border-radius: 10px;
@@ -4390,26 +4407,41 @@ input:focus {
   box-shadow: 0 8px 24px rgba(43, 56, 66, 0.08);
   transform: translateY(-2px);
 }
-.technical-resource-card > span {
-  color: #647783;
-  font-size: 14px;
-  line-height: 1.35;
+.technical-resource-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.technical-resource-meta > span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #edf2f4;
+  color: #566c79;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 720;
+  line-height: 1.25;
+  text-transform: capitalize;
 }
 .technical-resource-card > b {
   margin-top: 9px;
-  font-size: 14px;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.35;
 }
 .technical-resource-card > p {
   margin: 6px 0 10px;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 .technical-resource-card > small {
   margin-top: auto;
   color: var(--accent-deep);
   font-size: 14px;
   font-weight: 720;
+  line-height: 1.35;
 }
 .speech-vocabulary {
   margin-top: 10px;
@@ -6318,7 +6350,7 @@ input:focus {
     flex-direction: column;
     gap: 9px;
   }
-  .technical-round-library-heading > p {
+  .technical-round-library-summary {
     max-width: none;
   }
   .interview-role-guide-grid,
