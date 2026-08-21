@@ -50,7 +50,7 @@ const en: BetaCopy = {
     ["Review", "We connect feedback to a release, fix regressions, and publish what changed."],
   ] as const,
   formTitle: "Apply to a testing cohort",
-  formDescription: "We collect only structured selections here—no resume, job description, or free-text career history.",
+  formDescription: "We collect only structured selections here—no resume, job description, or open-ended career history.",
   signIn: "Sign in to apply",
   roleFamily: "Role family",
   experienceLevel: "Experience level",

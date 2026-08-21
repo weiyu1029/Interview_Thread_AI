@@ -103,7 +103,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
           "Truth before polish: every important claim should trace back to candidate-provided evidence.",
           "Clarity before automation: users should understand why a match, gap, or recommendation appears.",
           "Practice builds confidence: realistic follow-ups matter more than memorizing a perfect script.",
-          "Access matters: the core product is free and open source so the community can inspect and improve it.",
+          "Access matters: the core product is open source so the community can inspect and improve it.",
         ],
       },
     ],
@@ -137,7 +137,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
   },
   terms: {
     eyebrow: "Terms of use",
-    title: "Terms for the free, open-source InterviewThread service",
+    title: "Terms for the open-source InterviewThread service",
     description:
       "These terms explain acceptable use, account responsibilities, AI limitations, third-party services, and the current community-preview status.",
     updated: "Effective August 20, 2026",
@@ -242,7 +242,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
         paragraphs: [
           "If you submit feedback, we store its category, rating, message, locale, status, timestamp, account owner, product version, product surface, and active beta cohort when applicable. For signed-in use, we may store limited event records such as analysis completed, interview started or answered, tracker updated, feedback submitted, and beta application or withdrawal. These records indicate that an action happened; they do not contain the resume, job description, answer transcript, or raw voice recording.",
           "When you use a contact or partnership form, the name, reply-to email, topic, message, locale, and source page you provide are sent through our transactional email provider to the relevant InterviewThread inbox. Do not include passwords, tokens, full resumes, interview transcripts, or other sensitive information in these forms.",
-          "If you apply for closed beta, we store your structured role family, experience level, interview timing, primary goal, locale, cohort status, separate research/update choices, and the terms, privacy, and product versions you accepted. We do not ask for a resume or free-text career history in the beta application. You can withdraw from beta without deleting your account.",
+          "If you apply for closed beta, we store your structured role family, experience level, interview timing, primary goal, locale, cohort status, separate research/update choices, and the terms, privacy, and product versions you accepted. We do not ask for a resume or open-ended career history in the beta application. You can withdraw from beta without deleting your account.",
         ],
       },
       {

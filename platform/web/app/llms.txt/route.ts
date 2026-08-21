@@ -7,12 +7,12 @@ export function GET() {
 
 > Find the thread. Own the interview.
 
-InterviewThread is a free, open-source AI mock interview product. Upload a real resume and job description to get truthful stories, realistic questions, and role-specific feedback without invented achievements.
+InterviewThread is an open-source AI mock interview product. Upload a real resume and job description to get truthful stories, realistic questions, and role-specific feedback without invented achievements.
 
 ## Primary pages
 - Product: ${siteUrl}/en/#product
 - Workspace: ${siteUrl}/en/#workspace
-- Free and open-source access: ${siteUrl}/en/#plans
+- Open-source access: ${siteUrl}/en/#plans
 - Resume and job-description matching: ${siteUrl}/en/resume-job-description-match
 - Career story builder: ${siteUrl}/en/career-story-builder
 - AI mock interview: ${siteUrl}/en/ai-mock-interview
@@ -40,7 +40,7 @@ Every public page has an indexable, canonical language URL and reciprocal hrefla
 - Localized public pages and interface support
 
 ## Access
-- Every public feature is free and open source
+- Every public feature is open source
 - There are no paid tiers, billing flows, or priority support levels
 - Accounts may be used for identity and future cross-device persistence, not payment
 

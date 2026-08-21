@@ -145,49 +145,6 @@ const privateActivityNotice = {
   fa: "فقط شما می‌توانید فعالیت ذخیره‌شده خود را ببینید. ما رزومه، شرح شغل، متن مصاحبه یا ضبط صدای بازدیدکنندگان ناشناس را جمع‌آوری نمی‌کنیم.",
 } satisfies Record<LocaleCode, string>;
 
-const freeAccessNotice = {
-  en: "All features are free and open source.",
-  ja: "すべての機能は無料でオープンソースです。",
-  ko: "모든 기능은 무료이며 오픈 소스입니다.",
-  "zh-CN": "所有功能均免费开源。",
-  "zh-TW": "所有功能皆免費開源。",
-  es: "Todas las funciones son gratuitas y de código abierto.",
-  fr: "Toutes les fonctionnalités sont gratuites et open source.",
-  de: "Alle Funktionen sind kostenlos und Open Source.",
-  "pt-BR": "Todos os recursos são gratuitos e de código aberto.",
-  it: "Tutte le funzionalità sono gratuite e open source.",
-  nl: "Alle functies zijn gratis en open source.",
-  pl: "Wszystkie funkcje są bezpłatne i open source.",
-  tr: "Tüm özellikler ücretsiz ve açık kaynaklıdır.",
-  ru: "Все функции бесплатны и имеют открытый исходный код.",
-  uk: "Усі функції безкоштовні та мають відкритий код.",
-  ar: "جميع الميزات مجانية ومفتوحة المصدر.",
-  he: "כל התכונות חינמיות ובקוד פתוח.",
-  hi: "सभी सुविधाएँ निःशुल्क और ओपन सोर्स हैं।",
-  bn: "সব ফিচার বিনামূল্যে ও ওপেন সোর্স।",
-  ur: "تمام خصوصیات مفت اور اوپن سورس ہیں۔",
-  id: "Semua fitur gratis dan bersumber terbuka.",
-  ms: "Semua ciri adalah percuma dan sumber terbuka.",
-  th: "ทุกฟีเจอร์ใช้งานฟรีและเป็นโอเพนซอร์ส",
-  vi: "Mọi tính năng đều miễn phí và mã nguồn mở.",
-  fil: "Lahat ng feature ay libre at open source.",
-  sv: "Alla funktioner är gratis och har öppen källkod.",
-  no: "Alle funksjoner er gratis og har åpen kildekode.",
-  da: "Alle funktioner er gratis og open source.",
-  fi: "Kaikki ominaisuudet ovat ilmaisia ja avointa lähdekoodia.",
-  cs: "Všechny funkce jsou zdarma a s otevřeným zdrojovým kódem.",
-  sk: "Všetky funkcie sú bezplatné a s otvoreným zdrojovým kódom.",
-  hu: "Minden funkció ingyenes és nyílt forráskódú.",
-  ro: "Toate funcțiile sunt gratuite și open source.",
-  el: "Όλες οι λειτουργίες είναι δωρεάν και ανοικτού κώδικα.",
-  bg: "Всички функции са безплатни и с отворен код.",
-  hr: "Sve su značajke besplatne i otvorenog koda.",
-  sr: "Све функције су бесплатне и отвореног кода.",
-  sl: "Vse funkcije so brezplačne in odprtokodne.",
-  sw: "Vipengele vyote ni vya bure na vya chanzo huria.",
-  fa: "همه قابلیت‌ها رایگان و متن‌باز هستند.",
-} satisfies Record<LocaleCode, string>;
-
 const openSourceLabel = {
   en: "Open source", ja: "オープンソース", ko: "오픈 소스",
   "zh-CN": "开源", "zh-TW": "開源", es: "Código abierto",
@@ -207,7 +164,7 @@ const openSourceLabel = {
 export function accountCopyFor(locale: LocaleCode): AccountCopy {
   return {
     ...accountCopy[locale],
-    noCharge: freeAccessNotice[locale],
+    noCharge: openSourceLabel[locale],
     privacy: privateActivityNotice[locale],
   };
 }

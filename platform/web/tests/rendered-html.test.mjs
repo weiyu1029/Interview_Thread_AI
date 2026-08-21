@@ -71,7 +71,7 @@ test("server-renders the InterviewThread product experience", async () => {
   assert.match(html, /InterviewThread/);
   assert.match(
     html,
-    /Ace the interview for your dream jobs\./i,
+    /Ace the interview for your dream job\./i,
   );
   assert.match(html, /Start my mock interview/i);
   assert.doesNotMatch(html, /Free AI mock interview practice/i);
@@ -96,7 +96,7 @@ test("server-renders the InterviewThread product experience", async () => {
   assert.match(html, /home-faq-list/);
   assert.match(html, /href="#questions"/);
   assert.match(html, /Market Insights/i);
-  assert.match(html, /All features are free and open source/i);
+  assert.doesNotMatch(html, /\bfree\b/i);
   assert.match(html, /Terms of use/i);
   assert.match(html, /Privacy policy/i);
   assert.match(html, /href="\/en\/about"/i);
@@ -690,7 +690,7 @@ test("localizes every interviewer role and removes English interview-card fallba
   }
 });
 
-test("renders a localized registration page for free open-source access", async () => {
+test("renders a localized registration page for open-source access", async () => {
   const examples = [
     ["/en/account", openSourceLabelFor("en"), accountCopyFor("en")],
     ["/zh-tw/account", openSourceLabelFor("zh-TW"), accountCopyFor("zh-TW")],

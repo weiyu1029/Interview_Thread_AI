@@ -646,22 +646,15 @@ const TECHNICAL_RESOURCES: InterviewResource[] = [
     name: "LeetCode Explore",
     href: "https://leetcode.com/explore/",
     tags: ["coding"],
-    access: "External platform · free and paid content",
+    access: "External platform · mixed access",
     bestFor: "Algorithms, data structures, and timed coding patterns",
   },
   {
     name: "Exercism",
     href: "https://exercism.org/tracks",
     tags: ["coding"],
-    access: "Open source · free",
+    access: "Open source",
     bestFor: "Language fluency, tests, and mentor feedback",
-  },
-  {
-    name: "freeCodeCamp Coding Interview Prep",
-    href: "https://www.freecodecamp.org/learn/coding-interview-prep/",
-    tags: ["coding", "frontend"],
-    access: "Open-source curriculum · free",
-    bestFor: "Algorithms, projects, and progressive practice",
   },
   {
     name: "System Design Primer",
@@ -674,14 +667,14 @@ const TECHNICAL_RESOURCES: InterviewResource[] = [
     name: "Tech Interview Handbook",
     href: "https://github.com/yangshun/tech-interview-handbook",
     tags: ["behavioral", "coding"],
-    access: "Open source · free",
+    access: "Open source",
     bestFor: "Study plans, coding rounds, behavioral preparation, and checklists",
   },
   {
     name: "Front End Interview Handbook",
     href: "https://github.com/yangshun/front-end-interview-handbook",
     tags: ["frontend", "system-design"],
-    access: "Open source · free",
+    access: "Open source",
     bestFor: "HTML, CSS, JavaScript, browser knowledge, and front-end design",
   },
   {
@@ -4182,10 +4175,10 @@ export default function Home({
     MODE_DISCLOSURES[locale]?.[applicationMode] ||
     (locale === "en"
       ? applicationMode === "Manual"
-        ? "Open-source and free. You review every role, edit every document, and submit every application yourself."
+        ? "Open-source public version. You review every role, edit every document, and submit every application yourself."
         : applicationMode === "Hybrid"
-          ? "Open-source and free. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
-          : "Open-source and free. Nothing is submitted automatically in this public version. A future release will require approved employer APIs, consent, rate limits, an audit log, and an emergency stop."
+          ? "Open-source public version. AI can prepare a tailored draft and queue next steps, but you must approve every submission."
+          : "Open-source public version. Nothing is submitted automatically. A future release will require approved employer APIs, consent, rate limits, an audit log, and an emergency stop."
       : `${openSourceLabelFor(locale)} · ${copy.mode} · ${copy[applicationMode.toLowerCase() as "manual" | "hybrid" | "automatic"]}. ${copy.heroBody}`);
   const modeContext = MODE_CONTEXT[locale] || copy.heroBody;
   const suggestedLanguageName = suggestedLocale
@@ -4857,7 +4850,7 @@ export default function Home({
               <b>{detail.privateTitle}</b>
               <p>
                 {locale === "en"
-                  ? "Guest work stays on this device. Accounts can support free history and collaboration without changing the open-source license."
+                  ? "Guest work stays on this device. Accounts can support saved history and collaboration without changing the open-source license."
                   : copy.heroBody}
               </p>
             </div>
@@ -6659,7 +6652,7 @@ export default function Home({
                   <p>
                     {locale === "en"
                       ? radarMessage ||
-                        "Scanning is free and open source. Scheduled cross-device monitoring will require an account and background delivery infrastructure."
+                        "Scanning is open source. Scheduled cross-device monitoring will require an account and background delivery infrastructure."
                       : copy.heroBody}
                   </p>
                 </div>

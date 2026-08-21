@@ -53,7 +53,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     keywords: [
       "AI mock interview",
-      "free mock interview",
       "mock interview practice",
       "job interview practice",
       "interview question predictor",
@@ -189,7 +188,6 @@ export default async function RootLayout({
       ],
       url: origin,
       inLanguage: LANGUAGES.map(([code]) => code),
-      isAccessibleForFree: true,
       offers: [
         {
           "@type": "Offer",
