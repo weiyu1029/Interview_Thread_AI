@@ -77,6 +77,11 @@ import {
 } from "./interview-speech";
 import { normalizeTtsText } from "./interview-tts";
 import {
+  normalizeSttTranscript,
+  STT_MAX_AUDIO_BYTES,
+} from "./interview-stt";
+import { sttCopyFor } from "./interview-stt-copy";
+import {
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
   InterviewQuestionDifficulty,
@@ -1906,6 +1911,31 @@ function appendTranscript(current: string, next: string, locale: LocaleCode) {
   return `${current.trim()}${separator}${next.trim()}`;
 }
 
+const INTERVIEW_RECORDING_MAX_MILLISECONDS = 3 * 60 * 1_000;
+
+function preferredInterviewAudioMimeType() {
+  if (typeof MediaRecorder === "undefined") return "";
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/ogg;codecs=opus",
+    "audio/mp4",
+    "audio/webm",
+  ];
+  return (
+    candidates.find((type) => {
+      try {
+        return MediaRecorder.isTypeSupported(type);
+      } catch {
+        return false;
+      }
+    }) || ""
+  );
+}
+
+function stopInterviewMediaStream(stream: MediaStream | null) {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
 function speechVocabularyFor(
   jd: string,
   resume: string,
@@ -1950,25 +1980,7 @@ function speechVocabularyFor(
 }
 
 function normalizeSpeechTranscript(transcript: string, vocabulary: string[]) {
-  let normalized = transcript.replace(/\s+/g, " ").trim();
-  const canonical = new Map(vocabulary.map((term) => [term.toLowerCase(), term]));
-  const replacements: Array<[RegExp, string]> = [
-    [/\bsequel\b/giu, canonical.get("sql") || "SQL"],
-    [/\bpower\s+bee\b/giu, canonical.get("power bi") || "Power BI"],
-    [/\btableu\b/giu, canonical.get("tableau") || "Tableau"],
-    [/\btype\s*script\b/giu, canonical.get("typescript") || "TypeScript"],
-    [/\bjava\s*script\b/giu, canonical.get("javascript") || "JavaScript"],
-  ];
-  for (const [pattern, replacement] of replacements)
-    normalized = normalized.replace(pattern, replacement);
-  for (const [lower, display] of canonical) {
-    if (!/[A-Z+#.]/.test(display)) continue;
-    normalized = normalized.replace(
-      new RegExp(`\\b${lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "giu"),
-      display,
-    );
-  }
-  return normalized;
+  return normalizeSttTranscript(transcript, vocabulary);
 }
 
 function recognitionAlternativeScore(
@@ -2770,18 +2782,18 @@ export default function Home({
   const [realisticReviewOpen, setRealisticReviewOpen] = useState(false);
   const [interviewThinking, setInterviewThinking] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isRefiningVoice, setIsRefiningVoice] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
   const [voiceInterim, setVoiceInterim] = useState("");
-  const [recognitionConfidence, setRecognitionConfidence] = useState<
-    number | null
-  >(null);
+  const [, setRecognitionConfidence] = useState<number | null>(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
   const [suggestedLocale, setSuggestedLocale] =
     useState<LocaleCode | null>(null);
   const copy = copyFor(locale);
+  const sttUi = sttCopyFor(locale);
   const jobSearchUi = jobSearchCopyFor(locale);
   const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
@@ -2821,6 +2833,17 @@ export default function Home({
     start: () => void;
     stop: () => void;
   } | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const voiceMediaStreamRef = useRef<MediaStream | null>(null);
+  const voiceAudioChunksRef = useRef<Blob[]>([]);
+  const voiceRecordingMimeRef = useRef("audio/webm");
+  const voiceRecordingBaseRef = useRef("");
+  const voiceBrowserTranscriptRef = useRef("");
+  const interviewAnswerRef = useRef("");
+  const voiceTranscriptionAbortRef = useRef<AbortController | null>(null);
+  const voiceTranscriptionRequestIdRef = useRef(0);
+  const voiceRecordingTimerRef = useRef<number | null>(null);
+  const speechRestartTimerRef = useRef<number | null>(null);
   const keepListeningRef = useRef(false);
   const interviewLocaleRef = useRef(locale);
   const lastFinalSpeechRef = useRef({ text: "", at: 0 });
@@ -3043,6 +3066,29 @@ export default function Home({
     document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
+    speechRecognitionRef.current = null;
+    if (speechRestartTimerRef.current !== null) {
+      window.clearTimeout(speechRestartTimerRef.current);
+      speechRestartTimerRef.current = null;
+    }
+    if (voiceRecordingTimerRef.current !== null) {
+      window.clearTimeout(voiceRecordingTimerRef.current);
+      voiceRecordingTimerRef.current = null;
+    }
+    voiceTranscriptionRequestIdRef.current += 1;
+    voiceTranscriptionAbortRef.current?.abort();
+    voiceTranscriptionAbortRef.current = null;
+    const recorder = mediaRecorderRef.current;
+    if (recorder) {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      recorder.onerror = null;
+      if (recorder.state !== "inactive") recorder.stop();
+    }
+    mediaRecorderRef.current = null;
+    stopInterviewMediaStream(voiceMediaStreamRef.current);
+    voiceMediaStreamRef.current = null;
+    voiceAudioChunksRef.current = [];
     interviewSpeechRequestIdRef.current += 1;
     interviewSpeechAbortRef.current?.abort();
     interviewSpeechAbortRef.current = null;
@@ -3065,6 +3111,7 @@ export default function Home({
       setVoiceInterim("");
       setRecognitionConfidence(null);
       setIsListening(false);
+      setIsRefiningVoice(false);
       setIsSpeaking(false);
       setVoiceMessage(interviewFlowCopyFor(locale).languageLocked);
     }
@@ -3072,6 +3119,10 @@ export default function Home({
     if (preferencesLoaded.current)
       window.localStorage.setItem("aptograph-locale", locale);
   }, [locale]);
+
+  useEffect(() => {
+    interviewAnswerRef.current = interviewAnswer;
+  }, [interviewAnswer]);
 
   useEffect(() => {
     if (!preferencesLoaded.current || guestMode) return;
@@ -3141,6 +3192,22 @@ export default function Home({
     () => () => {
       keepListeningRef.current = false;
       speechRecognitionRef.current?.stop();
+      speechRecognitionRef.current = null;
+      if (speechRestartTimerRef.current !== null)
+        window.clearTimeout(speechRestartTimerRef.current);
+      if (voiceRecordingTimerRef.current !== null)
+        window.clearTimeout(voiceRecordingTimerRef.current);
+      voiceTranscriptionRequestIdRef.current += 1;
+      voiceTranscriptionAbortRef.current?.abort();
+      const recorder = mediaRecorderRef.current;
+      if (recorder) {
+        recorder.ondataavailable = null;
+        recorder.onstop = null;
+        recorder.onerror = null;
+        if (recorder.state !== "inactive") recorder.stop();
+      }
+      stopInterviewMediaStream(voiceMediaStreamRef.current);
+      voiceAudioChunksRef.current = [];
       interviewSpeechRequestIdRef.current += 1;
       interviewSpeechAbortRef.current?.abort();
       interviewAudioRef.current?.pause();
@@ -4062,7 +4129,14 @@ export default function Home({
   async function submitInterviewAnswer(event: FormEvent) {
     event.preventDefault();
     const answer = interviewAnswer.trim();
-    if (!answer || !interviewMessages.length || interviewThinking) return;
+    if (
+      !answer ||
+      !interviewMessages.length ||
+      interviewThinking ||
+      isListening ||
+      isRefiningVoice
+    )
+      return;
     keepListeningRef.current = false;
     speechRecognitionRef.current?.stop();
     const scores = scoreInterviewAnswer(answer, matches);
@@ -4084,6 +4158,7 @@ export default function Home({
     setInterviewScoreHistory((current) => [...current, scores].slice(-20));
     setInterviewTurn(next.turn);
     setInterviewTopicIndex(next.topicIndex);
+    interviewAnswerRef.current = "";
     setInterviewAnswer("");
     setVoiceMessage("");
     setVoiceInterim("");
@@ -4275,7 +4350,106 @@ export default function Home({
     if (latest) await speakInterviewQuestion(questionOnly(latest.content));
   }
 
-  function toggleInterviewListening() {
+  async function refineRecordedInterviewAnswer({
+    audio,
+    baseAnswer,
+    browserTranscript,
+    requestId,
+  }: {
+    audio: Blob;
+    baseAnswer: string;
+    browserTranscript: string;
+    requestId: number;
+  }) {
+    const browserDraft = appendTranscript(baseAnswer, browserTranscript, locale);
+    if (!authenticated || !audio.size || audio.size > STT_MAX_AUDIO_BYTES) {
+      if (requestId === voiceTranscriptionRequestIdRef.current) {
+        setIsRefiningVoice(false);
+        setVoiceMessage(sttUi.deviceFallback);
+      }
+      return;
+    }
+
+    const controller = new AbortController();
+    voiceTranscriptionAbortRef.current?.abort();
+    voiceTranscriptionAbortRef.current = controller;
+    setIsRefiningVoice(true);
+    setVoiceMessage(sttUi.refining);
+    try {
+      const form = new FormData();
+      form.append("audio", audio, "interview-answer");
+      form.append("locale", locale);
+      form.append("vocabulary", JSON.stringify(speechVocabulary.slice(0, 80)));
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        body: form,
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("premium transcription unavailable");
+      const payload = (await response.json()) as { transcript?: unknown };
+      const refined =
+        typeof payload.transcript === "string"
+          ? normalizeSpeechTranscript(payload.transcript, speechVocabulary)
+          : "";
+      if (
+        !refined ||
+        controller.signal.aborted ||
+        requestId !== voiceTranscriptionRequestIdRef.current
+      )
+        return;
+
+      const currentAnswer = interviewAnswerRef.current.trim();
+      const safeToReplace =
+        currentAnswer === browserDraft.trim() ||
+        currentAnswer === baseAnswer.trim();
+      if (safeToReplace) {
+        const nextAnswer = appendTranscript(baseAnswer, refined, locale);
+        interviewAnswerRef.current = nextAnswer;
+        setInterviewAnswer(nextAnswer);
+        setVoiceMessage(sttUi.privacy);
+      } else {
+        setVoiceMessage(sttUi.deviceFallback);
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setVoiceMessage(
+          browserTranscript ? sttUi.deviceFallback : sttUi.unavailable,
+        );
+      }
+    } finally {
+      if (requestId === voiceTranscriptionRequestIdRef.current)
+        setIsRefiningVoice(false);
+      if (voiceTranscriptionAbortRef.current === controller)
+        voiceTranscriptionAbortRef.current = null;
+    }
+  }
+
+  function stopInterviewListening() {
+    keepListeningRef.current = false;
+    speechRecognitionRef.current?.stop();
+    speechRecognitionRef.current = null;
+    if (speechRestartTimerRef.current !== null) {
+      window.clearTimeout(speechRestartTimerRef.current);
+      speechRestartTimerRef.current = null;
+    }
+    if (voiceRecordingTimerRef.current !== null) {
+      window.clearTimeout(voiceRecordingTimerRef.current);
+      voiceRecordingTimerRef.current = null;
+    }
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      setIsRefiningVoice(authenticated);
+      recorder.stop();
+    } else {
+      stopInterviewMediaStream(voiceMediaStreamRef.current);
+      voiceMediaStreamRef.current = null;
+      setIsRefiningVoice(false);
+    }
+    setIsListening(false);
+    setVoiceInterim("");
+  }
+
+  async function toggleInterviewListening() {
     type RecognitionAlternative = {
       transcript: string;
       confidence?: number;
@@ -4312,15 +4486,101 @@ export default function Home({
     };
     const Recognition =
       voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
-    if (!Recognition) {
-      setVoiceMessage(interview.unavailable);
+    const canRecord =
+      authenticated &&
+      typeof MediaRecorder !== "undefined" &&
+      Boolean(navigator.mediaDevices?.getUserMedia);
+    if (!Recognition && !canRecord) {
+      setVoiceMessage(sttUi.unavailable);
       return;
     }
     if (isListening) {
-      keepListeningRef.current = false;
-      speechRecognitionRef.current?.stop();
-      setIsListening(false);
-      setVoiceInterim("");
+      stopInterviewListening();
+      return;
+    }
+
+    voiceTranscriptionRequestIdRef.current += 1;
+    const requestId = voiceTranscriptionRequestIdRef.current;
+    voiceTranscriptionAbortRef.current?.abort();
+    voiceTranscriptionAbortRef.current = null;
+    voiceRecordingBaseRef.current = interviewAnswerRef.current.trim();
+    voiceBrowserTranscriptRef.current = "";
+    voiceAudioChunksRef.current = [];
+    lastFinalSpeechRef.current = { text: "", at: 0 };
+    speechRestartCountRef.current = 0;
+    setVoiceInterim("");
+    setRecognitionConfidence(null);
+
+    if (canRecord) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            autoGainControl: true,
+            echoCancellation: true,
+            noiseSuppression: true,
+            channelCount: 1,
+          },
+        });
+        if (requestId !== voiceTranscriptionRequestIdRef.current) {
+          stopInterviewMediaStream(stream);
+          return;
+        }
+        const preferredType = preferredInterviewAudioMimeType();
+        const recorder = preferredType
+          ? new MediaRecorder(stream, { mimeType: preferredType })
+          : new MediaRecorder(stream);
+        voiceMediaStreamRef.current = stream;
+        mediaRecorderRef.current = recorder;
+        voiceRecordingMimeRef.current =
+          recorder.mimeType || preferredType || "audio/webm";
+        recorder.ondataavailable = (event) => {
+          if (event.data.size) voiceAudioChunksRef.current.push(event.data);
+        };
+        recorder.onstop = () => {
+          stopInterviewMediaStream(voiceMediaStreamRef.current);
+          voiceMediaStreamRef.current = null;
+          mediaRecorderRef.current = null;
+          const audio = new Blob(voiceAudioChunksRef.current, {
+            type: voiceRecordingMimeRef.current,
+          });
+          voiceAudioChunksRef.current = [];
+          void refineRecordedInterviewAnswer({
+            audio,
+            baseAnswer: voiceRecordingBaseRef.current,
+            browserTranscript: voiceBrowserTranscriptRef.current,
+            requestId,
+          });
+        };
+        recorder.onerror = () => {
+          stopInterviewMediaStream(voiceMediaStreamRef.current);
+          voiceMediaStreamRef.current = null;
+          mediaRecorderRef.current = null;
+          setIsRefiningVoice(false);
+        };
+        recorder.start(1_000);
+      } catch {
+        stopInterviewMediaStream(voiceMediaStreamRef.current);
+        voiceMediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+        if (!Recognition) {
+          setVoiceMessage(sttUi.permissionDenied);
+          return;
+        }
+      }
+    }
+
+    if (!Recognition && mediaRecorderRef.current) {
+      keepListeningRef.current = true;
+      setIsListening(true);
+      setVoiceMessage(sttUi.listening);
+      voiceRecordingTimerRef.current = window.setTimeout(
+        stopInterviewListening,
+        INTERVIEW_RECORDING_MAX_MILLISECONDS,
+      );
+      return;
+    }
+    if (!Recognition) {
+      setVoiceMessage(sttUi.unavailable);
       return;
     }
     const recognition = new Recognition();
@@ -4371,9 +4631,18 @@ export default function Home({
           fingerprint !== lastFinalSpeechRef.current.text ||
           now - lastFinalSpeechRef.current.at > 4_000
         ) {
-          setInterviewAnswer((current) =>
-            appendTranscript(current, finalText, locale),
+          voiceBrowserTranscriptRef.current = appendTranscript(
+            voiceBrowserTranscriptRef.current,
+            finalText,
+            locale,
           );
+          const nextAnswer = appendTranscript(
+            voiceRecordingBaseRef.current,
+            voiceBrowserTranscriptRef.current,
+            locale,
+          );
+          interviewAnswerRef.current = nextAnswer;
+          setInterviewAnswer(nextAnswer);
           lastFinalSpeechRef.current = { text: fingerprint, at: now };
         }
         speechRestartCountRef.current = 0;
@@ -4393,22 +4662,31 @@ export default function Home({
         );
     };
     recognition.onend = () => {
-      if (keepListeningRef.current) {
+      if (
+        keepListeningRef.current &&
+        speechRecognitionRef.current === recognition
+      ) {
         const delay = Math.min(
           1_500,
           200 + speechRestartCountRef.current * 180,
         );
         speechRestartCountRef.current += 1;
-        window.setTimeout(() => {
-          if (!keepListeningRef.current) return;
+        speechRestartTimerRef.current = window.setTimeout(() => {
+          speechRestartTimerRef.current = null;
+          if (
+            !keepListeningRef.current ||
+            speechRecognitionRef.current !== recognition
+          )
+            return;
           try {
             recognition.start();
           } catch {
             keepListeningRef.current = false;
-            setIsListening(false);
+            if (mediaRecorderRef.current?.state !== "recording")
+              setIsListening(false);
           }
         }, delay);
-      } else {
+      } else if (mediaRecorderRef.current?.state !== "recording") {
         setIsListening(false);
       }
     };
@@ -4416,13 +4694,25 @@ export default function Home({
       const error = event.error || "";
       if (["not-allowed", "service-not-allowed"].includes(error)) {
         keepListeningRef.current = false;
-        setVoiceMessage(interview.permissionDenied);
+        if (mediaRecorderRef.current?.state === "recording") {
+          setVoiceMessage(sttUi.listening);
+        } else {
+          setVoiceMessage(sttUi.permissionDenied);
+        }
       } else if (error === "no-speech") {
         setVoiceMessage(interview.noSpeech);
       } else if (error !== "aborted") {
-        setVoiceMessage(interview.unavailable);
+        setVoiceMessage(
+          mediaRecorderRef.current?.state === "recording"
+            ? sttUi.listening
+            : sttUi.unavailable,
+        );
       }
-      if (error !== "no-speech") setIsListening(false);
+      if (
+        error !== "no-speech" &&
+        mediaRecorderRef.current?.state !== "recording"
+      )
+        setIsListening(false);
     };
     speechRecognitionRef.current = recognition;
     keepListeningRef.current = true;
@@ -4433,11 +4723,24 @@ export default function Home({
       setIsListening(true);
       setVoiceInterim("");
       setRecognitionConfidence(null);
-      setVoiceMessage(`${interview.speechLanguage}: ${speechLocale}`);
+      setVoiceMessage(sttUi.listening);
+      voiceRecordingTimerRef.current = window.setTimeout(
+        stopInterviewListening,
+        INTERVIEW_RECORDING_MAX_MILLISECONDS,
+      );
     } catch {
       keepListeningRef.current = false;
-      setIsListening(false);
-      setVoiceMessage(interview.unavailable);
+      if (mediaRecorderRef.current?.state === "recording") {
+        setIsListening(true);
+        setVoiceMessage(sttUi.listening);
+        voiceRecordingTimerRef.current = window.setTimeout(
+          stopInterviewListening,
+          INTERVIEW_RECORDING_MAX_MILLISECONDS,
+        );
+      } else {
+        setIsListening(false);
+        setVoiceMessage(sttUi.unavailable);
+      }
     }
   }
   async function sendFeedback(event: FormEvent<HTMLFormElement>) {
@@ -6601,25 +6904,27 @@ export default function Home({
                     <textarea
                       id="interview-answer"
                       value={interviewAnswer}
-                      onChange={(event) => setInterviewAnswer(event.target.value)}
+                      onChange={(event) => {
+                        interviewAnswerRef.current = event.target.value;
+                        setInterviewAnswer(event.target.value);
+                      }}
                       placeholder={interview.placeholder}
                       disabled={
                         !interviewMessages.length ||
                         interviewThinking ||
+                        isRefiningVoice ||
                         realisticReviewOpen
                       }
                     />
-                    {(isListening || voiceInterim) && (
+                    {(isListening || isRefiningVoice || voiceInterim) && (
                       <div className="voice-live-transcript" role="status">
                         <span>
-                          {interview.liveTranscript} · {interview.listening}
+                          {interview.liveTranscript} ·{" "}
+                          {isRefiningVoice
+                            ? sttUi.refining
+                            : sttUi.listening}
                         </span>
                         <p>{voiceInterim || "…"}</p>
-                        {recognitionConfidence !== null && (
-                          <b>
-                            {interview.recognitionConfidence} {recognitionConfidence}%
-                          </b>
-                        )}
                       </div>
                     )}
                     <div className="interview-answer-actions">
@@ -6630,6 +6935,7 @@ export default function Home({
                         disabled={
                           !interviewMessages.length ||
                           interviewThinking ||
+                          isRefiningVoice ||
                           realisticReviewOpen
                         }
                         aria-pressed={isListening}
@@ -6644,6 +6950,8 @@ export default function Home({
                           !interviewMessages.length ||
                           !interviewAnswer.trim() ||
                           interviewThinking ||
+                          isListening ||
+                          isRefiningVoice ||
                           realisticReviewOpen
                         }
                       >
@@ -6654,7 +6962,7 @@ export default function Home({
                     </div>
                     <small className="voice-disclosure">
                       {voiceMessage ||
-                        `${interviewFlow.languageLocked} ${accountLabels.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
+                        `${sttUi.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
                     </small>
                     <div
                       className={`speech-vocabulary ${realisticSessionActive ? "practice-hidden" : ""}`}

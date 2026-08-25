@@ -17,7 +17,7 @@ practice while keeping genuine gaps visible. Beta testers are welcome.
 
 **[Try InterviewThread](https://interviewthreadai.com/en)** · **[Join the founding beta](https://interviewthreadai.com/en/beta)** · **[Report a reproducible beta issue](https://github.com/weiyu1029/Interview_Thread_AI/issues/new?template=beta_feedback.yml)**
 
-[Watch the 60-second walkthrough](https://interviewthreadai.com/interviewthread-60-second-walkthrough.mp4) · [Read the beta guide](docs/BETA_TESTING.md) · [Preview the first beta release](docs/releases/v0.1.0-beta.1.md) · [Contribute](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Security](SECURITY.md)
+[Watch the 60-second walkthrough](https://interviewthreadai.com/interviewthread-60-second-walkthrough.mp4) · [Read the beta guide](docs/BETA_TESTING.md) · [Production architecture](docs/platform_architecture.md) · [Operations runbook](docs/production_operations.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 > **Founding beta testers wanted.** We are inviting new graduates, career
 > changers, non-native English speakers, and candidates interviewing in the
@@ -95,32 +95,37 @@ and feature experiments. It supports:
 
 ## Production web platform
 
-The `platform/` directory is the production-oriented evolution path for free
-accounts, permanent tracking, and open-source collaboration:
+`platform/web` is the formal production full-stack application. Its localized
+React interface and same-origin backend routes ship as one Cloudflare Sites
+Worker, and Cloudflare D1 stores account-backed records. This keeps the browser,
+API and OAuth callbacks on one origin and makes every frontend/backend release
+atomic and reversible.
 
-- a professional, responsive, emoji-free React / Next-compatible interface;
-- guest analysis, 40 locale choices with eight reviewed end-to-end catalogs
-  and 32 community-beta catalogs, locale-aware AI output, worldwide recommendation filters, an
-  interactive Market Insights preview, a device-local tracker, evidence-aware
-  copilot, and feedback;
-- FastAPI endpoints for identity, workspaces, persisted analyses, tracker items,
-  evidence-ranked job recommendations, market snapshots, application-mode
-  policies, analysis-linked chat, feedback, model discovery, usage, and plans;
-- PostgreSQL-ready multi-tenant data models and role-based workspace access;
-- Docker Compose for the web, API, and PostgreSQL services;
-- one free, open-source access level with no checkout or paid entitlement.
+The production platform includes:
 
-Start the complete local stack:
+- responsive web and mobile interfaces with 40 locale choices;
+- guest mode plus Google, GitHub and LinkedIn OAuth accounts;
+- server-side document parsing, evidence mapping, job adapters and mock
+  interview APIs;
+- authenticated Azure speech routes with device fallback;
+- D1-backed activity, beta and feedback records;
+- privacy-minimized structured logs, a D1 health endpoint, scheduled smoke
+  checks and a private aggregate-only operator dashboard;
+- one open-source access level with no checkout or paid entitlement.
+
+Run the production application locally:
 
 ```bash
-cd platform
-cp .env.example .env
-# replace the legacy CAREERPROOF_JWT_SECRET compatibility variable before starting
-docker compose up --build
+cd platform/web
+cp .dev.vars.example .dev.vars
+npm install
+npm run dev
 ```
 
-The web client is available at `http://localhost:3000` and the documented API at
-`http://localhost:8000/docs`.
+The optional `platform/api` FastAPI/PostgreSQL project is retained for
+self-hosting experiments. It is not called by `interviewthreadai.com` and is
+not a second production backend. See the [production architecture](docs/platform_architecture.md)
+and [operations runbook](docs/production_operations.md).
 
 ## Open and local model ecosystem
 
@@ -235,9 +240,9 @@ Interview_Thread_AI/
 │       └── privacy.py
 ├── tests/                       # deterministic matching and privacy tests
 ├── platform/
-│   ├── web/                     # professional public React interface
-│   ├── api/                     # FastAPI multi-tenant service
-│   └── docker-compose.yml       # web + API + PostgreSQL
+│   ├── web/                     # production Cloudflare full-stack app + D1
+│   ├── api/                     # optional FastAPI self-hosting prototype
+│   └── docker-compose.yml       # local prototype stack only
 ├── docs/
 ├── .github/                     # CI, issue forms, dependency updates
 ├── streamlit_app.py             # public web entry point
@@ -285,13 +290,13 @@ docker build -t interviewthread .
 docker run --rm -p 8501:8501 interviewthread
 ```
 
-### Multi-user platform
+### Production platform
 
-Use `platform/docker-compose.yml` for local evaluation. For public production,
-use managed PostgreSQL, reviewed schema migrations, encrypted backups, a
-rate-limiting proxy, and an asynchronous document queue before enabling open
-registration. The Next.js workspace is the public product. The Streamlit
-version remains a legacy reference implementation and feature incubator.
+The public product is deployed from `platform/web` to Cloudflare Sites with D1,
+reviewed environment configuration, immutable release versions, protected-branch
+CI and rollback. `platform/docker-compose.yml` is for optional local prototype
+evaluation only. The Streamlit version remains a legacy reference implementation
+and feature incubator.
 
 ## Community maintenance
 

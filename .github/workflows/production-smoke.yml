@@ -1,0 +1,73 @@
+name: Production smoke
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: interviewthread-production-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_ORIGIN: https://interviewthreadai.com
+    steps:
+      - name: Check production homepage and health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          response_dir="$(mktemp -d)"
+          trap 'rm -rf "$response_dir"' EXIT
+
+          request() {
+            local name="$1"
+            local url="$2"
+            curl \
+              --silent \
+              --show-error \
+              --location \
+              --connect-timeout 10 \
+              --max-time 30 \
+              --retry 2 \
+              --retry-delay 2 \
+              --retry-all-errors \
+              --header "User-Agent: InterviewThread production smoke/1.0" \
+              --dump-header "$response_dir/$name.headers" \
+              --output "$response_dir/$name.body" \
+              --write-out "%{http_code}" \
+              "$url"
+          }
+
+          home_status="$(request home "$SITE_ORIGIN/en")"
+          if [[ "$home_status" != "200" ]]; then
+            echo "Production homepage returned HTTP $home_status"
+            exit 1
+          fi
+          if ! grep --quiet --ignore-case "InterviewThread" "$response_dir/home.body"; then
+            echo "Production homepage did not contain the expected product marker"
+            exit 1
+          fi
+
+          health_status="$(request health "$SITE_ORIGIN/api/healthz")"
+          if [[ "$health_status" != "200" ]]; then
+            echo "Production health endpoint returned HTTP $health_status"
+            exit 1
+          fi
+          if ! jq --exit-status '.status == "ok" and (keys == ["status"])' \
+            "$response_dir/health.body" >/dev/null; then
+            echo "Production health endpoint returned an unexpected payload"
+            exit 1
+          fi
+          if ! grep --quiet --ignore-case '^cache-control:.*no-store' \
+            "$response_dir/health.headers"; then
+            echo "Production health endpoint is missing no-store caching"
+            exit 1
+          fi

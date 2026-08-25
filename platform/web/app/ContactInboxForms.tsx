@@ -145,8 +145,17 @@ function ContactInboxForm({
           <input name="name" required autoComplete="name" maxLength={120} />
         </label>
         <label>
-          <span>{copy.email}</span>
-          <input name="email" type="email" autoComplete="email" maxLength={254} />
+          <span>
+            {copy.email}
+            {kind === "feedback" ? ` (${copy.optional})` : ""}
+          </span>
+          <input
+            name="email"
+            type="email"
+            required={kind === "partnerships"}
+            autoComplete="email"
+            maxLength={254}
+          />
         </label>
         <label className="full">
           <span>{formCopy.topicLabel}</span>

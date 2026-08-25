@@ -2,6 +2,8 @@
 # AUTH_SECRET must be a cryptographically random value of at least 32 characters.
 AUTH_SECRET=replace-with-at-least-32-random-characters
 APP_BASE_URL=http://localhost:3001
+# Immutable release label used only in privacy-safe health and operations logs.
+APP_RELEASE=local
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -12,10 +14,14 @@ GITHUB_CLIENT_SECRET=
 LINKEDIN_CLIENT_ID=
 LINKEDIN_CLIENT_SECRET=
 
-# Optional server-side neural read-aloud. Keep the subscription key private.
-# Without both values, interview questions fall back to the browser/device voice.
+# Optional server-side Microsoft Azure Speech. Keep the subscription key private.
+# Neural read-aloud needs the key and region. Signed-in final transcript
+# correction needs the key and resource endpoint. Without the required values,
+# voice answers keep the browser/device transcript and read-aloud uses the
+# browser/device voice.
 AZURE_SPEECH_KEY=
 AZURE_SPEECH_REGION=
+AZURE_SPEECH_ENDPOINT=https://replace-with-resource.cognitiveservices.azure.com
 
 # Transactional website email. Keep the API key secret and verify the sender
 # domain with the provider before using the production address.
@@ -23,3 +29,7 @@ RESEND_API_KEY=
 EMAIL_FROM=InterviewThread Website <notifications@send.interviewthreadai.com>
 EMAIL_FEEDBACK_TO=feedback@interviewthreadai.com
 EMAIL_PARTNERSHIPS_TO=partnerships@interviewthreadai.com
+
+# Comma-separated operator accounts allowed to view aggregate-only metrics.
+# Use exact email addresses; wildcards are intentionally unsupported.
+ADMIN_EMAILS=contact@interviewthreadai.com,wy.alice.chen@gmail.com

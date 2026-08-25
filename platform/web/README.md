@@ -72,8 +72,25 @@ unavailable, the client falls back to the browser or device voice.
 
 Read-aloud does not send the resume, job description, interview answer,
 transcript, or raw voice recording to Azure Speech. Voice recognition remains a
-separate browser capability. Keep the public privacy policy and FAQ aligned if
-this data flow changes.
+separate capability. Keep the public privacy policy and FAQ aligned if this
+data flow changes.
+
+## Two-stage interview voice answers
+
+Voice answers show provisional captions from the browser or device while the
+candidate speaks. For signed-in users, when `AZURE_SPEECH_KEY` and
+`AZURE_SPEECH_ENDPOINT` are configured, the completed recording is sent to the
+Microsoft Azure Speech Fast Transcription endpoint for a final correction pass.
+The request contains the recorded answer audio, one of the 40 supported locale
+codes, and at most 80 short vocabulary hints derived from the selected role,
+resume, and job description. It never sends the full resume or job description
+as transcription context.
+
+The transcription route is same-origin, sign-in protected, size and media-type
+limited, and returns private no-store JSON. InterviewThread does not persist or
+log the raw recording. The user can edit the final text before submitting it.
+Guest mode remains browser-only, and any unavailable or failed cloud correction
+keeps the existing browser/device transcript instead of clearing the answer.
 
 Resume text, job descriptions, tracker items, and Story Signal alert settings
 remain on the device until an authenticated persistence feature explicitly

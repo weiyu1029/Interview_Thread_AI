@@ -224,6 +224,169 @@ const speechPrivacyFaqCopy = {
   },
 } satisfies Record<LocaleCode, FaqItem>;
 
+const voiceAnswerPrivacyFaqCopy = {
+  en: {
+    question: "What is sent when I answer by voice?",
+    answer: "Live draft captions use your browser or device. For signed-in users, when cloud correction is available, the recorded answer audio, selected language, and up to 80 short vocabulary hints from the role, resume, and job description are sent temporarily to Microsoft Azure Speech for a final transcript. InterviewThread does not store or log the raw audio, returns the result with private no-store instructions, and lets you edit the text before submitting. Guest mode stays browser-only. If cloud correction fails, your device transcript remains in the answer box.",
+  },
+  ja: {
+    question: "音声で回答すると、何が送信されますか？",
+    answer: "入力中の下書き字幕にはブラウザまたは端末の音声認識を使います。ログイン中でクラウド補正が利用できる場合は、回答音声、選択言語、職種・履歴書・求人票から抽出した最大80個の短い語彙ヒントを、一時的に Microsoft Azure Speech へ送って最終文字起こしを作成します。InterviewThread は元の音声を保存・記録せず、結果には非公開・保存禁止の指示を付け、送信前に文字を編集できます。ゲストモードはブラウザ内だけで動作し、クラウド補正に失敗しても端末の文字起こしは回答欄に残ります。",
+  },
+  ko: {
+    question: "음성으로 답변하면 어떤 정보가 전송되나요?",
+    answer: "말하는 동안의 초안 자막은 브라우저 또는 기기 음성 인식을 사용합니다. 로그인한 상태에서 클라우드 보정이 가능하면 답변 녹음, 선택한 언어, 직무·이력서·채용 공고에서 가져온 짧은 어휘 힌트 최대 80개를 최종 전사를 위해 Microsoft Azure Speech에 일시적으로 보냅니다. InterviewThread는 원본 오디오를 저장하거나 로그에 남기지 않으며 결과를 비공개·저장 금지로 반환하고 제출 전에 텍스트를 수정할 수 있게 합니다. 게스트 모드는 브라우저에서만 작동하며, 클라우드 보정에 실패해도 기기 전사는 답변 상자에 남습니다.",
+  },
+  "zh-CN": {
+    question: "使用语音作答时会发送哪些资料？",
+    answer: "说话时的即时草稿字幕由浏览器或设备识别。已登录且云端校正可用时，回答录音、所选语言，以及从职位、简历和职位描述中提取的最多 80 个简短词汇提示，会临时发送给 Microsoft Azure Speech 生成最终逐字稿。InterviewThread 不保存或记录原始音频，响应采用私密、禁止缓存设置，你可在提交前编辑文字。访客模式只使用浏览器；若云端校正失败，设备逐字稿仍会保留在回答框中。",
+  },
+  "zh-TW": {
+    question: "使用語音作答時會傳送哪些資料？",
+    answer: "說話時的即時草稿字幕由瀏覽器或裝置辨識。已登入且雲端校正可用時，回答錄音、所選語言，以及從職務、履歷與職缺描述擷取的最多 80 個簡短詞彙提示，會暫時傳送至 Microsoft Azure Speech 產生最終逐字稿。InterviewThread 不保存或記錄原始音訊，回應採私密且不得快取的設定，你可在送出前編輯文字。訪客模式只使用瀏覽器；若雲端校正失敗，裝置逐字稿仍會保留在回答欄。",
+  },
+  es: {
+    question: "¿Qué se envía cuando respondo por voz?",
+    answer: "Los subtítulos provisionales en directo usan el navegador o el dispositivo. Si has iniciado sesión y la corrección en la nube está disponible, el audio de tu respuesta, el idioma elegido y hasta 80 pistas breves de vocabulario del puesto, el CV y la descripción se envían temporalmente a Microsoft Azure Speech para obtener la transcripción final. InterviewThread no guarda ni registra el audio original; devuelve el resultado como privado y sin almacenamiento, y puedes editarlo antes de enviarlo. El modo invitado funciona solo en el navegador. Si falla la corrección, se conserva la transcripción del dispositivo.",
+  },
+  fr: {
+    question: "Qu’est-ce qui est envoyé lorsque je réponds à l’oral ?",
+    answer: "Les sous-titres provisoires en direct utilisent le navigateur ou l’appareil. Si vous êtes connecté et que la correction cloud est disponible, l’audio de votre réponse, la langue choisie et jusqu’à 80 courts indices de vocabulaire issus du poste, du CV et de l’offre sont envoyés temporairement à Microsoft Azure Speech pour produire la transcription finale. InterviewThread ne conserve ni ne journalise l’audio brut, renvoie le résultat en mode privé sans stockage et vous laisse corriger le texte avant envoi. Le mode invité reste uniquement dans le navigateur. En cas d’échec, la transcription de l’appareil est conservée.",
+  },
+  de: {
+    question: "Welche Daten werden bei einer Sprachantwort gesendet?",
+    answer: "Die vorläufigen Live-Untertitel verwenden den Browser oder das Gerät. Wenn Sie angemeldet sind und die Cloud-Korrektur verfügbar ist, werden die Antwortaufnahme, die gewählte Sprache und bis zu 80 kurze Vokabelhinweise aus Rolle, Lebenslauf und Stellenbeschreibung vorübergehend an Microsoft Azure Speech gesendet, um das endgültige Transkript zu erstellen. InterviewThread speichert oder protokolliert das Roh-Audio nicht, liefert das Ergebnis privat und ohne Speicherung zurück und lässt Sie den Text vor dem Senden bearbeiten. Im Gastmodus bleibt alles im Browser. Bei einem Cloud-Fehler bleibt das Geräte-Transkript erhalten.",
+  },
+  "pt-BR": {
+    question: "O que é enviado quando respondo por voz?",
+    answer: "As legendas provisórias ao vivo usam o navegador ou o dispositivo. Para usuários conectados, quando a correção na nuvem está disponível, o áudio da resposta, o idioma escolhido e até 80 dicas curtas de vocabulário da função, do currículo e da vaga são enviados temporariamente ao Microsoft Azure Speech para gerar a transcrição final. O InterviewThread não salva nem registra o áudio bruto, retorna o resultado de forma privada e sem armazenamento e permite editar o texto antes do envio. O modo visitante usa apenas o navegador. Se a correção falhar, a transcrição do dispositivo permanece.",
+  },
+  it: {
+    question: "Cosa viene inviato quando rispondo a voce?",
+    answer: "I sottotitoli provvisori in tempo reale usano il browser o il dispositivo. Se hai effettuato l’accesso e la correzione cloud è disponibile, l’audio della risposta, la lingua scelta e fino a 80 brevi suggerimenti di vocabolario ricavati da ruolo, CV e annuncio vengono inviati temporaneamente a Microsoft Azure Speech per creare la trascrizione finale. InterviewThread non salva né registra l’audio originale, restituisce il risultato in modalità privata senza memorizzazione e consente di modificare il testo prima dell’invio. La modalità ospite resta nel browser. Se la correzione fallisce, la trascrizione del dispositivo rimane.",
+  },
+  nl: {
+    question: "Wat wordt verzonden wanneer ik met mijn stem antwoord?",
+    answer: "Voorlopige live-ondertiteling gebruikt je browser of apparaat. Als je bent ingelogd en cloudcorrectie beschikbaar is, worden de opname van je antwoord, de gekozen taal en maximaal 80 korte woordenschat-hints uit de rol, het cv en de vacature tijdelijk naar Microsoft Azure Speech gestuurd voor het definitieve transcript. InterviewThread bewaart of logt de ruwe audio niet, retourneert het resultaat privé en zonder opslag en laat je de tekst voor verzending bewerken. Gastmodus blijft in de browser. Als cloudcorrectie mislukt, blijft het apparaattranscript staan.",
+  },
+  pl: {
+    question: "Co jest wysyłane, gdy odpowiadam głosowo?",
+    answer: "Wstępne napisy na żywo korzystają z przeglądarki lub urządzenia. Gdy użytkownik jest zalogowany i korekta w chmurze jest dostępna, nagranie odpowiedzi, wybrany język i maksymalnie 80 krótkich podpowiedzi słownikowych z roli, CV i ogłoszenia są tymczasowo wysyłane do Microsoft Azure Speech w celu utworzenia końcowej transkrypcji. InterviewThread nie zapisuje ani nie rejestruje surowego dźwięku, zwraca wynik prywatnie bez zapisu i pozwala edytować tekst przed wysłaniem. Tryb gościa działa tylko w przeglądarce. W razie błędu transkrypcja urządzenia pozostaje.",
+  },
+  tr: {
+    question: "Sesli yanıt verdiğimde hangi bilgiler gönderilir?",
+    answer: "Canlı taslak altyazılar tarayıcıyı veya cihazı kullanır. Oturum açtıysanız ve bulut düzeltmesi kullanılabiliyorsa yanıt kaydı, seçilen dil ve rol, özgeçmiş ile iş ilanından alınan en fazla 80 kısa terim ipucu son döküm için geçici olarak Microsoft Azure Speech’e gönderilir. InterviewThread ham sesi saklamaz veya günlüğe kaydetmez; sonucu özel ve kaydedilemez olarak döndürür ve göndermeden önce metni düzenlemenize izin verir. Misafir modu yalnızca tarayıcıda çalışır. Bulut düzeltmesi başarısız olursa cihaz dökümü korunur.",
+  },
+  ru: {
+    question: "Какие данные отправляются при голосовом ответе?",
+    answer: "Черновые субтитры в реальном времени создаются браузером или устройством. Для вошедших пользователей, когда доступна облачная коррекция, запись ответа, выбранный язык и до 80 коротких словарных подсказок из роли, резюме и вакансии временно отправляются в Microsoft Azure Speech для итоговой расшифровки. InterviewThread не хранит и не журналирует исходное аудио, возвращает результат конфиденциально без сохранения и позволяет исправить текст до отправки. Гостевой режим работает только в браузере. При сбое облака расшифровка устройства сохраняется.",
+  },
+  uk: {
+    question: "Які дані надсилаються, коли я відповідаю голосом?",
+    answer: "Чернеткові субтитри наживо створює браузер або пристрій. Для користувачів, які ввійшли, коли доступне хмарне виправлення, запис відповіді, вибрана мова й до 80 коротких словникових підказок із ролі, резюме та вакансії тимчасово надсилаються до Microsoft Azure Speech для остаточної транскрипції. InterviewThread не зберігає й не журналює сире аудіо, повертає результат приватно без збереження та дає відредагувати текст. Гостьовий режим працює лише в браузері. У разі збою транскрипція пристрою лишається.",
+  },
+  ar: {
+    question: "ما البيانات التي تُرسل عندما أجيب بالصوت؟",
+    answer: "تستخدم المسودة الفورية للنص المتصفح أو الجهاز. للمستخدم المسجّل، وعند توفر التصحيح السحابي، يُرسل تسجيل الإجابة واللغة المختارة وما يصل إلى 80 تلميحًا قصيرًا للمصطلحات من الدور والسيرة والوصف الوظيفي مؤقتًا إلى Microsoft Azure Speech لإنتاج النص النهائي. لا يخزّن InterviewThread الصوت الخام ولا يسجّله في السجلات، ويعيد النتيجة بصورة خاصة ومن دون تخزين، ويمكنك تعديل النص قبل إرساله. وضع الضيف يعمل في المتصفح فقط، وإذا فشل التصحيح يبقى نص الجهاز محفوظًا.",
+  },
+  he: {
+    question: "אילו נתונים נשלחים כשאני עונה בקול?",
+    answer: "כתוביות הטיוטה בזמן אמת משתמשות בדפדפן או במכשיר. למשתמשים מחוברים, כאשר תיקון בענן זמין, הקלטת התשובה, השפה שנבחרה ועד 80 רמזי מונחים קצרים מהתפקיד, מקורות החיים ומתיאור המשרה נשלחים זמנית ל‑Microsoft Azure Speech ליצירת התמלול הסופי. InterviewThread אינו שומר או רושם את האודיו הגולמי, מחזיר את התוצאה באופן פרטי וללא אחסון ומאפשר לערוך את הטקסט לפני השליחה. מצב אורח נשאר בדפדפן בלבד. אם התיקון נכשל, תמלול המכשיר נשמר.",
+  },
+  hi: {
+    question: "आवाज़ से उत्तर देने पर क्या भेजा जाता है?",
+    answer: "बोलते समय शुरुआती कैप्शन आपके ब्राउज़र या डिवाइस से बनते हैं। साइन इन होने और क्लाउड सुधार उपलब्ध होने पर उत्तर का ऑडियो, चुनी हुई भाषा और भूमिका, रिज़्यूमे व नौकरी विवरण से अधिकतम 80 छोटे शब्द-संकेत अंतिम ट्रांसक्रिप्ट के लिए अस्थायी रूप से Microsoft Azure Speech को भेजे जाते हैं। InterviewThread मूल ऑडियो को सहेजता या लॉग नहीं करता, परिणाम को निजी और नो-स्टोर रूप में लौटाता है और भेजने से पहले टेक्स्ट बदलने देता है। गेस्ट मोड केवल ब्राउज़र पर रहता है। क्लाउड विफल होने पर डिवाइस ट्रांसक्रिप्ट सुरक्षित रहता है।",
+  },
+  bn: {
+    question: "ভয়েসে উত্তর দিলে কী পাঠানো হয়?",
+    answer: "কথা বলার সময় প্রাথমিক ক্যাপশন ব্রাউজার বা ডিভাইস তৈরি করে। সাইন ইন করা থাকলে এবং ক্লাউড সংশোধন পাওয়া গেলে, উত্তরটির অডিও, নির্বাচিত ভাষা এবং ভূমিকা, জীবনবৃত্তান্ত ও চাকরির বিবরণ থেকে সর্বোচ্চ ৮০টি ছোট শব্দ-ইঙ্গিত চূড়ান্ত ট্রান্সক্রিপ্টের জন্য সাময়িকভাবে Microsoft Azure Speech-এ পাঠানো হয়। InterviewThread কাঁচা অডিও সংরক্ষণ বা লগ করে না, ফল ব্যক্তিগত ও নো-স্টোর হিসেবে ফেরত দেয় এবং পাঠানোর আগে লেখা সম্পাদনা করা যায়। অতিথি মোড শুধু ব্রাউজারে কাজ করে। ক্লাউড ব্যর্থ হলেও ডিভাইসের লেখা থেকে যায়।",
+  },
+  ur: {
+    question: "آواز سے جواب دینے پر کیا معلومات بھیجی جاتی ہیں؟",
+    answer: "بولتے وقت ابتدائی کیپشن براؤزر یا ڈیوائس بناتا ہے۔ سائن ان ہونے اور کلاؤڈ درستگی دستیاب ہونے پر جواب کی آڈیو، منتخب زبان اور کردار، ریزیومے اور ملازمت کی تفصیل سے زیادہ سے زیادہ 80 مختصر اصطلاحی اشارے حتمی ٹرانسکرپٹ کے لیے عارضی طور پر Microsoft Azure Speech کو بھیجے جاتے ہیں۔ InterviewThread خام آڈیو محفوظ یا لاگ نہیں کرتا، نتیجہ نجی اور نو اسٹور طور پر واپس کرتا ہے اور بھیجنے سے پہلے متن میں ترمیم کی جا سکتی ہے۔ گیسٹ موڈ صرف براؤزر میں رہتا ہے۔ کلاؤڈ ناکام ہو تو ڈیوائس کا ٹرانسکرپٹ برقرار رہتا ہے۔",
+  },
+  id: {
+    question: "Data apa yang dikirim saat saya menjawab dengan suara?",
+    answer: "Teks sementara secara langsung menggunakan browser atau perangkat. Untuk pengguna yang masuk, saat koreksi cloud tersedia, audio jawaban, bahasa pilihan, dan hingga 80 petunjuk kosakata singkat dari peran, resume, dan lowongan dikirim sementara ke Microsoft Azure Speech untuk transkrip akhir. InterviewThread tidak menyimpan atau mencatat audio mentah, mengembalikan hasil secara privat tanpa penyimpanan, dan memungkinkan Anda mengedit teks sebelum dikirim. Mode tamu hanya menggunakan browser. Jika koreksi cloud gagal, transkrip perangkat tetap tersedia.",
+  },
+  ms: {
+    question: "Apakah data yang dihantar apabila saya menjawab dengan suara?",
+    answer: "Sari kata draf secara langsung menggunakan pelayar atau peranti. Bagi pengguna yang telah log masuk, apabila pembetulan awan tersedia, audio jawapan, bahasa pilihan dan sehingga 80 petunjuk istilah ringkas daripada peranan, resume dan iklan kerja dihantar sementara kepada Microsoft Azure Speech untuk transkrip akhir. InterviewThread tidak menyimpan atau merekod audio mentah, mengembalikan hasil secara peribadi tanpa storan dan membolehkan anda menyunting teks sebelum dihantar. Mod tetamu hanya menggunakan pelayar. Jika pembetulan gagal, transkrip peranti dikekalkan.",
+  },
+  th: {
+    question: "เมื่อฉันตอบด้วยเสียง ระบบจะส่งข้อมูลอะไรบ้าง?",
+    answer: "คำบรรยายฉบับร่างแบบสดใช้การรู้จำของเบราว์เซอร์หรืออุปกรณ์ สำหรับผู้ใช้ที่ลงชื่อเข้าใช้ เมื่อใช้การแก้ไขผ่านคลาวด์ได้ ระบบจะส่งเสียงคำตอบ ภาษาที่เลือก และคำใบ้ศัพท์สั้น ๆ สูงสุด 80 รายการจากบทบาท เรซูเม่ และรายละเอียดงานไปยัง Microsoft Azure Speech ชั่วคราวเพื่อสร้างข้อความถอดเสียงฉบับสุดท้าย InterviewThread ไม่บันทึกหรือเก็บล็อกเสียงดิบ ส่งผลลัพธ์กลับแบบส่วนตัวและห้ามแคช และให้คุณแก้ไขข้อความก่อนส่ง โหมดผู้เยี่ยมชมใช้เฉพาะเบราว์เซอร์ หากคลาวด์ล้มเหลว ข้อความจากอุปกรณ์จะยังอยู่",
+  },
+  vi: {
+    question: "Dữ liệu nào được gửi khi tôi trả lời bằng giọng nói?",
+    answer: "Phụ đề nháp trực tiếp dùng trình duyệt hoặc thiết bị. Với người dùng đã đăng nhập, khi hiệu chỉnh trên đám mây khả dụng, âm thanh câu trả lời, ngôn ngữ đã chọn và tối đa 80 gợi ý thuật ngữ ngắn từ vai trò, CV và tin tuyển dụng được gửi tạm thời tới Microsoft Azure Speech để tạo bản chép lời cuối. InterviewThread không lưu hay ghi nhật ký âm thanh gốc, trả kết quả ở chế độ riêng tư không lưu trữ và cho phép sửa văn bản trước khi gửi. Chế độ khách chỉ dùng trình duyệt. Nếu hiệu chỉnh thất bại, bản chép lời của thiết bị vẫn được giữ lại.",
+  },
+  fil: {
+    question: "Anong data ang ipinapadala kapag sumasagot ako gamit ang boses?",
+    answer: "Ginagamit ng live draft captions ang browser o device. Para sa naka-sign in na user, kapag available ang cloud correction, pansamantalang ipinapadala sa Microsoft Azure Speech ang audio ng sagot, napiling wika, at hanggang 80 maiikling vocabulary hint mula sa role, résumé, at job post para sa final transcript. Hindi sine-save o nilo-log ng InterviewThread ang raw audio, pribado at no-store ang tugon, at maaari mong i-edit ang text bago isumite. Browser-only ang guest mode. Kapag pumalya ang cloud correction, mananatili ang transcript ng device.",
+  },
+  sv: {
+    question: "Vad skickas när jag svarar med rösten?",
+    answer: "Preliminära livetexter använder webbläsaren eller enheten. För inloggade användare skickas, när molnkorrigering finns, svarsljudet, valt språk och upp till 80 korta ordledtrådar från rollen, CV:t och jobbannonsen tillfälligt till Microsoft Azure Speech för den slutliga transkriberingen. InterviewThread sparar eller loggar inte råljudet, returnerar resultatet privat utan lagring och låter dig redigera texten före inlämning. Gästläget stannar i webbläsaren. Om korrigeringen misslyckas behålls enhetens transkript.",
+  },
+  no: {
+    question: "Hva sendes når jeg svarer med stemmen?",
+    answer: "Foreløpige direktetekster bruker nettleseren eller enheten. For innloggede brukere sendes, når skykorrigering er tilgjengelig, lydopptaket av svaret, valgt språk og opptil 80 korte ordtips fra rollen, CV-en og stillingsannonsen midlertidig til Microsoft Azure Speech for den endelige transkripsjonen. InterviewThread lagrer eller logger ikke rålyden, returnerer resultatet privat uten lagring og lar deg redigere teksten før innsending. Gjeste­modus bruker bare nettleseren. Hvis korrigeringen mislykkes, beholdes enhetens transkripsjon.",
+  },
+  da: {
+    question: "Hvad sendes, når jeg svarer med stemmen?",
+    answer: "Foreløbige live-undertekster bruger browseren eller enheden. For brugere, der er logget ind, sendes svarlyden, det valgte sprog og op til 80 korte ordtips fra rollen, CV’et og jobopslaget midlertidigt til Microsoft Azure Speech for den endelige transskription, når cloudkorrektion er tilgængelig. InterviewThread gemmer eller logger ikke rå lyd, returnerer resultatet privat uden lagring og lader dig redigere teksten før indsendelse. Gæstetilstand bruger kun browseren. Hvis korrektionen fejler, bevares enhedens transskription.",
+  },
+  fi: {
+    question: "Mitä tietoja lähetetään, kun vastaan puheella?",
+    answer: "Alustavat live-tekstitykset käyttävät selainta tai laitetta. Kun kirjautuneelle käyttäjälle on saatavilla pilvikorjaus, vastauksen ääni, valittu kieli ja enintään 80 lyhyttä sanastovihjettä roolista, ansioluettelosta ja työpaikkailmoituksesta lähetetään tilapäisesti Microsoft Azure Speechille lopullista litterointia varten. InterviewThread ei tallenna tai lokita raakaa ääntä, palauttaa tuloksen yksityisesti ilman tallennusta ja antaa muokata tekstiä ennen lähettämistä. Vierastila toimii vain selaimessa. Jos korjaus epäonnistuu, laitteen litterointi säilyy.",
+  },
+  cs: {
+    question: "Co se odesílá, když odpovídám hlasem?",
+    answer: "Průběžný pracovní přepis používá prohlížeč nebo zařízení. U přihlášených uživatelů se při dostupné cloudové opravě do Microsoft Azure Speech dočasně odešle zvuk odpovědi, zvolený jazyk a až 80 krátkých slovníkových nápověd z role, životopisu a nabídky práce pro vytvoření konečného přepisu. InterviewThread surový zvuk neukládá ani nezapisuje do protokolů, výsledek vrací soukromě bez ukládání a umožní text upravit. Režim hosta zůstává v prohlížeči. Při selhání zůstane přepis zařízení zachován.",
+  },
+  sk: {
+    question: "Čo sa odosiela, keď odpovedám hlasom?",
+    answer: "Priebežný pracovný prepis používa prehliadač alebo zariadenie. Prihláseným používateľom sa pri dostupnej cloudovej oprave do Microsoft Azure Speech dočasne odošle zvuk odpovede, zvolený jazyk a najviac 80 krátkych slovníkových pomôcok z roly, životopisu a pracovnej ponuky na vytvorenie konečného prepisu. InterviewThread surový zvuk neukladá ani nezapisuje do protokolov, výsledok vracia súkromne bez uloženia a umožní text upraviť. Režim hosťa zostáva v prehliadači. Pri zlyhaní zostane prepis zariadenia zachovaný.",
+  },
+  hu: {
+    question: "Milyen adat kerül elküldésre, amikor hanggal válaszolok?",
+    answer: "Az élő piszkozatfeliratok a böngészőt vagy az eszközt használják. Bejelentkezett felhasználóknál, ha elérhető a felhős javítás, a válasz hangja, a kiválasztott nyelv, valamint a szerepkörből, önéletrajzból és álláshirdetésből származó legfeljebb 80 rövid szókincssegéd ideiglenesen a Microsoft Azure Speechhez kerül a végleges átirathoz. Az InterviewThread nem tárolja és nem naplózza a nyers hangot, az eredményt privát, nem tárolható válaszként adja vissza, és beküldés előtt szerkeszthető. A vendég mód csak a böngészőt használja. Hiba esetén az eszköz átirata megmarad.",
+  },
+  ro: {
+    question: "Ce date sunt trimise când răspund vocal?",
+    answer: "Subtitrările provizorii în direct folosesc browserul sau dispozitivul. Pentru utilizatorii autentificați, când corectarea în cloud este disponibilă, sunetul răspunsului, limba aleasă și până la 80 de indicii scurte de vocabular din rol, CV și anunț sunt trimise temporar către Microsoft Azure Speech pentru transcrierea finală. InterviewThread nu stochează și nu înregistrează în jurnale sunetul brut, returnează rezultatul privat fără stocare și permite editarea textului înainte de trimitere. Modul vizitator rămâne în browser. Dacă corectarea eșuează, transcrierea dispozitivului se păstrează.",
+  },
+  el: {
+    question: "Ποια δεδομένα αποστέλλονται όταν απαντώ με φωνή;",
+    answer: "Οι προσωρινοί ζωντανοί υπότιτλοι χρησιμοποιούν το πρόγραμμα περιήγησης ή τη συσκευή. Για συνδεδεμένους χρήστες, όταν είναι διαθέσιμη η διόρθωση cloud, ο ήχος της απάντησης, η επιλεγμένη γλώσσα και έως 80 σύντομες υποδείξεις όρων από τον ρόλο, το βιογραφικό και την αγγελία αποστέλλονται προσωρινά στο Microsoft Azure Speech για την τελική απομαγνητοφώνηση. Το InterviewThread δεν αποθηκεύει ούτε καταγράφει τον αρχικό ήχο, επιστρέφει το αποτέλεσμα ιδιωτικά χωρίς αποθήκευση και επιτρέπει επεξεργασία πριν την υποβολή. Η λειτουργία επισκέπτη μένει στον browser. Σε αποτυχία διατηρείται η απομαγνητοφώνηση της συσκευής.",
+  },
+  bg: {
+    question: "Какви данни се изпращат, когато отговарям с глас?",
+    answer: "Предварителните субтитри на живо използват браузъра или устройството. За влезли потребители, когато е налична облачна корекция, звукът на отговора, избраният език и до 80 кратки терминологични подсказки от ролята, автобиографията и обявата временно се изпращат към Microsoft Azure Speech за окончателния препис. InterviewThread не съхранява и не записва в дневници необработения звук, връща резултата частно без съхранение и позволява редакция преди изпращане. Гост режимът остава в браузъра. При неуспех преписът на устройството се запазва.",
+  },
+  hr: {
+    question: "Koji se podaci šalju kada odgovaram glasom?",
+    answer: "Privremeni titlovi uživo koriste preglednik ili uređaj. Za prijavljene korisnike, kada je dostupno ispravljanje u oblaku, zvuk odgovora, odabrani jezik i do 80 kratkih pojmovnih smjernica iz uloge, životopisa i oglasa privremeno se šalju u Microsoft Azure Speech radi konačnog prijepisa. InterviewThread ne sprema ni ne bilježi izvorni zvuk, rezultat vraća privatno bez pohrane i omogućuje uređivanje prije slanja. Gostujući način ostaje u pregledniku. Ako ispravak ne uspije, prijepis uređaja ostaje.",
+  },
+  sr: {
+    question: "Који подаци се шаљу када одговарам гласом?",
+    answer: "Привремени титлови уживо користе прегледач или уређај. За пријављене кориснике, када је доступна исправка у облаку, звук одговора, изабрани језик и до 80 кратких појмовних смерница из улоге, биографије и огласа привремено се шаљу у Microsoft Azure Speech ради коначног преписа. InterviewThread не чува нити бележи изворни звук, резултат враћа приватно без складиштења и омогућава уређивање пре слања. Гост режим остаје у прегледачу. Ако исправка не успе, препис уређаја остаје.",
+  },
+  sl: {
+    question: "Kateri podatki se pošljejo, ko odgovorim z glasom?",
+    answer: "Začasni podnapisi v živo uporabljajo brskalnik ali napravo. Pri prijavljenih uporabnikih se, ko je na voljo popravek v oblaku, zvok odgovora, izbrani jezik in do 80 kratkih izraznih namigov iz vloge, življenjepisa in oglasa začasno pošljejo v Microsoft Azure Speech za končni prepis. InterviewThread surovega zvoka ne shrani ali beleži, rezultat vrne zasebno brez shranjevanja in omogoča urejanje pred oddajo. Gostujoči način ostane v brskalniku. Če popravek ne uspe, prepis naprave ostane.",
+  },
+  sw: {
+    question: "Ni data gani hutumwa ninapojibu kwa sauti?",
+    answer: "Manukuu ya rasimu ya moja kwa moja hutumia kivinjari au kifaa. Kwa mtumiaji aliyeingia, urekebishaji wa wingu ukiwepo, sauti ya jibu, lugha iliyochaguliwa na hadi vidokezo 80 vifupi vya msamiati kutoka nafasi, wasifu na tangazo la kazi hutumwa kwa muda kwa Microsoft Azure Speech ili kutengeneza nakala ya mwisho. InterviewThread haihifadhi wala kuweka kumbukumbu ya sauti ghafi, hurudisha matokeo kwa faragha bila kuhifadhi na hukuruhusu kuhariri kabla ya kutuma. Hali ya mgeni hutumia kivinjari pekee. Urekebishaji ukishindwa, nakala ya kifaa hubaki.",
+  },
+  fa: {
+    question: "هنگام پاسخ صوتی چه داده‌ای ارسال می‌شود؟",
+    answer: "زیرنویس پیش‌نویس زنده از مرورگر یا دستگاه استفاده می‌کند. برای کاربر واردشده، اگر اصلاح ابری در دسترس باشد، صدای پاسخ، زبان انتخابی و حداکثر ۸۰ راهنمای کوتاه واژگان از نقش، رزومه و آگهی شغلی به‌طور موقت برای متن نهایی به Microsoft Azure Speech فرستاده می‌شود. InterviewThread صدای خام را ذخیره یا ثبت نمی‌کند، نتیجه را خصوصی و بدون ذخیره برمی‌گرداند و امکان ویرایش متن پیش از ارسال را می‌دهد. حالت مهمان فقط در مرورگر است. اگر اصلاح ابری ناموفق باشد، متن دستگاه باقی می‌ماند.",
+  },
+} satisfies Record<LocaleCode, FaqItem>;
+
 // The fourth FAQ answer is injected by faqCopyFor from the single localized
 // account-access policy, so account requirements cannot drift across surfaces.
 const faqCopy = {
@@ -805,6 +968,7 @@ export function faqCopyFor(locale: LocaleCode): FaqCopy {
             : item,
       ),
       speechPrivacyFaqCopy[locale],
+      voiceAnswerPrivacyFaqCopy[locale],
     ],
   };
 }

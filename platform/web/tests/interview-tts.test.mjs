@@ -11,9 +11,54 @@ import {
   isTtsLocale,
   normalizeTtsText,
 } from "../app/interview-tts.ts";
-import { POST } from "../app/api/speech/route.ts";
 
 const LOCALES = LANGUAGES.map(([locale]) => locale);
+const SITE_ORIGIN = "https://interviewthread.example";
+let builtWorkerPromise;
+
+async function builtWorker() {
+  builtWorkerPromise ??= (async () => {
+    const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+    workerUrl.searchParams.set(
+      "interview-tts",
+      `${process.pid}-${Date.now()}-${Math.random()}`,
+    );
+    return (await import(workerUrl.href)).default;
+  })();
+  return builtWorkerPromise;
+}
+
+async function requestBuiltSpeech({
+  payload = {
+    locale: "en",
+    text: "Tell me about your strongest project.",
+  },
+  origin = SITE_ORIGIN,
+  authenticated = true,
+  contentType = "application/json",
+  extraHeaders = {},
+} = {}) {
+  const headers = new Headers({
+    "content-type": contentType,
+    host: "interviewthread.example",
+    ...extraHeaders,
+  });
+  if (origin) headers.set("origin", origin);
+  if (authenticated) {
+    headers.set("oai-authenticated-user-id", "tts-test-user");
+    headers.set("oai-authenticated-user-email", "tts-test-user@example.com");
+  }
+  const worker = await builtWorker();
+  return worker.fetch(
+    new Request(`${SITE_ORIGIN}/api/speech`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+}
 
 function requestParts(built) {
   if (built instanceof Request) {
@@ -160,19 +205,12 @@ test("speech route streams private audio and never exposes provider credentials"
     });
   };
 
-  const response = await POST(
-    new Request("https://interviewthreadai.com/api/speech", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        origin: "https://interviewthreadai.com",
-      },
-      body: JSON.stringify({
-        locale: "ja",
-        text: "SQL を使った最も強い事例を説明してください。",
-      }),
-    }),
-  );
+  const response = await requestBuiltSpeech({
+    payload: {
+      locale: "ja",
+      text: "SQL を使った最も強い事例を説明してください。",
+    },
+  });
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^audio\//);
@@ -211,21 +249,14 @@ test("speech route rejects unsafe payloads before contacting the provider", asyn
     });
   };
 
-  for (const origin of [undefined, "https://example.com"]) {
-    const headers = { "content-type": "application/json" };
-    if (origin) headers.origin = origin;
-    const response = await POST(
-      new Request("https://interviewthreadai.com/api/speech", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          locale: "en",
-          text: "Tell me about your strongest project.",
-        }),
-      }),
-    );
+  for (const origin of [null, "https://example.com"]) {
+    const response = await requestBuiltSpeech({ origin });
     assert.equal(response.status, 403, `origin ${origin ?? "missing"}`);
   }
+
+  const unauthenticated = await requestBuiltSpeech({ authenticated: false });
+  assert.equal(unauthenticated.status, 401);
+  assert.deepEqual(await unauthenticated.json(), { error: "sign_in_required" });
 
   const invalidPayloads = [
     {},
@@ -237,16 +268,7 @@ test("speech route rejects unsafe payloads before contacting the provider", asyn
   ];
 
   for (const payload of invalidPayloads) {
-    const response = await POST(
-      new Request("https://interviewthreadai.com/api/speech", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          origin: "https://interviewthreadai.com",
-        },
-        body: JSON.stringify(payload),
-      }),
-    );
+    const response = await requestBuiltSpeech({ payload });
     assert.equal(response.status, 400, JSON.stringify(payload).slice(0, 100));
     assert.match(response.headers.get("cache-control") ?? "no-store", /no-store/i);
   }
@@ -273,16 +295,9 @@ test("speech route fails closed when configuration or the provider is unavailabl
     return new Response("provider should not be contacted");
   };
 
-  const missingConfiguration = await POST(
-    new Request("https://interviewthreadai.com/api/speech", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        origin: "https://interviewthreadai.com",
-      },
-      body: JSON.stringify({ locale: "en", text: "Tell me about yourself." }),
-    }),
-  );
+  const missingConfiguration = await requestBuiltSpeech({
+    payload: { locale: "en", text: "Tell me about yourself." },
+  });
   assert.equal(missingConfiguration.status, 503);
   assert.equal(fetchCount, 0);
   assert.match(missingConfiguration.headers.get("cache-control") ?? "no-store", /no-store/i);
@@ -302,16 +317,9 @@ test("speech route fails closed when configuration or the provider is unavailabl
       },
     });
 
-  const unavailable = await POST(
-    new Request("https://interviewthreadai.com/api/speech", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        origin: "https://interviewthreadai.com",
-      },
-      body: JSON.stringify({ locale: "en", text: "Tell me about yourself." }),
-    }),
-  );
+  const unavailable = await requestBuiltSpeech({
+    payload: { locale: "en", text: "Tell me about yourself." },
+  });
   assert.ok([429, 502, 503].includes(unavailable.status));
   assert.match(unavailable.headers.get("cache-control") ?? "no-store", /no-store/i);
   const unavailableBody = await unavailable.text();

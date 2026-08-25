@@ -570,3 +570,154 @@ export async function withdrawBetaParticipant(userId: string) {
     .run();
   return findBetaParticipant(userId);
 }
+
+export type AdminProductMetrics = {
+  generatedAt: string;
+  accounts: {
+    total: number;
+    createdLast7Days: number;
+  };
+  activity: {
+    last24Hours: number;
+    last7Days: number;
+    last30Days: number;
+    activeAccountsLast7Days: number;
+    activeAccountsLast30Days: number;
+    byTypeLast30Days: Array<{
+      eventType: UserActivityType;
+      count: number;
+    }>;
+  };
+  beta: {
+    total: number;
+    byStatus: Array<{
+      status: BetaStatus;
+      count: number;
+    }>;
+  };
+  feedback: {
+    total: number;
+    new: number;
+  };
+};
+
+type CountRow = { count: number };
+
+function countFrom(row: CountRow | null) {
+  return Number(row?.count || 0);
+}
+
+/**
+ * Returns aggregate-only product metrics for the private operator dashboard.
+ * Only grouped counts leave this function; source content and request
+ * metadata remain outside this aggregate reporting boundary.
+ */
+export async function getAdminProductMetrics(): Promise<AdminProductMetrics> {
+  await Promise.all([ensureAuthStorage(), ensureFeedbackStorage()]);
+
+  const now = Date.now();
+  const last24Hours = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+  const last7Days = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const last30Days = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [
+    accountsTotal,
+    accountsLast7Days,
+    activityLast24Hours,
+    activityLast7Days,
+    activityLast30Days,
+    activeAccountsLast7Days,
+    activeAccountsLast30Days,
+    feedbackTotal,
+    feedbackNew,
+    betaTotal,
+    activityByType,
+    betaByStatus,
+  ] = await Promise.all([
+    env.DB.prepare("SELECT COUNT(*) AS count FROM auth_users").first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM auth_users WHERE created_at >= ?",
+    )
+      .bind(last7Days)
+      .first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM user_activity_events WHERE created_at >= ?",
+    )
+      .bind(last24Hours)
+      .first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM user_activity_events WHERE created_at >= ?",
+    )
+      .bind(last7Days)
+      .first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM user_activity_events WHERE created_at >= ?",
+    )
+      .bind(last30Days)
+      .first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(DISTINCT user_id) AS count FROM user_activity_events WHERE created_at >= ?",
+    )
+      .bind(last7Days)
+      .first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(DISTINCT user_id) AS count FROM user_activity_events WHERE created_at >= ?",
+    )
+      .bind(last30Days)
+      .first<CountRow>(),
+    env.DB.prepare("SELECT COUNT(*) AS count FROM feedback_submissions").first<CountRow>(),
+    env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM feedback_submissions WHERE status = 'new'",
+    ).first<CountRow>(),
+    env.DB.prepare("SELECT COUNT(*) AS count FROM beta_participants").first<CountRow>(),
+    env.DB.prepare(
+      `SELECT event_type, COUNT(*) AS count
+       FROM user_activity_events
+       WHERE created_at >= ?
+       GROUP BY event_type
+       ORDER BY count DESC`,
+    )
+      .bind(last30Days)
+      .all<{ event_type: UserActivityType; count: number }>(),
+    env.DB.prepare(
+      `SELECT status, COUNT(*) AS count
+       FROM beta_participants
+       GROUP BY status
+       ORDER BY count DESC`,
+    ).all<{ status: BetaStatus; count: number }>(),
+  ]);
+
+  return {
+    generatedAt: new Date(now).toISOString(),
+    accounts: {
+      total: countFrom(accountsTotal),
+      createdLast7Days: countFrom(accountsLast7Days),
+    },
+    activity: {
+      last24Hours: countFrom(activityLast24Hours),
+      last7Days: countFrom(activityLast7Days),
+      last30Days: countFrom(activityLast30Days),
+      activeAccountsLast7Days: countFrom(activeAccountsLast7Days),
+      activeAccountsLast30Days: countFrom(activeAccountsLast30Days),
+      byTypeLast30Days: activityByType.results
+        .filter((row) => USER_ACTIVITY_TYPES.includes(row.event_type))
+        .map((row) => ({
+          eventType: row.event_type,
+          count: Number(row.count || 0),
+        })),
+    },
+    beta: {
+      total: countFrom(betaTotal),
+      byStatus: betaByStatus.results
+        .filter((row) => BETA_STATUSES.includes(row.status))
+        .map((row) => ({
+          status: row.status,
+          count: Number(row.count || 0),
+        })),
+    },
+    feedback: {
+      total: countFrom(feedbackTotal),
+      new: countFrom(feedbackNew),
+    },
+  };
+}
