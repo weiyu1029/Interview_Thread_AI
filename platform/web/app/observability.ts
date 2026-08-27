@@ -17,6 +17,7 @@ export const OBSERVABILITY_ROUTES = [
   "api_contact",
   "api_feedback",
   "api_jobs",
+  "api_interview_dialogue",
   "api_region",
   "api_speech",
   "api_speech_to_speech",

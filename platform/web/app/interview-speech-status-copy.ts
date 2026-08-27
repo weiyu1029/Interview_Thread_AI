@@ -54,6 +54,8 @@ export function speechStatusCopyFor(locale: LocaleCode): SpeechStatusCopy {
 }
 
 export function speechModelDisplayName(model: string) {
+  if (model === "eleven_v3_conversational")
+    return "ElevenLabs v3 Conversational";
   if (model === "eleven_v3") return "ElevenLabs v3";
   if (model === "azure-dragon-hd-omni") return "Azure Dragon HD Omni";
   if (model === "azure-standard-neural") return "Azure Neural";
