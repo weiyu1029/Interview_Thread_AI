@@ -19,6 +19,7 @@ export const OBSERVABILITY_ROUTES = [
   "api_jobs",
   "api_region",
   "api_speech",
+  "api_speech_to_speech",
   "api_transcribe",
   "other",
 ] as const;

@@ -86,9 +86,12 @@ import {
 } from "./speech-privacy-copy";
 import {
   normalizeSttTranscript,
+  STT_CONSENT_VERSION,
   STT_MAX_AUDIO_BYTES,
 } from "./interview-stt";
+import { STS_CONSENT_VERSION } from "./interview-sts";
 import { sttCopyFor } from "./interview-stt-copy";
+import { voiceConsentCopyFor } from "./voice-consent-copy";
 import {
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
@@ -216,6 +219,7 @@ type WorkspaceView =
   | "Feedback";
 type ApplicationMode = "Manual" | "Hybrid" | "Automatic";
 type InterviewMode = "Coaching" | "Realistic";
+type VoiceInputMode = "cloud" | "browser";
 type InterviewScore = {
   relevance: number;
   evidence: number;
@@ -1920,6 +1924,34 @@ function appendTranscript(current: string, next: string, locale: LocaleCode) {
 }
 
 const INTERVIEW_RECORDING_MAX_MILLISECONDS = 3 * 60 * 1_000;
+const VOICE_INPUT_CONSENT_STORAGE_KEY =
+  "interviewthread-voice-input-consent";
+
+function storedVoiceInputMode() {
+  try {
+    const stored = window.sessionStorage.getItem(
+      VOICE_INPUT_CONSENT_STORAGE_KEY,
+    );
+    const [version, mode] = (stored || "").split(":");
+    return version === STT_CONSENT_VERSION &&
+      (mode === "cloud" || mode === "browser")
+      ? mode
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberVoiceInputMode(mode: VoiceInputMode) {
+  try {
+    window.sessionStorage.setItem(
+      VOICE_INPUT_CONSENT_STORAGE_KEY,
+      `${STT_CONSENT_VERSION}:${mode}`,
+    );
+  } catch {
+    // Session storage is optional; consent still applies to this action.
+  }
+}
 
 function preferredInterviewAudioMimeType() {
   if (typeof MediaRecorder === "undefined") return "";
@@ -2795,6 +2827,12 @@ export default function Home({
   const [voiceInputSupported, setVoiceInputSupported] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
   const [voiceInterim, setVoiceInterim] = useState("");
+  const [voiceConsentOpen, setVoiceConsentOpen] = useState(false);
+  const [voiceTransformConsentOpen, setVoiceTransformConsentOpen] =
+    useState(false);
+  const [isTransformingVoice, setIsTransformingVoice] = useState(false);
+  const [hasCoachedVoiceSource, setHasCoachedVoiceSource] = useState(false);
+  const [coachedVoiceUrl, setCoachedVoiceUrl] = useState("");
   const [restartNotice, setRestartNotice] = useState("");
   const [, setRecognitionConfidence] = useState<number | null>(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -2804,6 +2842,7 @@ export default function Home({
     useState<LocaleCode | null>(null);
   const copy = copyFor(locale);
   const sttUi = sttCopyFor(locale);
+  const voiceConsentUi = voiceConsentCopyFor(locale);
   const jobSearchUi = jobSearchCopyFor(locale);
   const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
@@ -2856,9 +2895,15 @@ export default function Home({
   const voiceRecordingMimeRef = useRef("audio/webm");
   const voiceRecordingBaseRef = useRef("");
   const voiceBrowserTranscriptRef = useRef("");
+  const lastVoiceRecordingRef = useRef<Blob | null>(null);
+  const coachedVoiceUrlRef = useRef("");
+  const voiceConsentPrimaryActionRef = useRef<HTMLButtonElement | null>(null);
+  const voiceTransformPrimaryActionRef =
+    useRef<HTMLButtonElement | null>(null);
   const interviewAnswerRef = useRef("");
   const voiceTranscriptionAbortRef = useRef<AbortController | null>(null);
   const voiceTranscriptionRequestIdRef = useRef(0);
+  const voiceTransformAbortRef = useRef<AbortController | null>(null);
   const voiceRecordingTimerRef = useRef<number | null>(null);
   const speechRestartTimerRef = useRef<number | null>(null);
   const restartNoticeTimerRef = useRef<number | null>(null);
@@ -3100,6 +3145,8 @@ export default function Home({
     voiceTranscriptionRequestIdRef.current += 1;
     voiceTranscriptionAbortRef.current?.abort();
     voiceTranscriptionAbortRef.current = null;
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = null;
     const recorder = mediaRecorderRef.current;
     if (recorder) {
       recorder.ondataavailable = null;
@@ -3111,6 +3158,11 @@ export default function Home({
     stopInterviewMediaStream(voiceMediaStreamRef.current);
     voiceMediaStreamRef.current = null;
     voiceAudioChunksRef.current = [];
+    lastVoiceRecordingRef.current = null;
+    if (coachedVoiceUrlRef.current) {
+      URL.revokeObjectURL(coachedVoiceUrlRef.current);
+      coachedVoiceUrlRef.current = "";
+    }
     interviewSpeechRequestIdRef.current += 1;
     interviewSpeechAbortRef.current?.abort();
     interviewSpeechAbortRef.current = null;
@@ -3143,6 +3195,9 @@ export default function Home({
       setRealisticReviewOpen(false);
       setVoiceInterim("");
       setRecognitionConfidence(null);
+      setHasCoachedVoiceSource(false);
+      setCoachedVoiceUrl("");
+      setIsTransformingVoice(false);
       setIsListening(false);
       setIsRefiningVoice(false);
       setIsSpeaking(false);
@@ -3253,6 +3308,7 @@ export default function Home({
         window.clearTimeout(restartNoticeTimerRef.current);
       voiceTranscriptionRequestIdRef.current += 1;
       voiceTranscriptionAbortRef.current?.abort();
+      voiceTransformAbortRef.current?.abort();
       const audioSource = interviewAudioSourceRef.current;
       interviewAudioSourceRef.current = null;
       if (audioSource) {
@@ -3277,6 +3333,10 @@ export default function Home({
       }
       stopInterviewMediaStream(voiceMediaStreamRef.current);
       voiceAudioChunksRef.current = [];
+      lastVoiceRecordingRef.current = null;
+      if (coachedVoiceUrlRef.current)
+        URL.revokeObjectURL(coachedVoiceUrlRef.current);
+      coachedVoiceUrlRef.current = "";
       interviewSpeechRequestIdRef.current += 1;
       interviewSpeechAbortRef.current?.abort();
       interviewAudioRef.current?.pause();
@@ -3299,6 +3359,25 @@ export default function Home({
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
   }, [walkthroughOpen]);
+
+  useEffect(() => {
+    if (!voiceConsentOpen && !voiceTransformConsentOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setVoiceConsentOpen(false);
+      setVoiceTransformConsentOpen(false);
+    };
+    const focusTimer = window.setTimeout(() => {
+      if (voiceTransformConsentOpen)
+        voiceTransformPrimaryActionRef.current?.focus();
+      else voiceConsentPrimaryActionRef.current?.focus();
+    }, 0);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [voiceConsentOpen, voiceTransformConsentOpen]);
 
   useEffect(() => {
     if (!walkthroughOpen) return;
@@ -4239,6 +4318,11 @@ export default function Home({
     setInterviewTopicIndex(next.topicIndex);
     interviewAnswerRef.current = "";
     setInterviewAnswer("");
+    lastVoiceRecordingRef.current = null;
+    setHasCoachedVoiceSource(false);
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = null;
+    releaseCoachedVoice();
     setVoiceMessage("");
     setVoiceInterim("");
     setRecognitionConfidence(null);
@@ -4342,6 +4426,8 @@ export default function Home({
     voiceTranscriptionRequestIdRef.current += 1;
     voiceTranscriptionAbortRef.current?.abort();
     voiceTranscriptionAbortRef.current = null;
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = null;
     const recorder = mediaRecorderRef.current;
     if (recorder) {
       recorder.ondataavailable = null;
@@ -4354,11 +4440,23 @@ export default function Home({
     voiceMediaStreamRef.current = null;
     voiceAudioChunksRef.current = [];
     voiceBrowserTranscriptRef.current = "";
+    lastVoiceRecordingRef.current = null;
+    setHasCoachedVoiceSource(false);
+    releaseCoachedVoice();
     setVoiceInterim("");
     setRecognitionConfidence(null);
     setIsListening(false);
     setIsRefiningVoice(false);
     stopInterviewSpeech();
+  }
+
+  function releaseCoachedVoice() {
+    if (coachedVoiceUrlRef.current) {
+      URL.revokeObjectURL(coachedVoiceUrlRef.current);
+      coachedVoiceUrlRef.current = "";
+    }
+    setCoachedVoiceUrl("");
+    setIsTransformingVoice(false);
   }
 
   function stopInterviewSpeech(setIdle = true) {
@@ -4601,6 +4699,7 @@ export default function Home({
     try {
       const form = new FormData();
       form.append("audio", audio, "interview-answer");
+      form.append("consent_version", STT_CONSENT_VERSION);
       form.append("locale", locale);
       form.append("vocabulary", JSON.stringify(speechVocabulary.slice(0, 80)));
       const response = await fetch("/api/transcribe", {
@@ -4672,7 +4771,27 @@ export default function Home({
     setVoiceInterim("");
   }
 
-  async function toggleInterviewListening() {
+  function toggleInterviewListening() {
+    if (isListening) {
+      stopInterviewListening();
+      return;
+    }
+    const remembered = storedVoiceInputMode();
+    if (!remembered || (!authenticated && remembered === "cloud")) {
+      setVoiceConsentOpen(true);
+      return;
+    }
+    void startInterviewListening(remembered);
+  }
+
+  async function acceptVoiceInputMode(mode: VoiceInputMode) {
+    const permittedMode = authenticated ? mode : "browser";
+    rememberVoiceInputMode(permittedMode);
+    setVoiceConsentOpen(false);
+    await startInterviewListening(permittedMode);
+  }
+
+  async function startInterviewListening(mode: VoiceInputMode) {
     type RecognitionAlternative = {
       transcript: string;
       confidence?: number;
@@ -4710,6 +4829,7 @@ export default function Home({
     const Recognition =
       voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
     const canRecord =
+      mode === "cloud" &&
       authenticated &&
       typeof MediaRecorder !== "undefined" &&
       Boolean(navigator.mediaDevices?.getUserMedia);
@@ -4717,11 +4837,6 @@ export default function Home({
       setVoiceMessage(sttUi.unavailable);
       return;
     }
-    if (isListening) {
-      stopInterviewListening();
-      return;
-    }
-
     voiceTranscriptionRequestIdRef.current += 1;
     const requestId = voiceTranscriptionRequestIdRef.current;
     voiceTranscriptionAbortRef.current?.abort();
@@ -4767,6 +4882,9 @@ export default function Home({
             type: voiceRecordingMimeRef.current,
           });
           voiceAudioChunksRef.current = [];
+          lastVoiceRecordingRef.current = audio.size ? audio : null;
+          setHasCoachedVoiceSource(Boolean(audio.size));
+          releaseCoachedVoice();
           void refineRecordedInterviewAnswer({
             audio,
             baseAnswer: voiceRecordingBaseRef.current,
@@ -4969,6 +5087,46 @@ export default function Home({
       }
     }
   }
+
+  async function transformRecordedInterviewVoice() {
+    const audio = lastVoiceRecordingRef.current;
+    setVoiceTransformConsentOpen(false);
+    if (!authenticated || !audio?.size || audio.size > STT_MAX_AUDIO_BYTES) {
+      setVoiceMessage(voiceConsentUi.coachedUnavailable);
+      return;
+    }
+    const controller = new AbortController();
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = controller;
+    releaseCoachedVoice();
+    setIsTransformingVoice(true);
+    try {
+      const form = new FormData();
+      form.append("audio", audio, "interview-answer");
+      form.append("consent_version", STS_CONSENT_VERSION);
+      const response = await fetch("/api/speech-to-speech", {
+        method: "POST",
+        body: form,
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("voice transform unavailable");
+      const transformed = await response.blob();
+      if (!transformed.size || controller.signal.aborted)
+        throw new Error("voice transform unavailable");
+      const url = URL.createObjectURL(transformed);
+      coachedVoiceUrlRef.current = url;
+      setCoachedVoiceUrl(url);
+      setVoiceMessage(voiceConsentUi.coachedReady);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError"))
+        setVoiceMessage(voiceConsentUi.coachedUnavailable);
+    } finally {
+      if (voiceTransformAbortRef.current === controller)
+        voiceTransformAbortRef.current = null;
+      setIsTransformingVoice(false);
+    }
+  }
+
   async function sendFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedbackSubmitting(true);
@@ -5505,6 +5663,143 @@ export default function Home({
           </div>
         </div>
       </section>
+
+      {voiceConsentOpen && (
+        <div
+          className="voice-consent-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setVoiceConsentOpen(false);
+          }}
+        >
+          <section
+            className="voice-consent-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="voice-consent-title"
+            aria-describedby="voice-consent-description"
+          >
+            <button
+              className="walkthrough-close"
+              type="button"
+              aria-label={detail.verifyClose}
+              onClick={() => setVoiceConsentOpen(false)}
+            >
+              ×
+            </button>
+            <p className="eyebrow">{interview.answer}</p>
+            <h2 id="voice-consent-title">{voiceConsentUi.title}</h2>
+            <div id="voice-consent-description" className="voice-consent-options">
+              {authenticated && (
+                <article>
+                  <b>{voiceConsentUi.cloudButton}</b>
+                  <p>{voiceConsentUi.cloudBody}</p>
+                </article>
+              )}
+              <article>
+                <b>{voiceConsentUi.browserButton}</b>
+                <p>{voiceConsentUi.browserBody}</p>
+              </article>
+            </div>
+            <div className="voice-consent-actions">
+              {authenticated && (
+                <button
+                  ref={voiceConsentPrimaryActionRef}
+                  className="button primary"
+                  type="button"
+                  onClick={() => void acceptVoiceInputMode("cloud")}
+                >
+                  {voiceConsentUi.cloudButton}
+                </button>
+              )}
+              <button
+                ref={authenticated ? undefined : voiceConsentPrimaryActionRef}
+                className={authenticated ? "button secondary" : "button primary"}
+                type="button"
+                onClick={() => void acceptVoiceInputMode("browser")}
+              >
+                {voiceConsentUi.browserButton}
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setVoiceConsentOpen(false)}
+              >
+                {voiceConsentUi.typeButton}
+              </button>
+            </div>
+            <a
+              className="voice-consent-privacy"
+              href={localizedPath(locale, "privacy")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {voiceConsentUi.privacyLink} ↗
+            </a>
+          </section>
+        </div>
+      )}
+
+      {voiceTransformConsentOpen && (
+        <div
+          className="voice-consent-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setVoiceTransformConsentOpen(false);
+          }}
+        >
+          <section
+            className="voice-consent-dialog voice-transform-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="voice-transform-title"
+            aria-describedby="voice-transform-description"
+          >
+            <button
+              className="walkthrough-close"
+              type="button"
+              aria-label={detail.verifyClose}
+              onClick={() => setVoiceTransformConsentOpen(false)}
+            >
+              ×
+            </button>
+            <p className="eyebrow">{interview.answer}</p>
+            <h2 id="voice-transform-title">
+              {voiceConsentUi.coachedButton}
+            </h2>
+            <p id="voice-transform-description">
+              {voiceConsentUi.coachedNotice}
+            </p>
+            <div className="voice-consent-actions">
+              <button
+                ref={voiceTransformPrimaryActionRef}
+                className="button primary"
+                type="button"
+                onClick={() => void transformRecordedInterviewVoice()}
+              >
+                {voiceConsentUi.coachedButton}
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setVoiceTransformConsentOpen(false)}
+              >
+                {voiceConsentUi.typeButton}
+              </button>
+            </div>
+            <a
+              className="voice-consent-privacy"
+              href={localizedPath(locale, "privacy")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {voiceConsentUi.privacyLink} ↗
+            </a>
+          </section>
+        </div>
+      )}
 
       {walkthroughOpen && (
         <div
@@ -7198,9 +7493,57 @@ export default function Home({
                           : interview.send}
                       </button>
                     </div>
+                    {(hasCoachedVoiceSource || coachedVoiceUrl) && (
+                      <div className="coached-voice-panel">
+                        <button
+                          type="button"
+                          className="button secondary"
+                          disabled={
+                            isListening ||
+                            isRefiningVoice ||
+                            isTransformingVoice ||
+                            realisticReviewOpen
+                          }
+                          onClick={() => setVoiceTransformConsentOpen(true)}
+                        >
+                          {isTransformingVoice
+                            ? sttUi.refining
+                            : voiceConsentUi.coachedButton}
+                        </button>
+                        {coachedVoiceUrl && (
+                          // The editable answer immediately above is the
+                          // synchronized transcript for this temporary audio.
+                          // eslint-disable-next-line jsx-a11y/media-has-caption
+                          <audio
+                            controls
+                            preload="metadata"
+                            src={coachedVoiceUrl}
+                            aria-label={voiceConsentUi.coachedReady}
+                            aria-describedby="interview-answer"
+                          />
+                        )}
+                      </div>
+                    )}
                     <small className="voice-disclosure">
                       {voiceMessage ||
                         `${sttUi.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
+                      {voiceInputSupported && !isListening && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              window.sessionStorage.removeItem(
+                                VOICE_INPUT_CONSENT_STORAGE_KEY,
+                              );
+                            } catch {
+                              // The modal can still be opened without storage.
+                            }
+                            setVoiceConsentOpen(true);
+                          }}
+                        >
+                          {voiceConsentUi.title}
+                        </button>
+                      )}
                     </small>
                     <div
                       className={`speech-vocabulary ${realisticSessionActive ? "practice-hidden" : ""}`}

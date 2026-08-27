@@ -24,8 +24,19 @@ const CREATE_SPEECH_CHARACTER_USAGE_WINDOWS_TABLE = `
   )
 `;
 
+const CREATE_SPEECH_AUDIO_USAGE_WINDOWS_TABLE = `
+  CREATE TABLE IF NOT EXISTS speech_audio_usage_windows (
+    operation text NOT NULL,
+    window_start integer NOT NULL,
+    byte_count integer DEFAULT 0 NOT NULL,
+    updated_at text NOT NULL,
+    PRIMARY KEY (operation, window_start)
+  )
+`;
+
 const storageReadiness = new WeakMap<object, Promise<void>>();
 const characterStorageReadiness = new WeakMap<object, Promise<void>>();
+const audioStorageReadiness = new WeakMap<object, Promise<void>>();
 
 async function ensureSpeechUsageStorage(db: SpeechQuotaDatabase) {
   let ready = storageReadiness.get(db as object);
@@ -55,6 +66,22 @@ async function ensureSpeechCharacterUsageStorage(db: SpeechQuotaDatabase) {
         throw error;
       });
     characterStorageReadiness.set(db as object, ready);
+  }
+  return ready;
+}
+
+async function ensureSpeechAudioUsageStorage(db: SpeechQuotaDatabase) {
+  let ready = audioStorageReadiness.get(db as object);
+  if (!ready) {
+    ready = db
+      .prepare(CREATE_SPEECH_AUDIO_USAGE_WINDOWS_TABLE)
+      .run()
+      .then(() => undefined)
+      .catch((error) => {
+        audioStorageReadiness.delete(db as object);
+        throw error;
+      });
+    audioStorageReadiness.set(db as object, ready);
   }
   return ready;
 }
@@ -132,6 +159,51 @@ export async function consumeGlobalSpeechCharacterQuota(
         "DELETE FROM speech_character_usage_windows WHERE window_start < ?",
       )
       .bind(windowStart - 6 * windowMilliseconds)
+      .run();
+  }
+  return count > limit;
+}
+
+export async function consumeGlobalSpeechAudioQuota(
+  db: SpeechQuotaDatabase,
+  {
+    operation,
+    windowStart,
+    windowMilliseconds,
+    bytes,
+    limit,
+  }: {
+    operation: "stt" | "s2s";
+    windowStart: number;
+    windowMilliseconds: number;
+    bytes: number;
+    limit: number;
+  },
+) {
+  await ensureSpeechAudioUsageStorage(db);
+  const boundedBytes = Math.max(0, Math.floor(bytes));
+  if (!boundedBytes) return false;
+  const updatedAt = new Date().toISOString();
+  const row = await db
+    .prepare(
+      `INSERT INTO speech_audio_usage_windows
+         (operation, window_start, byte_count, updated_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(operation, window_start) DO UPDATE SET
+         byte_count = speech_audio_usage_windows.byte_count + excluded.byte_count,
+         updated_at = excluded.updated_at
+       RETURNING byte_count`,
+    )
+    .bind(operation, windowStart, boundedBytes, updatedAt)
+    .first<{ byte_count: number }>();
+
+  const count = Number(row?.byte_count || 0);
+  if (count === boundedBytes) {
+    await db
+      .prepare(
+        "DELETE FROM speech_audio_usage_windows WHERE operation = ? AND window_start < ?",
+      )
+      .bind(operation, windowStart - 6 * windowMilliseconds)
       .run();
   }
   return count > limit;

@@ -1,6 +1,7 @@
 import type { LocaleCode } from "./i18n";
 import { accountIntroCopyFor } from "./account-copy.ts";
 import { cloudReadAloudNoticeFor } from "./speech-privacy-copy.ts";
+import { voiceConsentCopyFor } from "./voice-consent-copy.ts";
 
 export type FaqItem = {
   question: string;
@@ -956,6 +957,7 @@ const faqCopy = {
 export function faqCopyFor(locale: LocaleCode): FaqCopy {
   const copy = faqCopy[locale];
   const readAloudPrivacy = speechPrivacyFaqCopy[locale];
+  const voiceConsent = voiceConsentCopyFor(locale);
   return {
     ...copy,
     items: [
@@ -976,7 +978,10 @@ export function faqCopyFor(locale: LocaleCode): FaqCopy {
           "ElevenLabs / Microsoft Azure Speech",
         ) + ` ${cloudReadAloudNoticeFor(locale)}`,
       },
-      voiceAnswerPrivacyFaqCopy[locale],
+      {
+        ...voiceAnswerPrivacyFaqCopy[locale],
+        answer: `${voiceConsent.cloudBody} ${voiceConsent.browserBody} ${voiceConsent.coachedNotice}`,
+      },
     ],
   };
 }

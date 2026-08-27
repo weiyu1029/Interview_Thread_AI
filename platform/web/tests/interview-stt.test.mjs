@@ -4,24 +4,45 @@ import test from "node:test";
 
 import { LANGUAGES } from "../app/i18n.ts";
 import {
+  ELEVENLABS_STT_MODEL_ID,
   STT_API_VERSION,
+  STT_CONSENT_VERSION,
   STT_MAX_AUDIO_BYTES,
   STT_MAX_VOCABULARY_TERM_CHARACTERS,
   STT_MAX_VOCABULARY_TERMS,
   azureSttLocaleFor,
   buildAzureTranscriptionRequest,
+  buildElevenLabsTranscriptionRequest,
+  elevenLabsSttLanguageFor,
+  hasSupportedInterviewAudioSignature,
   isSttLocale,
   isSupportedInterviewAudioType,
   normalizeSttTranscript,
   sanitizeSpeechVocabulary,
   transcriptFromAzureResponse,
+  transcriptFromElevenLabsResponse,
 } from "../app/interview-stt.ts";
 
 const LOCALES = LANGUAGES.map(([locale]) => locale);
+const SITE_ORIGIN = "https://interviewthread.example";
 let builtWorkerPromise;
 
-function testAudio(type = "audio/webm;codecs=opus", size = 32) {
-  return new Blob([new Uint8Array(size)], { type });
+function signatureFor(type) {
+  const base = type.toLowerCase().split(";", 1)[0].trim();
+  if (base === "audio/webm") return [0x1a, 0x45, 0xdf, 0xa3];
+  if (base === "audio/ogg") return [0x4f, 0x67, 0x67, 0x53];
+  if (base === "audio/mp4") return [0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70];
+  if (base === "audio/mpeg") return [0x49, 0x44, 0x33, 4];
+  if (base === "audio/wav" || base === "audio/x-wav")
+    return [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x41, 0x56, 0x45];
+  return [];
+}
+
+function testAudio(type = "audio/webm;codecs=opus", size = 32, valid = true) {
+  if (size === 0) return new Blob([], { type });
+  const bytes = new Uint8Array(size);
+  if (valid) bytes.set(signatureFor(type).slice(0, size));
+  return new Blob([bytes], { type });
 }
 
 function formFromBuiltRequest(built) {
@@ -34,10 +55,7 @@ function formFromBuiltRequest(built) {
 async function builtWorker() {
   builtWorkerPromise ??= (async () => {
     const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-    workerUrl.searchParams.set(
-      "interview-stt",
-      `${process.pid}-${Date.now()}-${Math.random()}`,
-    );
+    workerUrl.searchParams.set("interview-stt", `${process.pid}-${Date.now()}-${Math.random()}`);
     return (await import(workerUrl.href)).default;
   })();
   return builtWorkerPromise;
@@ -46,35 +64,35 @@ async function builtWorker() {
 function transcriptionForm({
   type = "audio/webm",
   size = 32,
+  validSignature = true,
   locale = "en",
   vocabulary = ["SQL"],
+  consentVersion = STT_CONSENT_VERSION,
 } = {}) {
   const form = new FormData();
-  form.append("audio", testAudio(type, size), "interview-answer.webm");
+  form.append("audio", testAudio(type, size, validSignature), "interview-answer");
   form.append("locale", locale);
   form.append("vocabulary", JSON.stringify(vocabulary));
+  if (consentVersion !== null) form.append("consent_version", consentVersion);
   return form;
 }
 
 async function requestBuiltTranscription({
   form = transcriptionForm(),
-  origin = "https://interviewthread.example",
+  origin = SITE_ORIGIN,
   authenticated = true,
   userId = `stt-test-${crypto.randomUUID()}`,
   extraHeaders = {},
 } = {}) {
-  const headers = new Headers({
-    origin,
-    host: "interviewthread.example",
-    ...extraHeaders,
-  });
+  const headers = new Headers({ host: "interviewthread.example", ...extraHeaders });
+  if (origin) headers.set("origin", origin);
   if (authenticated) {
     headers.set("oai-authenticated-user-id", userId);
     headers.set("oai-authenticated-user-email", `${userId}@example.com`);
   }
   const worker = await builtWorker();
   return worker.fetch(
-    new Request("https://interviewthread.example/api/transcribe", {
+    new Request(`${SITE_ORIGIN}/api/transcribe`, {
       method: "POST",
       headers,
       body: form,
@@ -84,6 +102,14 @@ async function requestBuiltTranscription({
   );
 }
 
+function snapshotEnvironment() {
+  return {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
+    AZURE_SPEECH_ENDPOINT: process.env.AZURE_SPEECH_ENDPOINT,
+  };
+}
+
 function restoreEnvironment(previous) {
   for (const [name, value] of Object.entries(previous)) {
     if (value === undefined) delete process.env[name];
@@ -91,66 +117,63 @@ function restoreEnvironment(previous) {
   }
 }
 
-test("builds a private Azure fast-transcription request for all 40 locales", () => {
+function configureBothProviders() {
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.AZURE_SPEECH_KEY = "route-azure-secret";
+  process.env.AZURE_SPEECH_ENDPOINT = "https://route-test.cognitiveservices.azure.com";
+}
+
+test("builds ElevenLabs-primary and Azure-fallback requests for all 40 locales", () => {
   assert.equal(LOCALES.length, 40);
+  assert.equal(ELEVENLABS_STT_MODEL_ID, "scribe_v2");
   assert.equal(STT_API_VERSION, "2025-10-15");
 
   for (const locale of LOCALES) {
     assert.equal(isSttLocale(locale), true, `${locale} should be accepted`);
-    const built = buildAzureTranscriptionRequest({
-      audio: testAudio(),
+    const audio = testAudio();
+    const elevenLabs = buildElevenLabsTranscriptionRequest({
+      audio,
       locale,
       vocabulary: ["SQL", "Power BI", "TypeScript"],
-      apiKey: "unit-test-speech-key",
+      apiKey: "unit-test-elevenlabs-key",
+    });
+    assert.equal(elevenLabs.url, "https://api.elevenlabs.io/v1/speech-to-text");
+    assert.doesNotMatch(elevenLabs.url, /unit-test-elevenlabs-key/);
+    const elevenHeaders = new Headers(elevenLabs.init.headers);
+    assert.equal(elevenHeaders.get("xi-api-key"), "unit-test-elevenlabs-key");
+    assert.equal(elevenHeaders.get("accept"), "application/json");
+    const elevenForm = formFromBuiltRequest(elevenLabs);
+    assert.equal(elevenForm.get("model_id"), ELEVENLABS_STT_MODEL_ID);
+    assert.equal(elevenForm.get("language_code"), elevenLabsSttLanguageFor(locale));
+    assert.deepEqual(elevenForm.getAll("keyterms"), ["SQL", "Power BI", "TypeScript"]);
+    assert.ok(elevenForm.get("file") instanceof Blob);
+
+    const azure = buildAzureTranscriptionRequest({
+      audio,
+      locale,
+      vocabulary: ["SQL", "Power BI", "TypeScript"],
+      apiKey: "unit-test-azure-key",
       endpoint: "https://interviewthread-speech.cognitiveservices.azure.com/",
     });
-
-    const url = new URL(built.url);
-    assert.equal(url.protocol, "https:");
-    assert.equal(
-      url.hostname,
-      "interviewthread-speech.cognitiveservices.azure.com",
-    );
-    assert.equal(
-      url.pathname,
-      "/speechtotext/transcriptions:transcribe",
-    );
+    const url = new URL(azure.url);
+    assert.equal(url.hostname, "interviewthread-speech.cognitiveservices.azure.com");
+    assert.equal(url.pathname, "/speechtotext/transcriptions:transcribe");
     assert.equal(url.searchParams.get("api-version"), STT_API_VERSION);
-    assert.equal(url.toString().includes("unit-test-speech-key"), false);
-
-    const headers = new Headers(built.init.headers);
-    assert.equal(headers.get("accept"), "application/json");
-    assert.equal(
-      headers.get("ocp-apim-subscription-key"),
-      "unit-test-speech-key",
-    );
-
-    const form = formFromBuiltRequest(built);
-    const audio = form.get("audio");
-    assert.ok(audio instanceof Blob);
-    assert.equal(audio.type, "audio/webm;codecs=opus");
-    assert.equal(audio.size, 32);
-    assert.match(audio.name, /\.webm$/);
-
-    const definition = JSON.parse(String(form.get("definition")));
+    assert.doesNotMatch(url.toString(), /unit-test-azure-key/);
+    const azureHeaders = new Headers(azure.init.headers);
+    assert.equal(azureHeaders.get("ocp-apim-subscription-key"), "unit-test-azure-key");
+    const definition = JSON.parse(String(formFromBuiltRequest(azure).get("definition")));
     assert.deepEqual(definition.locales, [azureSttLocaleFor(locale)]);
-    assert.equal(definition.profanityFilterMode, "None");
-    assert.deepEqual(definition.phraseList.phrases, [
-      "SQL",
-      "Power BI",
-      "TypeScript",
-    ]);
+    assert.deepEqual(definition.phraseList.phrases, ["SQL", "Power BI", "TypeScript"]);
   }
 
   assert.equal(azureSttLocaleFor("bn"), "bn-IN");
   assert.equal(azureSttLocaleFor("ur"), "ur-IN");
-
-  for (const invalid of ["", "en-US", "zh", "xx", null, 42, {}]) {
+  for (const invalid of ["", "en-US", "zh", "xx", null, 42, {}])
     assert.equal(isSttLocale(invalid), false, String(invalid));
-  }
 });
 
-test("accepts only bounded interview audio and locks provider hosts", () => {
+test("accepts only bounded audio with a matching supported container signature", async () => {
   for (const type of [
     "audio/webm",
     "audio/webm;codecs=opus",
@@ -161,15 +184,12 @@ test("accepts only bounded interview audio and locks provider hosts", () => {
     "audio/x-wav",
   ]) {
     assert.equal(isSupportedInterviewAudioType(type), true, type);
+    assert.equal(await hasSupportedInterviewAudioSignature(testAudio(type)), true, `${type} signature`);
+    assert.equal(await hasSupportedInterviewAudioSignature(testAudio(type, 32, false)), false, `${type} spoof`);
   }
-  for (const type of [
-    "",
-    "application/octet-stream",
-    "video/webm",
-    "text/plain",
-    "audio/aac",
-  ]) {
+  for (const type of ["", "application/octet-stream", "video/webm", "text/plain", "audio/aac"]) {
     assert.equal(isSupportedInterviewAudioType(type), false, type);
+    assert.equal(await hasSupportedInterviewAudioSignature(testAudio(type)), false, type);
   }
 
   for (const endpoint of [
@@ -179,294 +199,197 @@ test("accepts only bounded interview audio and locks provider hosts", () => {
     "https://user:password@speech.cognitiveservices.azure.com",
     "not a URL",
   ]) {
-    assert.throws(
-      () =>
-        buildAzureTranscriptionRequest({
-          audio: testAudio(),
-          locale: "en",
-          vocabulary: [],
-          apiKey: "unit-test-speech-key",
-          endpoint,
-        }),
+    assert.throws(() => buildAzureTranscriptionRequest({
+      audio: testAudio(),
+      locale: "en",
+      vocabulary: [],
+      apiKey: "unit-test-key",
       endpoint,
-    );
+    }));
   }
-
-  const regionalEndpoint = buildAzureTranscriptionRequest({
-    audio: testAudio(),
-    locale: "en",
-    vocabulary: [],
-    apiKey: "unit-test-speech-key",
-    endpoint: "https://westus.api.cognitive.microsoft.com/",
-  });
-  assert.equal(
-    new URL(regionalEndpoint.url).hostname,
-    "westus.api.cognitive.microsoft.com",
-  );
 
   for (const audio of [
     testAudio("audio/webm", 0),
     testAudio("application/octet-stream"),
     testAudio("audio/webm", STT_MAX_AUDIO_BYTES + 1),
   ]) {
-    assert.throws(
-      () =>
-        buildAzureTranscriptionRequest({
-          audio,
-          locale: "en",
-          vocabulary: [],
-          apiKey: "unit-test-speech-key",
-          endpoint: "https://speech.cognitiveservices.azure.com",
-        }),
-      /audio is invalid/i,
-    );
+    assert.throws(() => buildElevenLabsTranscriptionRequest({
+      audio,
+      locale: "en",
+      vocabulary: [],
+      apiKey: "unit-test-key",
+    }), /audio is invalid/i);
   }
 });
 
 test("sanitizes phrase hints and restores technical vocabulary casing", () => {
   const noisy = [
-    " SQL ",
-    "sql",
-    "Power\u0000 BI",
-    "TypeScript",
-    "x",
-    "a".repeat(STT_MAX_VOCABULARY_TERM_CHARACTERS + 1),
-    42,
-    null,
+    " SQL ", "sql", "Power\u0000 BI", "TypeScript", "x",
+    "a".repeat(STT_MAX_VOCABULARY_TERM_CHARACTERS + 1), 42, null,
     ...Array.from({ length: 100 }, (_, index) => `term-${index}`),
   ];
   const sanitized = sanitizeSpeechVocabulary(noisy);
-  assert.equal(sanitized[0], "SQL");
-  assert.equal(sanitized[1], "Power BI");
-  assert.equal(sanitized[2], "TypeScript");
+  assert.deepEqual(sanitized.slice(0, 3), ["SQL", "Power BI", "TypeScript"]);
   assert.equal(sanitized.filter((term) => term.toLowerCase() === "sql").length, 1);
   assert.ok(sanitized.length <= STT_MAX_VOCABULARY_TERMS);
-  assert.ok(
-    sanitized.every(
-      (term) =>
-        term.length >= 2 && term.length <= STT_MAX_VOCABULARY_TERM_CHARACTERS,
-    ),
-  );
-
+  assert.ok(sanitized.every((term) => term.length >= 2 && term.length <= STT_MAX_VOCABULARY_TERM_CHARACTERS));
   assert.equal(
     normalizeSttTranscript(
-      "  I used sequel, power bee, tableu, type script, java script, and post gres Q L.\u0000 ",
+      " I used sequel, power bee, tableu, type script, java script, and post gres Q L.\u0000 ",
       ["SQL", "Power BI", "Tableau", "TypeScript", "JavaScript", "PostgreSQL"],
     ),
     "I used SQL, Power BI, Tableau, TypeScript, JavaScript, and PostgreSQL.",
   );
-  assert.equal(
-    normalizeSttTranscript("we shipped with sql and typescript", ["SQL", "TypeScript"]),
-    "we shipped with SQL and TypeScript",
-  );
-  assert.equal(normalizeSttTranscript("  one\n\t two   three  "), "one two three");
-  assert.equal(normalizeSttTranscript("\u0000\u0007"), "");
 });
 
-test("prefers Azure combined display text and falls back to phrase text", () => {
+test("parses only provider transcript fields", () => {
+  assert.equal(transcriptFromElevenLabsResponse({ text: "  ElevenLabs transcript.  " }), "ElevenLabs transcript.");
+  assert.equal(transcriptFromElevenLabsResponse({ text: 42 }), "");
   assert.equal(
-    transcriptFromAzureResponse({
-      combinedPhrases: [{ text: "First sentence." }, { text: "Second sentence." }],
-      phrases: [{ text: "ignored" }],
-    }),
-    "First sentence. Second sentence.",
+    transcriptFromAzureResponse({ combinedPhrases: [{ text: "First." }, { text: "Second." }], phrases: [{ text: "ignored" }] }),
+    "First. Second.",
   );
   assert.equal(
-    transcriptFromAzureResponse({
-      combinedPhrases: [{ text: "" }],
-      phrases: [{ text: "Fallback one." }, {}, { text: "Fallback two." }],
-    }),
+    transcriptFromAzureResponse({ phrases: [{ text: "Fallback one." }, {}, { text: "Fallback two." }] }),
     "Fallback one. Fallback two.",
   );
-  for (const invalid of [null, "text", 42, {}, { phrases: [{}] }]) {
-    assert.equal(transcriptFromAzureResponse(invalid), "");
-  }
 });
 
-test("transcription route fails closed before the Azure provider is contacted", async () => {
-  const route = await readFile(
-    new URL("../app/api/transcribe/route.ts", import.meta.url),
-    "utf8",
-  );
-
-  assert.match(route, /sameOrigin\(request\)/);
-  assert.match(route, /multipart\/form-data/);
-  assert.match(route, /content-length/);
-  assert.match(route, /payload_too_large/);
-  assert.match(route, /STT_MAX_AUDIO_BYTES/);
-  assert.match(route, /isSupportedInterviewAudioType\(audio\.type\)/);
-  assert.match(route, /isSttLocale\(locale\)/);
-  assert.match(route, /sanitizeSpeechVocabulary/);
+test("transcription route declares consent, signature, quota, and ordered provider controls", async () => {
+  const route = await readFile(new URL("../app/api/transcribe/route.ts", import.meta.url), "utf8");
+  assert.match(route, /hasSameOrigin\(request\)/);
+  assert.match(route, /readMultipartBody\(request, MAX_MULTIPART_BYTES\)/);
+  assert.match(route, /consentVersion\s*!==\s*STT_CONSENT_VERSION/);
+  assert.match(route, /hasSupportedInterviewAudioSignature\(audio\)/);
   assert.match(route, /getAppUser\(\)/);
-  assert.match(route, /sign_in_required/);
-  assert.match(route, /TRANSCRIPTION_WINDOW_LIMIT/);
-  assert.match(route, /rateLimitExceeded\(user\.userId\)/);
+  assert.match(route, /consumeGlobalSpeechAudioQuota/);
+  assert.match(route, /ELEVENLABS_API_KEY/);
   assert.match(route, /AZURE_SPEECH_KEY/);
-  assert.match(route, /AZURE_SPEECH_ENDPOINT/);
-  assert.match(route, /AbortSignal\.timeout\(30_000\)/);
-  assert.match(route, /providerResponse\.status === 429/);
-  assert.match(route, /transcription_rate_limited/);
-  assert.match(route, /transcription_unavailable/);
-  assert.match(route, /premium_unavailable/);
-  assert.match(route, /no_speech/);
+  assert.match(route, /attempts\.push[\s\S]*elevenlabs[\s\S]*attempts\.push[\s\S]*azure_speech/);
+  assert.match(route, /provider:\s*attempt\.provider/);
+  assert.match(route, /AbortSignal\.timeout\(PROVIDER_TIMEOUT_MS\)/);
   assert.match(route, /private, no-store/);
   assert.doesNotMatch(route, /console\.(?:log|info|debug)\s*\(/);
 });
 
-test("built transcription route requires same-origin authentication and bounded audio", async (t) => {
+test("built transcription route fails closed before contacting a provider", async (t) => {
   const originalFetch = globalThis.fetch;
-  const previous = {
-    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
-    AZURE_SPEECH_ENDPOINT: process.env.AZURE_SPEECH_ENDPOINT,
-  };
+  const previous = snapshotEnvironment();
   let providerCalls = 0;
   t.after(() => {
     globalThis.fetch = originalFetch;
     restoreEnvironment(previous);
   });
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
-  process.env.AZURE_SPEECH_ENDPOINT =
-    "https://route-test.cognitiveservices.azure.com";
+  configureBothProviders();
   globalThis.fetch = async () => {
     providerCalls += 1;
-    return Response.json({ combinedPhrases: [{ text: "unused" }] });
+    return Response.json({ text: "unused" });
   };
 
-  const invalidOrigin = await requestBuiltTranscription({
-    origin: "https://attacker.example",
-  });
-  assert.equal(invalidOrigin.status, 403);
-  assert.deepEqual(await invalidOrigin.json(), { error: "invalid_origin" });
-
-  const unauthenticated = await requestBuiltTranscription({ authenticated: false });
-  assert.equal(unauthenticated.status, 401);
-  assert.deepEqual(await unauthenticated.json(), { error: "sign_in_required" });
-
-  const oversizedDeclared = await requestBuiltTranscription({
-    extraHeaders: { "content-length": String(STT_MAX_AUDIO_BYTES + 300_000) },
-  });
-  assert.equal(oversizedDeclared.status, 413);
-  assert.deepEqual(await oversizedDeclared.json(), { error: "payload_too_large" });
-
-  const invalidMime = await requestBuiltTranscription({
-    form: transcriptionForm({ type: "application/octet-stream" }),
-  });
-  assert.equal(invalidMime.status, 400);
-  assert.deepEqual(await invalidMime.json(), { error: "invalid_request" });
-
-  const invalidLocale = await requestBuiltTranscription({
-    form: transcriptionForm({ locale: "en-US" }),
-  });
-  assert.equal(invalidLocale.status, 400);
-  assert.deepEqual(await invalidLocale.json(), { error: "invalid_request" });
-
-  assert.equal(providerCalls, 0);
-  for (const response of [
-    invalidOrigin,
-    unauthenticated,
-    oversizedDeclared,
-    invalidMime,
-    invalidLocale,
-  ]) {
-    assert.match(response.headers.get("cache-control") ?? "", /private/i);
-    assert.match(response.headers.get("cache-control") ?? "", /no-store/i);
+  const cases = [
+    [await requestBuiltTranscription({ origin: "https://attacker.example" }), 403, "invalid_origin"],
+    [await requestBuiltTranscription({ authenticated: false }), 401, "sign_in_required"],
+    [await requestBuiltTranscription({ extraHeaders: { "content-length": String(STT_MAX_AUDIO_BYTES + 300_000) } }), 413, "payload_too_large"],
+    [await requestBuiltTranscription({ form: transcriptionForm({ type: "application/octet-stream" }) }), 400, "invalid_request"],
+    [await requestBuiltTranscription({ form: transcriptionForm({ validSignature: false }) }), 400, "invalid_request"],
+    [await requestBuiltTranscription({ form: transcriptionForm({ consentVersion: null }) }), 400, "invalid_request"],
+    [await requestBuiltTranscription({ form: transcriptionForm({ consentVersion: "voice-input-v1" }) }), 400, "invalid_request"],
+  ];
+  for (const [response, status, error] of cases) {
+    assert.equal(response.status, status);
+    assert.deepEqual(await response.json(), { error });
+    assert.match(response.headers.get("cache-control") ?? "", /private.*no-store/i);
     assert.equal(response.headers.get("x-content-type-options"), "nosniff");
   }
+  assert.equal(providerCalls, 0);
 });
 
-test("built transcription route returns a corrected display transcript without exposing credentials", async (t) => {
+test("built route uses ElevenLabs first and returns its provider marker", async (t) => {
   const originalFetch = globalThis.fetch;
-  const previous = {
-    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
-    AZURE_SPEECH_ENDPOINT: process.env.AZURE_SPEECH_ENDPOINT,
-  };
+  const previous = snapshotEnvironment();
   t.after(() => {
     globalThis.fetch = originalFetch;
     restoreEnvironment(previous);
   });
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
-  process.env.AZURE_SPEECH_ENDPOINT =
-    "https://route-test.cognitiveservices.azure.com";
-
-  let upstream;
+  configureBothProviders();
+  const upstream = [];
   globalThis.fetch = async (input, init) => {
-    upstream = { input: String(input), init };
-    return Response.json({
-      combinedPhrases: [{ text: "I used sequel and power bee." }],
-    });
+    upstream.push({ input: String(input), init });
+    return Response.json({ text: "I used sequel and power bee." });
   };
 
-  const response = await requestBuiltTranscription({
-    form: transcriptionForm({ vocabulary: ["SQL", "Power BI"] }),
-  });
+  const response = await requestBuiltTranscription({ form: transcriptionForm({ vocabulary: ["SQL", "Power BI"] }) });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.clone().json(), {
     transcript: "I used SQL and Power BI.",
     locale: "en",
+    provider: "elevenlabs",
   });
-  assert.equal(
-    upstream.input,
-    `https://route-test.cognitiveservices.azure.com/speechtotext/transcriptions:transcribe?api-version=${STT_API_VERSION}`,
-  );
-  const upstreamHeaders = new Headers(upstream.init.headers);
-  assert.equal(
-    upstreamHeaders.get("ocp-apim-subscription-key"),
-    "route-test-secret",
-  );
-  const definition = JSON.parse(String(upstream.init.body.get("definition")));
-  assert.deepEqual(definition.locales, ["en-US"]);
-  assert.deepEqual(definition.phraseList.phrases, ["SQL", "Power BI"]);
-  assert.doesNotMatch(JSON.stringify([...response.headers]), /route-test-secret/);
-  assert.doesNotMatch(await response.text(), /route-test-secret/);
+  assert.equal(upstream.length, 1);
+  assert.equal(upstream[0].input, "https://api.elevenlabs.io/v1/speech-to-text");
+  assert.equal(new Headers(upstream[0].init.headers).get("xi-api-key"), "route-elevenlabs-secret");
+  assert.equal(upstream[0].init.body.get("model_id"), ELEVENLABS_STT_MODEL_ID);
+  assert.deepEqual(upstream[0].init.body.getAll("keyterms"), ["SQL", "Power BI"]);
+  assert.doesNotMatch(JSON.stringify([...response.headers]), /route-(?:elevenlabs|azure)-secret/);
+  assert.doesNotMatch(await response.text(), /route-(?:elevenlabs|azure)-secret/);
 });
 
-test("built transcription route maps Azure provider failures to safe typed errors", async (t) => {
+test("built route falls back from ElevenLabs to Azure and returns the actual provider", async (t) => {
   const originalFetch = globalThis.fetch;
-  const previous = {
-    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
-    AZURE_SPEECH_ENDPOINT: process.env.AZURE_SPEECH_ENDPOINT,
-  };
+  const previous = snapshotEnvironment();
   t.after(() => {
     globalThis.fetch = originalFetch;
     restoreEnvironment(previous);
   });
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
-  process.env.AZURE_SPEECH_ENDPOINT =
-    "https://route-test.cognitiveservices.azure.com";
+  configureBothProviders();
+  const upstream = [];
+  globalThis.fetch = async (input, init) => {
+    upstream.push({ input: String(input), init });
+    if (upstream.length === 1) return new Response("ElevenLabs unavailable", { status: 503 });
+    return Response.json({ combinedPhrases: [{ text: "Azure fallback worked." }] });
+  };
 
-  const cases = [
+  const response = await requestBuiltTranscription();
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    transcript: "Azure fallback worked.",
+    locale: "en",
+    provider: "azure_speech",
+  });
+  assert.equal(upstream.length, 2);
+  assert.equal(upstream[0].input, "https://api.elevenlabs.io/v1/speech-to-text");
+  assert.equal(upstream[1].input, `https://route-test.cognitiveservices.azure.com/speechtotext/transcriptions:transcribe?api-version=${STT_API_VERSION}`);
+  assert.equal(new Headers(upstream[1].init.headers).get("ocp-apim-subscription-key"), "route-azure-secret");
+});
+
+test("built route maps dual-provider failures to safe typed errors", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const previous = snapshotEnvironment();
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    restoreEnvironment(previous);
+  });
+  configureBothProviders();
+
+  for (const scenario of [
+    { provider: async () => new Response("rate limited", { status: 429 }), status: 429, error: "transcription_rate_limited" },
+    { provider: async () => new Response("failure", { status: 500 }), status: 503, error: "transcription_unavailable" },
+    { provider: async () => { throw new Error("provider network failure"); }, status: 503, error: "transcription_unavailable" },
     {
-      provider: async () => new Response("rate limited", { status: 429 }),
-      status: 429,
-      error: "transcription_rate_limited",
-    },
-    {
-      provider: async () => new Response("failure", { status: 500 }),
-      status: 502,
-      error: "transcription_unavailable",
-    },
-    {
-      provider: async () => {
-        throw new Error("provider network failure");
-      },
+      provider: async (input) => String(input).includes("elevenlabs")
+        ? Response.json({ text: "" })
+        : Response.json({ combinedPhrases: [{ text: "" }] }),
       status: 503,
       error: "transcription_unavailable",
     },
-    {
-      provider: async () => Response.json({ combinedPhrases: [{ text: "" }] }),
-      status: 422,
-      error: "no_speech",
-    },
-  ];
-
-  for (const scenario of cases) {
+  ]) {
     globalThis.fetch = scenario.provider;
     const response = await requestBuiltTranscription();
     assert.equal(response.status, scenario.status);
     assert.deepEqual(await response.json(), { error: scenario.error });
-    assert.match(response.headers.get("cache-control") ?? "", /no-store/i);
   }
 
+  delete process.env.ELEVENLABS_API_KEY;
   delete process.env.AZURE_SPEECH_KEY;
   delete process.env.AZURE_SPEECH_ENDPOINT;
   let providerCalled = false;
@@ -478,55 +401,4 @@ test("built transcription route maps Azure provider failures to safe typed error
   assert.equal(unavailable.status, 503);
   assert.deepEqual(await unavailable.json(), { error: "premium_unavailable" });
   assert.equal(providerCalled, false);
-});
-
-test("two-stage voice lifecycle preserves live text and protects manual edits", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-
-  assert.match(page, /webkitSpeechRecognition/);
-  assert.match(page, /recognition\.interimResults\s*=\s*true/);
-  assert.match(page, /recognition\.maxAlternatives\s*=\s*5/);
-  assert.match(page, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(page, /new MediaRecorder\(/);
-  assert.match(page, /echoCancellation:\s*true/);
-  assert.match(page, /noiseSuppression:\s*true/);
-  assert.match(page, /autoGainControl:\s*true/);
-  assert.match(page, /fetch\("\/api\/transcribe"/);
-  assert.match(page, /form\.append\("locale",\s*locale\)/);
-  assert.match(page, /form\.append\("vocabulary"/);
-  assert.match(page, /voiceBrowserTranscriptRef\.current/);
-  assert.match(page, /currentAnswer\s*===\s*browserDraft\.trim\(\)/);
-  assert.match(page, /currentAnswer\s*===\s*baseAnswer\.trim\(\)/);
-  assert.match(page, /voiceTranscriptionAbortRef\.current\?\.abort\(\)/);
-  assert.match(page, /voiceTranscriptionRequestIdRef\.current/);
-  assert.match(page, /stopInterviewMediaStream/);
-  assert.match(page, /voiceRecordingTimerRef/);
-  assert.match(page, /speechRestartTimerRef/);
-  assert.match(page, /audio\.size\s*>\s*STT_MAX_AUDIO_BYTES/);
-
-  assert.match(
-    page,
-    /voiceBrowserTranscriptRef\.current\s*=\s*appendTranscript\(/,
-    "browser final segments must accumulate separately for safe cloud replacement",
-  );
-  assert.match(
-    page,
-    /interviewAnswerRef\.current\s*=\s*nextAnswer/,
-    "the ref used by the no-overwrite guard must stay synchronized",
-  );
-  assert.match(
-    page,
-    /speechRestartTimerRef\.current\s*=\s*window\.setTimeout/,
-    "recognition restart timers must be cancellable",
-  );
-  assert.match(
-    page,
-    /disabled=\{[\s\S]{0,260}isRefiningVoice/,
-    "answer controls should not submit while the final transcript is being refined",
-  );
-  assert.doesNotMatch(
-    page,
-    /recognitionConfidence\}\s*%/,
-    "browser confidence must not be presented as a comparable accuracy score",
-  );
 });

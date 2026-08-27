@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
   readJsonBody,
+  readMultipartBody,
   validateJsonRequest,
 } from "../app/api/request-security.ts";
 
@@ -83,6 +84,21 @@ test("bounded JSON reader rejects oversized actual bodies without Content-Length
     body: JSON.stringify({ message: "a".repeat(4 * 1024) }),
   });
   const result = await readJsonBody(request, 1024);
+  assert.equal(result.ok, false);
+  assert.equal(result.status, 413);
+});
+
+test("bounded multipart reader rejects oversized actual bodies without Content-Length", async () => {
+  const request = new Request(`${SITE_ORIGIN}/api/transcribe`, {
+    method: "POST",
+    headers: {
+      "content-type": "multipart/form-data; boundary=interviewthread-test",
+      origin: SITE_ORIGIN,
+    },
+    body: new Uint8Array(4 * 1024),
+  });
+  assert.equal(request.headers.get("content-length"), null);
+  const result = await readMultipartBody(request, 1024);
   assert.equal(result.ok, false);
   assert.equal(result.status, 413);
 });
