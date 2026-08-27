@@ -52,3 +52,10 @@ export const SPEECH_STATUS_COPY: Record<LocaleCode, SpeechStatusCopy> = {
 export function speechStatusCopyFor(locale: LocaleCode): SpeechStatusCopy {
   return SPEECH_STATUS_COPY[locale] ?? SPEECH_STATUS_COPY.en;
 }
+
+export function speechModelDisplayName(model: string) {
+  if (model === "eleven_v3") return "ElevenLabs v3";
+  if (model === "azure-dragon-hd-omni") return "Azure Dragon HD Omni";
+  if (model === "azure-standard-neural") return "Azure Neural";
+  return "InterviewThread cloud voice";
+}

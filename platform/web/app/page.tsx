@@ -76,7 +76,14 @@ import {
   speechRateFor,
 } from "./interview-speech";
 import { normalizeTtsText } from "./interview-tts";
-import { speechStatusCopyFor } from "./interview-speech-status-copy";
+import {
+  speechModelDisplayName,
+  speechStatusCopyFor,
+} from "./interview-speech-status-copy";
+import {
+  CLOUD_READ_ALOUD_CONSENT_KEY,
+  cloudReadAloudNoticeFor,
+} from "./speech-privacy-copy";
 import {
   normalizeSttTranscript,
   STT_MAX_AUDIO_BYTES,
@@ -2995,8 +3002,12 @@ export default function Home({
               setInterviewTurn(session.turn || 0);
             if (Number.isInteger(session.topicIndex))
               setInterviewTopicIndex(Math.max(0, session.topicIndex || 0));
-            if (typeof session.autoRead === "boolean")
-              setAutoReadInterviewQuestions(session.autoRead);
+            if (
+              session.autoRead === true &&
+              window.localStorage.getItem(CLOUD_READ_ALOUD_CONSENT_KEY) ===
+                "accepted"
+            )
+              setAutoReadInterviewQuestions(true);
             if (session.scores) setInterviewScores(session.scores);
             if (Array.isArray(session.scoreHistory))
               setInterviewScoreHistory(session.scoreHistory.slice(-20));
@@ -4454,7 +4465,8 @@ export default function Home({
         return;
       const speechModel =
         response.headers.get("x-interviewthread-speech-model") ||
-        "azure-neural";
+        "cloud-voice";
+      const speechModelName = speechModelDisplayName(speechModel);
       const activeAudioContext =
         unlockedAudioContext ||
         (interviewAudioContextRef.current?.state === "running"
@@ -4483,7 +4495,7 @@ export default function Home({
           };
           source.start();
           setVoiceMessage(
-            `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModel}`,
+            `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModelName}`,
           );
           return;
         } catch {
@@ -4511,7 +4523,7 @@ export default function Home({
         return;
       }
       setVoiceMessage(
-        `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModel}`,
+        `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModelName}`,
       );
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -4543,7 +4555,7 @@ export default function Home({
         setIsSpeaking(true);
         await readyAudio.play();
         setVoiceMessage(
-          `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${interviewSpeechModelRef.current || "azure-neural"}`,
+          `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModelDisplayName(interviewSpeechModelRef.current || "cloud-voice")}`,
         );
         return;
       } catch {
@@ -7207,12 +7219,32 @@ export default function Home({
                         checked={autoReadInterviewQuestions}
                         onChange={(event) => {
                           const enabled = event.target.checked;
-                          if (enabled) void unlockInterviewAudioContext();
+                          if (enabled) {
+                            const alreadyAccepted =
+                              window.localStorage.getItem(
+                                CLOUD_READ_ALOUD_CONSENT_KEY,
+                              ) === "accepted";
+                            if (
+                              !alreadyAccepted &&
+                              !window.confirm(
+                                `${cloudReadAloudNoticeFor(locale)}\n\n${interviewFlow.autoRead}?`,
+                              )
+                            )
+                              return;
+                            window.localStorage.setItem(
+                              CLOUD_READ_ALOUD_CONSENT_KEY,
+                              "accepted",
+                            );
+                            void unlockInterviewAudioContext();
+                          }
                           setAutoReadInterviewQuestions(enabled);
                         }}
                       />
                       <span>{interviewFlow.autoRead}</span>
                     </label>
+                    <small className="voice-disclosure">
+                      {cloudReadAloudNoticeFor(locale)}
+                    </small>
                   </form>
                 </section>
 

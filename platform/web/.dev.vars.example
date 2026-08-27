@@ -14,11 +14,24 @@ GITHUB_CLIENT_SECRET=
 LINKEDIN_CLIENT_ID=
 LINKEDIN_CLIENT_SECRET=
 
-# Optional server-side Microsoft Azure Speech. Keep the subscription key private.
-# Dragon HD Omni read-aloud needs the key and region. Signed-in final transcript
-# correction needs the key and resource endpoint. Without the required values,
-# voice answers keep the browser/device transcript and read-aloud uses the
-# browser/device voice.
+# Optional server-side ElevenLabs question read-aloud. Configure a natural
+# female interviewer voice in ElevenLabs and keep both values private. They
+# must never use a NEXT_PUBLIC_ prefix or appear in browser code.
+ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_ID=
+# JSON object for reviewed native per-locale voices. ELEVENLABS_VOICE_ID is the
+# English baseline only; a missing/invalid non-English entry safely falls back
+# to Azure instead of reusing an English-accented voice.
+ELEVENLABS_VOICE_IDS_JSON={}
+# Server-side daily cloud TTS character ceiling. The default is 50000 when
+# unset; also configure a provider-side spending limit for a hard billing cap.
+TTS_DAILY_CHARACTER_LIMIT=50000
+
+# Optional server-side Microsoft Azure Speech. Azure Dragon HD Omni and the
+# locale's standard Neural voice are the cloud fallbacks for read-aloud.
+# Signed-in final transcript correction also needs the Azure key and resource
+# endpoint. Without any cloud provider, the browser/device voice remains the
+# explicitly labelled final fallback.
 AZURE_SPEECH_KEY=
 AZURE_SPEECH_REGION=
 AZURE_SPEECH_ENDPOINT=https://replace-with-resource.cognitiveservices.azure.com

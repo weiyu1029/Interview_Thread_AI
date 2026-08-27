@@ -11,7 +11,7 @@ This runbook covers the Cloudflare-hosted InterviewThread production system at
 | Frontend and backend | Cloudflare Sites Worker | `platform/web` |
 | Relational storage | Cloudflare D1 | reviewed migrations and D1 backups |
 | OAuth | Google, GitHub, LinkedIn | provider console + encrypted Sites variables |
-| Speech | Azure Speech | encrypted Sites variables |
+| Speech | ElevenLabs v3, with Azure Speech and device fallback | provider console + Sites variables |
 | Website email | Resend | verified sending subdomain + encrypted Sites key |
 | Source and CI | GitHub | protected `main` branch |
 
@@ -28,6 +28,9 @@ Non-secret values:
 - `EMAIL_FROM=InterviewThread Website <notifications@send.interviewthreadai.com>`
 - `EMAIL_FEEDBACK_TO=feedback@interviewthreadai.com`
 - `EMAIL_PARTNERSHIPS_TO=partnerships@interviewthreadai.com`
+- `ELEVENLABS_VOICE_ID=<reviewed default multilingual voice ID>`
+- `ELEVENLABS_VOICE_IDS_JSON=<optional JSON map of InterviewThread locale to reviewed voice ID>`
+- `TTS_DAILY_CHARACTER_LIMIT=<global UTC-day character budget; default 50000>`
 - `AZURE_SPEECH_REGION=<Azure Speech resource region>`
 - `AZURE_SPEECH_ENDPOINT=https://<resource>.cognitiveservices.azure.com`
 
@@ -35,10 +38,139 @@ Encrypted secrets:
 
 - `AUTH_SECRET`
 - OAuth client IDs and client secrets for every enabled provider
+- `ELEVENLABS_API_KEY` when ElevenLabs read-aloud is enabled
 - `AZURE_SPEECH_KEY` when managed speech is enabled
 - `RESEND_API_KEY` when background email is enabled
 
 Never print or copy secret values into tickets, chat, logs or CI output.
+
+## Natural read-aloud production configuration
+
+The cloud read-aloud order is deliberately fixed:
+
+1. ElevenLabs `eleven_v3` with the locale-specific voice ID when configured.
+2. Azure `en-US-Ava:DragonHDOmniLatestNeural` with the requested language.
+3. The reviewed Azure standard neural voice for that locale.
+4. Browser or device speech, initiated by the client only after the cloud API
+   cannot return audio.
+
+`ELEVENLABS_VOICE_ID` is the required English baseline voice. A single voice
+does not guarantee native pronunciation in every language, so production must
+provide reviewed native voices in `ELEVENLABS_VOICE_IDS_JSON`, for example
+`{"en":"<voice-id>","zh-TW":"<voice-id>","ja":"<voice-id>"}`. Only use a
+voice after a native or near-native reviewer has approved short, long and
+technical InterviewThread prompts. Malformed JSON and unrecognized locale
+entries for non-English locales safely fall back to Azure rather than reusing
+an English-accented voice.
+
+Create the ElevenLabs key at
+[API Keys](https://elevenlabs.io/app/developers/api-keys). Restrict it to
+text-to-speech, set the smallest practical provider credit limit, and keep it
+in the encrypted Sites secret `ELEVENLABS_API_KEY`. Choose and audition voices
+in the [Voice Library](https://elevenlabs.io/app/voice-library). Do not expose
+the key in a `NEXT_PUBLIC_*` variable, a browser request, a source file or a
+deployment transcript.
+
+The application enforces a second cost boundary in D1. It counts normalized
+characters in `speech_character_usage_windows` before any provider call and
+returns HTTP 429 after `TTS_DAILY_CHARACTER_LIMIT` is reached. The value must
+remain lower than the provider account's affordable daily allowance. Its
+accepted range is 1,000–5,000,000 characters; an absent or invalid value uses
+50,000. Keep the provider-side credit limit enabled because the application
+limit is defense in depth, not a billing guarantee. The existing ten-minute
+request limits also remain in force: 30 per guest, 100 per signed-in user and
+300 globally.
+
+Azure is an independent fallback and also powers transcript correction. Keep
+`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` and `AZURE_SPEECH_ENDPOINT`
+configured even when ElevenLabs is healthy. If neither cloud provider is
+configured, the endpoint returns a private, non-cacheable 503 and tells the
+client to use device speech.
+
+### Provider privacy and retention
+
+Read-aloud sends the normalized current question and selected language to
+ElevenLabs. If it fails, the same limited question may be sent to Microsoft.
+It does not send the complete resume, complete job description, answer audio
+or transcript as part of the read-aloud request. Tailored question text can,
+however, contain short role, evidence or gap terms derived from user-supplied
+materials and must be treated as user data.
+
+The Worker does not store generated audio and returns `private, no-store`, but
+that response header does not control provider-side retention. ElevenLabs and
+Microsoft process and may retain requests according to the account settings,
+plan and their current privacy terms. Do not claim zero retention unless it is
+enabled for the actual production account and verified. Any provider or
+retention change requires a privacy-page review before deployment.
+
+### Sites configuration sequence
+
+1. Record the current deployed Sites version and environment revision so both
+   code and configuration can be restored independently.
+2. Save the non-secret voice IDs, optional locale map, Azure region/endpoint
+   and daily character cap as Sites configuration values.
+3. Save `ELEVENLABS_API_KEY` and `AZURE_SPEECH_KEY` as encrypted Sites
+   secrets. Enter secrets directly in the trusted configuration UI or secret
+   command; never paste them into chat or a shell history.
+4. Set `APP_RELEASE` to the exact reviewed Git SHA.
+5. Build that SHA, save an immutable Sites version and deploy it. Do not run a
+   database migration for this release; the quota tables are created
+   idempotently by the application.
+6. Run the canary below before announcing availability.
+
+### Speech canary and acceptance gate
+
+Run the canary from the public origin. Use neutral test text rather than a real
+resume or interview answer:
+
+```sh
+curl -sS -D /tmp/interviewthread-speech.headers \
+  -o /tmp/interviewthread-speech.mp3 \
+  -X POST https://interviewthreadai.com/api/speech \
+  -H 'Origin: https://interviewthreadai.com' \
+  -H 'Content-Type: application/json' \
+  --data '{"text":"Tell me about a project where you made a difficult technical decision.","locale":"en"}'
+```
+
+The response must be HTTP 200, playable audio, `private, no-store`, and include
+these safe diagnostic headers:
+
+- `X-InterviewThread-Speech-Provider: elevenlabs`
+- `X-InterviewThread-Speech-Model: eleven_v3`
+- `X-InterviewThread-Speech-Fallback: none`
+- `X-Request-ID: <random UUID>`
+
+Repeat with English, Traditional Chinese, Japanese and one right-to-left
+language, then with a short prompt, a long prompt and a prompt containing role
+and technical terminology. A native or near-native reviewer must approve
+pronunciation, pacing, sentence stress and lack of truncation. Also verify the
+manual read button, automatic question read-aloud, replay/cancel behavior and
+device fallback on both mobile and desktop. Provider-failure tests belong in a
+non-production environment; do not intentionally invalidate a production key.
+
+For the first 15 minutes after deployment, watch the structured `api_speech`
+events by release. The accepted log fields are provider, outcome, status,
+duration, request ID and release only. A normal primary response records
+`provider=elevenlabs`, `outcome=ok`, `status=200`; Azure responses identify
+`provider=azure_speech`. Do not log prompt text, locale-derived career content,
+audio, headers, account identifiers or raw provider errors.
+
+### Speech rollback and provider isolation
+
+- If ElevenLabs is degraded but Azure succeeds, remove or disable only the
+  ElevenLabs secret through a reviewed Sites environment revision. Re-run the
+  canary and confirm `azure_speech` with `azure-dragon-hd-omni`; the feature can
+  remain available while the primary provider is investigated.
+- If the Azure HD attempt fails, the same request automatically tries the
+  locale's Azure standard neural voice. If all cloud attempts fail, the client
+  uses device speech and the API reports a bounded error/fallback header.
+- If the release causes errors, privacy regression, unbounded spend, broken
+  playback or incorrect language selection, deploy the previously recorded
+  immutable Sites version and restore its matching environment revision.
+  Rolling back code alone does not roll back secrets or configuration.
+- After rollback, repeat the public-origin canary, verify the account page and
+  check that the D1 health endpoint remains healthy. Preserve only safe request
+  IDs and aggregate metrics for the incident review.
 
 ## Release checklist
 

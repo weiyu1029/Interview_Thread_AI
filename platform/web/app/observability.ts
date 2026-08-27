@@ -41,6 +41,7 @@ export const OBSERVABILITY_PROVIDERS = [
   "google",
   "github",
   "linkedin",
+  "elevenlabs",
   "azure_speech",
   "resend",
   "greenhouse",

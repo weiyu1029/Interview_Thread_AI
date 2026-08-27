@@ -3,25 +3,36 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { LANGUAGES } from "../app/i18n.ts";
-import { consumeGlobalSpeechQuota } from "../app/speech-quota.ts";
+import {
+  consumeGlobalSpeechCharacterQuota,
+  consumeGlobalSpeechQuota,
+} from "../app/speech-quota.ts";
 import {
   TTS_MAX_CHARACTERS,
   TTS_MODEL_ID,
   TTS_FALLBACK_MODEL_ID,
+  TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
   azureStandardVoiceForLocale,
   azureVoiceForLocale,
+  buildElevenLabsSpeechRequest,
   buildAzureSpeechRequest,
   buildAzureStandardSpeechRequest,
+  elevenLabsLanguageForLocale,
+  elevenLabsVoiceIdForLocale,
+  isElevenLabsVoiceId,
   isTtsLocale,
+  normalizeTechnicalTermsForSpeech,
   normalizeTtsText,
 } from "../app/interview-tts.ts";
 
 const LOCALES = LANGUAGES.map(([locale]) => locale);
 const SITE_ORIGIN = "https://interviewthread.example";
+const TEST_ELEVENLABS_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
 let builtWorkerPromise;
 
-function createSpeechQuotaDb(initialCount = 0) {
+function createSpeechQuotaDb(initialCount = 0, initialCharacterCount = 0) {
   const counts = new Map();
+  const characterCounts = new Map();
   return {
     prepare(sql) {
       let bindings = [];
@@ -37,9 +48,24 @@ function createSpeechQuotaDb(initialCount = 0) {
               if (key < cutoff) counts.delete(key);
             }
           }
+          if (/DELETE FROM speech_character_usage_windows/i.test(sql)) {
+            const cutoff = Number(bindings[0]);
+            for (const key of characterCounts.keys()) {
+              if (key < cutoff) characterCounts.delete(key);
+            }
+          }
           return { success: true };
         },
         async first() {
+          if (/INSERT INTO speech_character_usage_windows/i.test(sql)) {
+            const windowStart = Number(bindings[0]);
+            const characters = Number(bindings[1]);
+            const next =
+              (characterCounts.get(windowStart) ?? initialCharacterCount) +
+              characters;
+            characterCounts.set(windowStart, next);
+            return { character_count: next };
+          }
           if (!/INSERT INTO speech_usage_windows/i.test(sql)) return null;
           const windowStart = Number(bindings[0]);
           const next = (counts.get(windowStart) ?? initialCount) + 1;
@@ -137,10 +163,11 @@ function restoreEnvironment(previous) {
   }
 }
 
-test("builds a bounded Azure Speech request for every supported locale", async () => {
+test("builds bounded ElevenLabs v3 and Azure fallback requests for all 40 locales", async () => {
   assert.equal(LOCALES.length, 40);
-  assert.equal(TTS_MODEL_ID, "azure-dragon-hd-omni");
-  assert.equal(TTS_FALLBACK_MODEL_ID, "azure-standard-neural");
+  assert.equal(TTS_MODEL_ID, "eleven_v3");
+  assert.equal(TTS_FALLBACK_MODEL_ID, "azure-dragon-hd-omni");
+  assert.equal(TTS_FINAL_CLOUD_FALLBACK_MODEL_ID, "azure-standard-neural");
   assert.ok(
     Number.isInteger(TTS_MAX_CHARACTERS) &&
       TTS_MAX_CHARACTERS >= 800 &&
@@ -150,6 +177,31 @@ test("builds a bounded Azure Speech request for every supported locale", async (
 
   for (const locale of LOCALES) {
     assert.equal(isTtsLocale(locale), true, `${locale} should be accepted`);
+    const elevenLabs = requestParts(
+      buildElevenLabsSpeechRequest({
+        apiKey: "test-elevenlabs-key",
+        voiceId: TEST_ELEVENLABS_VOICE_ID,
+        locale,
+        text: "Explain your strongest SQL example.",
+      }),
+    );
+    const elevenLabsBody = JSON.parse(await elevenLabs.body);
+    assert.equal(
+      elevenLabs.url,
+      `https://api.elevenlabs.io/v1/text-to-speech/${TEST_ELEVENLABS_VOICE_ID}/stream?output_format=mp3_44100_128`,
+    );
+    assert.doesNotMatch(elevenLabs.url, /test-elevenlabs-key/);
+    assert.equal(elevenLabs.method, "POST");
+    assert.equal(elevenLabs.headers.get("xi-api-key"), "test-elevenlabs-key");
+    assert.equal(elevenLabs.headers.get("content-type"), "application/json");
+    assert.equal(elevenLabsBody.model_id, "eleven_v3");
+    assert.equal(elevenLabsBody.language_code, elevenLabsLanguageForLocale(locale));
+    assert.equal(elevenLabsBody.voice_settings.stability, 0.5);
+    assert.deepEqual(elevenLabsBody.voice_settings, { stability: 0.5 });
+    assert.doesNotMatch(elevenLabsBody.text, /^\[[^\]]+\]/);
+    assert.match(elevenLabsBody.text, /strongest S Q L example/);
+    assert.doesNotMatch(elevenLabsBody.text, /<speak|<voice/i);
+
     const voice = azureVoiceForLocale(locale);
     assert.equal(typeof voice, "string", locale);
     assert.equal(voice, "en-US-Ava:DragonHDOmniLatestNeural");
@@ -185,6 +237,41 @@ test("builds a bounded Azure Speech request for every supported locale", async (
   }
 });
 
+test("uses locale-native ElevenLabs voices and never reuses the English default for other locales", () => {
+  assert.equal(isElevenLabsVoiceId(TEST_ELEVENLABS_VOICE_ID), true);
+  assert.equal(isElevenLabsVoiceId("../unsafe"), false);
+  const localeMap = JSON.stringify({
+    en: "21m00Tcm4TlvDq8ikWAM",
+    "zh-TW": "XB0fDUnXU5powFXDhCwa",
+    ja: "../unsafe",
+  });
+  assert.equal(
+    elevenLabsVoiceIdForLocale("en", TEST_ELEVENLABS_VOICE_ID, localeMap),
+    "21m00Tcm4TlvDq8ikWAM",
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("zh-TW", TEST_ELEVENLABS_VOICE_ID, localeMap),
+    "XB0fDUnXU5powFXDhCwa",
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("ja", TEST_ELEVENLABS_VOICE_ID, localeMap),
+    null,
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("en", TEST_ELEVENLABS_VOICE_ID, "not-json"),
+    TEST_ELEVENLABS_VOICE_ID,
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("zh-TW", TEST_ELEVENLABS_VOICE_ID, "not-json"),
+    null,
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("ja", TEST_ELEVENLABS_VOICE_ID, undefined),
+    null,
+  );
+  assert.equal(elevenLabsVoiceIdForLocale("en", "unsafe", localeMap), null);
+});
+
 test("normalizes and SSML-escapes speech text without reducing a question to an acronym", async () => {
   const source = `## Hiring manager\n\n請用你最有力的 **SQL** 經驗帶我走過一次。\u0000`;
   const normalized = normalizeTtsText(source);
@@ -199,6 +286,10 @@ test("normalizes and SSML-escapes speech text without reducing a question to an 
 
   assert.equal(normalizeTtsText("  Tell   me\nabout\tPython.  "), "Tell me about Python.");
   assert.equal(normalizeTtsText("\u0000\u0007"), "");
+  assert.equal(
+    normalizeTechnicalTermsForSpeech("Compare C++, API, SQL, and PostgreSQL."),
+    "Compare C plus plus, A P I, S Q L, and PostgreSQL.",
+  );
 
   const oversized = normalizeTtsText("a".repeat(20_000));
   assert.ok(oversized.length > 0, "normalization should retain usable text");
@@ -239,6 +330,9 @@ test("normalizes and SSML-escapes speech text without reducing a question to an 
 test("speech route streams private audio and never exposes provider credentials", async (t) => {
   const originalFetch = globalThis.fetch;
   const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
     AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
     AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
   };
@@ -247,7 +341,12 @@ test("speech route streams private audio and never exposes provider credentials"
     restoreEnvironment(previous);
   });
 
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  process.env.ELEVENLABS_VOICE_IDS_JSON = JSON.stringify({
+    ja: "21m00Tcm4TlvDq8ikWAM",
+  });
+  process.env.AZURE_SPEECH_KEY = "route-azure-secret";
   process.env.AZURE_SPEECH_REGION = "eastus";
   let upstream;
   globalThis.fetch = async (input, init) => {
@@ -272,23 +371,34 @@ test("speech route streams private audio and never exposes provider credentials"
   assert.ok(Number(response.headers.get("content-length") ?? 1) !== 0);
   assert.equal(
     response.headers.get("x-interviewthread-speech-model"),
-    "azure-dragon-hd-omni",
+    "eleven_v3",
+  );
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-provider"),
+    "elevenlabs",
+  );
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-fallback"),
+    "none",
   );
   assert.equal(
     upstream.input,
-    "https://eastus.tts.speech.microsoft.com/cognitiveservices/v1",
+    "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream?output_format=mp3_44100_128",
   );
   assert.equal(
-    new Headers(upstream.init.headers).get("ocp-apim-subscription-key"),
-    "route-test-secret",
+    new Headers(upstream.init.headers).get("xi-api-key"),
+    "route-elevenlabs-secret",
   );
-  assert.doesNotMatch(JSON.stringify([...response.headers]), /route-test-secret/);
-  assert.doesNotMatch(await response.clone().text(), /route-test-secret/);
+  assert.doesNotMatch(JSON.stringify([...response.headers]), /route-(?:elevenlabs|azure)-secret/);
+  assert.doesNotMatch(await response.clone().text(), /route-(?:elevenlabs|azure)-secret/);
 });
 
-test("speech route gives a guest natural voice and falls back server-side when HD is unavailable", async (t) => {
+test("speech route rejects oversized provider audio before and during buffered streaming", async (t) => {
   const originalFetch = globalThis.fetch;
   const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
     AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
     AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
   };
@@ -297,11 +407,99 @@ test("speech route gives a guest natural voice and falls back server-side when H
     restoreEnvironment(previous);
   });
 
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  process.env.ELEVENLABS_VOICE_IDS_JSON = JSON.stringify({
+    "zh-TW": "XB0fDUnXU5powFXDhCwa",
+  });
+  process.env.AZURE_SPEECH_KEY = "route-azure-secret";
+  process.env.AZURE_SPEECH_REGION = "eastus";
+
+  let fetchCount = 0;
+  globalThis.fetch = async (input) => {
+    fetchCount += 1;
+    if (String(input).includes("api.elevenlabs.io")) {
+      return new Response(Uint8Array.from([73, 68, 51]), {
+        status: 200,
+        headers: {
+          "content-type": "audio/mpeg",
+          "content-length": String(5 * 1024 * 1024 + 1),
+        },
+      });
+    }
+    return new Response(Uint8Array.from([73, 68, 51, 4]), {
+      status: 200,
+      headers: { "content-type": "audio/mpeg" },
+    });
+  };
+
+  const declaredOversized = await requestBuiltSpeech({
+    payload: { locale: "en", text: "Tell me about your strongest result." },
+  });
+  assert.equal(declaredOversized.status, 200);
+  assert.equal(fetchCount, 2, "an oversized primary response should use Azure");
+  assert.equal(
+    declaredOversized.headers.get("x-interviewthread-speech-fallback"),
+    "azure-dragon-hd-omni",
+  );
+
+  delete process.env.AZURE_SPEECH_KEY;
+  delete process.env.AZURE_SPEECH_REGION;
+  globalThis.fetch = async () => {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(3 * 1024 * 1024));
+        controller.enqueue(new Uint8Array(3 * 1024 * 1024));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      status: 200,
+      headers: { "content-type": "audio/mpeg" },
+    });
+  };
+
+  const streamedOversized = await requestBuiltSpeech({
+    payload: { locale: "zh-TW", text: "請介紹一個你最有把握的專案。" },
+  });
+  assert.equal(streamedOversized.status, 502);
+  assert.equal(
+    streamedOversized.headers.get("x-interviewthread-speech-error"),
+    "provider_audio_too_large",
+  );
+  assert.equal(
+    streamedOversized.headers.get("x-interviewthread-speech-fallback"),
+    "device",
+  );
+  assert.deepEqual(await streamedOversized.json(), {
+    error: "speech_audio_too_large",
+  });
+});
+
+test("speech route gives a guest natural voice and falls back server-side when HD is unavailable", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
+    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
+    AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    restoreEnvironment(previous);
+  });
+
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  delete process.env.ELEVENLABS_VOICE_IDS_JSON;
+  process.env.AZURE_SPEECH_KEY = "route-azure-secret";
   process.env.AZURE_SPEECH_REGION = "eastus";
   let fetchCount = 0;
-  globalThis.fetch = async (_input, init) => {
+  globalThis.fetch = async (input, init) => {
     fetchCount += 1;
+    if (String(input).includes("api.elevenlabs.io"))
+      return new Response("ElevenLabs unavailable", { status: 503 });
     const body = String(init?.body || "");
     if (body.includes("DragonHDOmniLatestNeural"))
       return new Response("HD unavailable in this resource", { status: 400 });
@@ -317,9 +515,21 @@ test("speech route gives a guest natural voice and falls back server-side when H
     payload: { locale: "zh-TW", text: "請介紹一個你最有把握的專案。" },
   });
   assert.equal(response.status, 200);
-  assert.equal(fetchCount, 2);
+  assert.equal(
+    fetchCount,
+    2,
+    "a non-English locale without a native ElevenLabs voice must start at Azure",
+  );
   assert.equal(
     response.headers.get("x-interviewthread-speech-model"),
+    "azure-standard-neural",
+  );
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-provider"),
+    "azure_speech",
+  );
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-fallback"),
     "azure-standard-neural",
   );
 });
@@ -327,6 +537,9 @@ test("speech route gives a guest natural voice and falls back server-side when H
 test("speech route enforces per-visitor and global paid-provider quotas", async (t) => {
   const originalFetch = globalThis.fetch;
   const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
     AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
     AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
   };
@@ -335,8 +548,11 @@ test("speech route enforces per-visitor and global paid-provider quotas", async 
     restoreEnvironment(previous);
   });
 
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
-  process.env.AZURE_SPEECH_REGION = "eastus";
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  delete process.env.ELEVENLABS_VOICE_IDS_JSON;
+  delete process.env.AZURE_SPEECH_KEY;
+  delete process.env.AZURE_SPEECH_REGION;
   let fetchCount = 0;
   globalThis.fetch = async () => {
     fetchCount += 1;
@@ -359,7 +575,7 @@ test("speech route enforces per-visitor and global paid-provider quotas", async 
   });
   assert.equal(visitorLimited.status, 429);
   assert.equal(visitorLimited.headers.get("retry-after"), "600");
-  assert.equal(fetchCount, 30, "a rejected request must not contact Azure");
+  assert.equal(fetchCount, 30, "a rejected request must not contact a paid provider");
 
   const windowMilliseconds = 10 * 60 * 1_000;
   const windowStart =
@@ -376,7 +592,7 @@ test("speech route enforces per-visitor and global paid-provider quotas", async 
   assert.equal(
     fetchCount,
     30,
-    "checking the durable global cap must not contact Azure",
+    "checking the durable global cap must not contact a paid provider",
   );
   const firstGlobalRequest = await consumeGlobalSpeechQuota(
     createSpeechQuotaDb(),
@@ -387,11 +603,42 @@ test("speech route enforces per-visitor and global paid-provider quotas", async 
     },
   );
   assert.equal(firstGlobalRequest, false);
+
+  const dailyWindowMilliseconds = 24 * 60 * 60 * 1_000;
+  const dailyWindowStart =
+    Math.floor(Date.now() / dailyWindowMilliseconds) * dailyWindowMilliseconds;
+  assert.equal(
+    await consumeGlobalSpeechCharacterQuota(
+      createSpeechQuotaDb(0, 49_900),
+      {
+        windowStart: dailyWindowStart,
+        windowMilliseconds: dailyWindowMilliseconds,
+        characters: 100,
+        limit: 50_000,
+      },
+    ),
+    false,
+  );
+  assert.equal(
+    await consumeGlobalSpeechCharacterQuota(
+      createSpeechQuotaDb(0, 49_901),
+      {
+        windowStart: dailyWindowStart,
+        windowMilliseconds: dailyWindowMilliseconds,
+        characters: 100,
+        limit: 50_000,
+      },
+    ),
+    true,
+  );
 });
 
 test("speech route rejects unsafe payloads before contacting the provider", async (t) => {
   const originalFetch = globalThis.fetch;
   const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
     AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
     AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
   };
@@ -400,8 +647,11 @@ test("speech route rejects unsafe payloads before contacting the provider", asyn
     globalThis.fetch = originalFetch;
     restoreEnvironment(previous);
   });
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
-  process.env.AZURE_SPEECH_REGION = "eastus";
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  delete process.env.ELEVENLABS_VOICE_IDS_JSON;
+  delete process.env.AZURE_SPEECH_KEY;
+  delete process.env.AZURE_SPEECH_REGION;
   globalThis.fetch = async () => {
     fetchCount += 1;
     return new Response(new Uint8Array([1]), {
@@ -439,6 +689,9 @@ test("speech route rejects unsafe payloads before contacting the provider", asyn
 test("speech route fails closed when configuration or the provider is unavailable", async (t) => {
   const originalFetch = globalThis.fetch;
   const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
     AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
     AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
   };
@@ -447,6 +700,9 @@ test("speech route fails closed when configuration or the provider is unavailabl
     restoreEnvironment(previous);
   });
 
+  delete process.env.ELEVENLABS_API_KEY;
+  delete process.env.ELEVENLABS_VOICE_ID;
+  delete process.env.ELEVENLABS_VOICE_IDS_JSON;
   delete process.env.AZURE_SPEECH_KEY;
   delete process.env.AZURE_SPEECH_REGION;
   let fetchCount = 0;
@@ -463,11 +719,11 @@ test("speech route fails closed when configuration or the provider is unavailabl
   assert.match(missingConfiguration.headers.get("cache-control") ?? "no-store", /no-store/i);
   assert.doesNotMatch(
     await missingConfiguration.text(),
-    /AZURE|SPEECH[_ -]?(?:KEY|REGION)|api[_ -]?key/i,
+    /AZURE|ELEVENLABS|SPEECH[_ -]?(?:KEY|REGION)|api[_ -]?key|voice[_ -]?id/i,
   );
 
-  process.env.AZURE_SPEECH_KEY = "route-test-secret";
-  process.env.AZURE_SPEECH_REGION = "eastus";
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
   globalThis.fetch = async () =>
     new Response(JSON.stringify({ detail: "internal provider detail" }), {
       status: 429,
@@ -482,9 +738,83 @@ test("speech route fails closed when configuration or the provider is unavailabl
   });
   assert.ok([429, 502, 503].includes(unavailable.status));
   assert.match(unavailable.headers.get("cache-control") ?? "no-store", /no-store/i);
+  assert.equal(
+    unavailable.headers.get("x-interviewthread-speech-fallback"),
+    "device",
+  );
+  assert.equal(
+    unavailable.headers.get("x-interviewthread-speech-error"),
+    "provider_unavailable",
+  );
   const unavailableBody = await unavailable.text();
-  assert.doesNotMatch(unavailableBody, /route-test-secret/);
+  assert.doesNotMatch(unavailableBody, /route-elevenlabs-secret/);
   assert.doesNotMatch(unavailableBody, /internal provider detail/);
+});
+
+test("speech route labels a provider timeout and hands off to device voice", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
+    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
+    AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    restoreEnvironment(previous);
+  });
+
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  delete process.env.ELEVENLABS_VOICE_IDS_JSON;
+  delete process.env.AZURE_SPEECH_KEY;
+  delete process.env.AZURE_SPEECH_REGION;
+  globalThis.fetch = async () => {
+    throw new DOMException("provider timed out", "TimeoutError");
+  };
+
+  const response = await requestBuiltSpeech({
+    payload: { locale: "en", text: "Tell me about your strongest result." },
+  });
+  assert.equal(response.status, 504);
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-error"),
+    "provider_timeout",
+  );
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-fallback"),
+    "device",
+  );
+  assert.deepEqual(await response.json(), { error: "speech_timeout" });
+});
+
+test("read-aloud provider disclosure and browser labels match the production chain", () => {
+  const pageSource = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const statusSource = readFileSync(
+    new URL("../app/interview-speech-status-copy.ts", import.meta.url),
+    "utf8",
+  );
+  const faqSource = readFileSync(new URL("../app/faq-copy.ts", import.meta.url), "utf8");
+  const informationSource = readFileSync(
+    new URL("../app/site-information.ts", import.meta.url),
+    "utf8",
+  );
+  const routeSource = readFileSync(
+    new URL("../app/api/speech/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(statusSource, /ElevenLabs v3/);
+  assert.match(statusSource, /Azure Dragon HD Omni/);
+  assert.match(pageSource, /speechModelDisplayName/);
+  assert.doesNotMatch(pageSource, /ELEVENLABS_(?:API_KEY|VOICE_ID)/);
+  assert.match(routeSource, /process\.env\.ELEVENLABS_API_KEY/);
+  assert.match(routeSource, /process\.env\.ELEVENLABS_VOICE_ID/);
+  assert.match(faqSource, /ElevenLabs \/ Microsoft Azure Speech/);
+  assert.match(informationSource, /sent to ElevenLabs to generate the primary audio response/);
+  assert.match(informationSource, /Microsoft Azure Speech as a fallback/);
+  assert.match(informationSource, /不會保存音訊/);
 });
 
 test("interview read-aloud has one premium request, one device fallback, and stale-audio guards", () => {
@@ -501,7 +831,9 @@ test("interview read-aloud has one premium request, one device fallback, and sta
   assert.match(pageSource, /function unlockInterviewAudioContext\(\)/);
   assert.match(pageSource, /decodeAudioData\(/);
   assert.match(pageSource, /createBufferSource\(\)/);
-  assert.match(pageSource, /if \(enabled\) void unlockInterviewAudioContext\(\)/);
+  assert.match(pageSource, /CLOUD_READ_ALOUD_CONSENT_KEY/);
+  assert.match(pageSource, /window\.confirm\(/);
+  assert.match(pageSource, /void unlockInterviewAudioContext\(\)/);
   assert.match(pageSource, /URL\.createObjectURL\(/);
   assert.match(pageSource, /URL\.revokeObjectURL\(/);
   assert.match(pageSource, /SpeechSynthesisUtterance/);
