@@ -139,24 +139,26 @@ export function elevenLabsVoiceIdForLocale(
   defaultVoiceId: string | undefined,
   rawLocaleVoiceIds: string | undefined,
 ) {
-  if (!isElevenLabsVoiceId(defaultVoiceId)) return null;
   // The default voice is the English baseline only. Reusing an English voice
   // for every locale can leave a strong English accent, so non-English
   // locales require an explicitly selected native voice and otherwise fall
   // through to Azure's locale-specific neural voice.
-  if (!rawLocaleVoiceIds) return locale === "en" ? defaultVoiceId : null;
+  const englishFallback = isElevenLabsVoiceId(defaultVoiceId)
+    ? defaultVoiceId
+    : null;
+  if (!rawLocaleVoiceIds) return locale === "en" ? englishFallback : null;
   try {
     const parsed: unknown = JSON.parse(rawLocaleVoiceIds);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
-      return locale === "en" ? defaultVoiceId : null;
+      return locale === "en" ? englishFallback : null;
     const localeVoiceId = (parsed as Record<string, unknown>)[locale];
     return isElevenLabsVoiceId(localeVoiceId)
       ? localeVoiceId
       : locale === "en"
-        ? defaultVoiceId
+        ? englishFallback
         : null;
   } catch {
-    return locale === "en" ? defaultVoiceId : null;
+    return locale === "en" ? englishFallback : null;
   }
 }
 
@@ -209,7 +211,15 @@ const TECHNICAL_PLAIN_TEXT_ALIASES: Record<string, string> = {
   jd: "job description",
 };
 
-export function normalizeTechnicalTermsForSpeech(text: string) {
+export function normalizeTechnicalTermsForSpeech(
+  text: string,
+  locale: LocaleCode = "en",
+) {
+  // English phonetic aliases such as "C plus plus" and "job description"
+  // sound markedly less natural when inserted into another language. Native
+  // v3 voices can infer code-switching from the original spelling, so retain
+  // the user's localized text outside English.
+  if (locale !== "en") return text;
   return text.replace(TECHNICAL_TERM_PATTERN, (term) => {
     const alias = TECHNICAL_PLAIN_TEXT_ALIASES[term.toLowerCase()];
     if (alias) return alias;
@@ -218,7 +228,8 @@ export function normalizeTechnicalTermsForSpeech(text: string) {
   });
 }
 
-function technicalSsml(text: string) {
+function technicalSsml(text: string, locale: LocaleCode) {
+  if (locale !== "en") return escapeXml(text);
   return text
     .split(/(<[^>]*>)/g)
     .map((segment) => {
@@ -258,7 +269,7 @@ function azureSpeechRequest({
   const normalized = normalizeTtsText(text);
   if (!normalized) throw new Error("Speech text is empty.");
   const voice = AZURE_VOICES[locale];
-  const spokenText = technicalSsml(normalized);
+  const spokenText = technicalSsml(normalized, locale);
   const body =
     model === "hd"
       ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${voice.language}"><voice name="${AZURE_HD_INTERVIEW_VOICE}" parameters="temperature=0.65;top_p=0.65;top_k=20;cfg_scale=1.4;enhancePronunciation=true"><lang xml:lang="${voice.language}"><p><s>${spokenText}</s></p></lang></voice></speak>`
@@ -295,7 +306,7 @@ export function buildElevenLabsSpeechRequest({
     throw new Error("Speech configuration is unavailable.");
   const normalized = normalizeTtsText(text);
   if (!normalized) throw new Error("Speech text is empty.");
-  const spokenText = normalizeTechnicalTermsForSpeech(normalized);
+  const spokenText = normalizeTechnicalTermsForSpeech(normalized, locale);
 
   return {
     url: `${ELEVENLABS_TTS_ENDPOINT}/${encodeURIComponent(voiceId)}/stream?output_format=mp3_44100_128`,

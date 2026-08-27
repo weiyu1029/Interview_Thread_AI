@@ -199,7 +199,12 @@ test("builds bounded ElevenLabs v3 and Azure fallback requests for all 40 locale
     assert.equal(elevenLabsBody.voice_settings.stability, 0.5);
     assert.deepEqual(elevenLabsBody.voice_settings, { stability: 0.5 });
     assert.doesNotMatch(elevenLabsBody.text, /^\[[^\]]+\]/);
-    assert.match(elevenLabsBody.text, /strongest S Q L example/);
+    assert.match(
+      elevenLabsBody.text,
+      locale === "en"
+        ? /strongest S Q L example/
+        : /strongest SQL example/,
+    );
     assert.doesNotMatch(elevenLabsBody.text, /<speak|<voice/i);
 
     const voice = azureVoiceForLocale(locale);
@@ -269,7 +274,14 @@ test("uses locale-native ElevenLabs voices and never reuses the English default 
     elevenLabsVoiceIdForLocale("ja", TEST_ELEVENLABS_VOICE_ID, undefined),
     null,
   );
-  assert.equal(elevenLabsVoiceIdForLocale("en", "unsafe", localeMap), null);
+  assert.equal(
+    elevenLabsVoiceIdForLocale("zh-TW", "unsafe", localeMap),
+    "XB0fDUnXU5powFXDhCwa",
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("en", "unsafe", localeMap),
+    "21m00Tcm4TlvDq8ikWAM",
+  );
 });
 
 test("normalizes and SSML-escapes speech text without reducing a question to an acronym", async () => {
@@ -289,6 +301,10 @@ test("normalizes and SSML-escapes speech text without reducing a question to an 
   assert.equal(
     normalizeTechnicalTermsForSpeech("Compare C++, API, SQL, and PostgreSQL."),
     "Compare C plus plus, A P I, S Q L, and PostgreSQL.",
+  );
+  assert.equal(
+    normalizeTechnicalTermsForSpeech("請比較 C++、API、SQL 與 JD。", "zh-TW"),
+    "請比較 C++、API、SQL 與 JD。",
   );
 
   const oversized = normalizeTtsText("a".repeat(20_000));

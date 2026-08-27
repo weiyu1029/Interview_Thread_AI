@@ -382,29 +382,36 @@ export async function POST(request: Request) {
       });
     }
     if (azureConfigured) {
+      const azureHdAttempt = {
+        model: TTS_FALLBACK_MODEL_ID,
+        provider: "azure_speech" as const,
+        fallback: "azure-dragon-hd-omni" as const,
+        request: buildAzureSpeechRequest({
+          text,
+          locale,
+          apiKey: azureApiKey!,
+          region: azureRegion!,
+        }),
+      };
+      const azureNativeAttempt = {
+        model: TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
+        provider: "azure_speech" as const,
+        fallback: "azure-standard-neural" as const,
+        request: buildAzureStandardSpeechRequest({
+          text,
+          locale,
+          apiKey: azureApiKey!,
+          region: azureRegion!,
+        }),
+      };
+      // The multilingual HD persona is English-trained. Keep it for the
+      // English baseline, but prefer Azure's locale-native voice for every
+      // other language so a technically successful fallback never introduces
+      // an avoidable English accent.
       attempts.push(
-        {
-          model: TTS_FALLBACK_MODEL_ID,
-          provider: "azure_speech",
-          fallback: "azure-dragon-hd-omni",
-          request: buildAzureSpeechRequest({
-            text,
-            locale,
-            apiKey: azureApiKey!,
-            region: azureRegion!,
-          }),
-        },
-        {
-          model: TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
-          provider: "azure_speech",
-          fallback: "azure-standard-neural",
-          request: buildAzureStandardSpeechRequest({
-            text,
-            locale,
-            apiKey: azureApiKey!,
-            region: azureRegion!,
-          }),
-        },
+        ...(locale === "en"
+          ? [azureHdAttempt, azureNativeAttempt]
+          : [azureNativeAttempt, azureHdAttempt]),
       );
     }
 
@@ -477,6 +484,7 @@ export async function POST(request: Request) {
                 "X-InterviewThread-Speech-Model": attempt.model,
                 "X-InterviewThread-Speech-Provider": attempt.provider,
                 "X-InterviewThread-Speech-Fallback": attempt.fallback,
+                "X-InterviewThread-Speech-Locale": locale,
                 "X-Request-ID": requestId,
               },
             });
