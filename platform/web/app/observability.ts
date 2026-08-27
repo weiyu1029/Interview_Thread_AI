@@ -17,8 +17,10 @@ export const OBSERVABILITY_ROUTES = [
   "api_contact",
   "api_feedback",
   "api_jobs",
+  "api_interview_dialogue",
   "api_region",
   "api_speech",
+  "api_speech_to_speech",
   "api_transcribe",
   "other",
 ] as const;
@@ -41,6 +43,7 @@ export const OBSERVABILITY_PROVIDERS = [
   "google",
   "github",
   "linkedin",
+  "elevenlabs",
   "azure_speech",
   "resend",
   "greenhouse",

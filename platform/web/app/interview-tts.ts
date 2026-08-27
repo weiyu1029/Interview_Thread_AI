@@ -1,7 +1,60 @@
 import type { LocaleCode } from "./i18n";
 
-export const TTS_MODEL_ID = "azure-standard-neural";
+export const TTS_MODEL_ID = "eleven_v3";
+export const TTS_FALLBACK_MODEL_ID = "azure-dragon-hd-omni";
+export const TTS_FINAL_CLOUD_FALLBACK_MODEL_ID = "azure-standard-neural";
 export const TTS_MAX_CHARACTERS = 1_600;
+
+const ELEVENLABS_TTS_ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech";
+
+const ELEVENLABS_LANGUAGE_CODES = {
+  en: "en",
+  ja: "ja",
+  ko: "ko",
+  "zh-CN": "zh",
+  "zh-TW": "zh",
+  es: "es",
+  fr: "fr",
+  de: "de",
+  "pt-BR": "pt",
+  it: "it",
+  nl: "nl",
+  pl: "pl",
+  tr: "tr",
+  ru: "ru",
+  uk: "uk",
+  ar: "ar",
+  he: "he",
+  hi: "hi",
+  bn: "bn",
+  ur: "ur",
+  id: "id",
+  ms: "ms",
+  th: "th",
+  vi: "vi",
+  fil: "fil",
+  sv: "sv",
+  no: "no",
+  da: "da",
+  fi: "fi",
+  cs: "cs",
+  sk: "sk",
+  hu: "hu",
+  ro: "ro",
+  el: "el",
+  bg: "bg",
+  hr: "hr",
+  sr: "sr",
+  sl: "sl",
+  sw: "sw",
+  fa: "fa",
+} satisfies Record<LocaleCode, string>;
+
+// Dragon HD Omni is Azure's multilingual, context-aware speech model. One
+// consistent interviewer persona is used across locales while <lang> locks the
+// pronunciation and accent to the language selected in InterviewThread.
+const AZURE_HD_INTERVIEW_VOICE =
+  "en-US-Ava:DragonHDOmniLatestNeural";
 
 type AzureVoice = {
   language: string;
@@ -58,11 +111,57 @@ export function isTtsLocale(value: unknown): value is LocaleCode {
 }
 
 export function azureVoiceForLocale(locale: LocaleCode) {
+  void locale;
+  return AZURE_HD_INTERVIEW_VOICE;
+}
+
+export function azureStandardVoiceForLocale(locale: LocaleCode) {
   return AZURE_VOICES[locale].name;
 }
 
 export function azureLanguageForLocale(locale: LocaleCode) {
   return AZURE_VOICES[locale].language;
+}
+
+export function elevenLabsLanguageForLocale(locale: LocaleCode) {
+  return ELEVENLABS_LANGUAGE_CODES[locale];
+}
+
+export function isElevenLabsVoiceId(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[A-Za-z0-9_-]{8,128}$/.test(value)
+  );
+}
+
+export function elevenLabsVoiceIdForLocale(
+  locale: LocaleCode,
+  defaultVoiceId: string | undefined,
+  rawLocaleVoiceIds: string | undefined,
+) {
+  if (!isElevenLabsVoiceId(defaultVoiceId)) return null;
+  // The default voice is the English baseline only. Reusing an English voice
+  // for every locale can leave a strong English accent, so non-English
+  // locales require an explicitly selected native voice and otherwise fall
+  // through to Azure's locale-specific neural voice.
+  if (!rawLocaleVoiceIds) return locale === "en" ? defaultVoiceId : null;
+  try {
+    const parsed: unknown = JSON.parse(rawLocaleVoiceIds);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      return locale === "en" ? defaultVoiceId : null;
+    const localeVoiceId = (parsed as Record<string, unknown>)[locale];
+    return isElevenLabsVoiceId(localeVoiceId)
+      ? localeVoiceId
+      : locale === "en"
+        ? defaultVoiceId
+        : null;
+  } catch {
+    return locale === "en" ? defaultVoiceId : null;
+  }
+}
+
+export function isAzureSpeechRegion(value: unknown): value is string {
+  return typeof value === "string" && /^[a-z0-9-]+$/i.test(value);
 }
 
 export function normalizeTtsText(value: string) {
@@ -103,6 +202,22 @@ const TECHNICAL_ALIASES: Record<string, string> = {
   jd: "job description",
 };
 
+const TECHNICAL_PLAIN_TEXT_ALIASES: Record<string, string> = {
+  "c++": "C plus plus",
+  "c#": "C sharp",
+  ".net": "dot net",
+  jd: "job description",
+};
+
+export function normalizeTechnicalTermsForSpeech(text: string) {
+  return text.replace(TECHNICAL_TERM_PATTERN, (term) => {
+    const alias = TECHNICAL_PLAIN_TEXT_ALIASES[term.toLowerCase()];
+    if (alias) return alias;
+    if (/^[A-Z]{2,}$/u.test(term)) return Array.from(term).join(" ");
+    return term;
+  });
+}
+
 function technicalSsml(text: string) {
   return text
     .split(/(<[^>]*>)/g)
@@ -124,24 +239,30 @@ function technicalSsml(text: string) {
     .join("");
 }
 
-export function buildAzureSpeechRequest({
+function azureSpeechRequest({
   text,
   locale,
   apiKey,
   region,
+  model,
 }: {
   text: string;
   locale: LocaleCode;
   apiKey: string;
   region: string;
+  model: "hd" | "standard";
 }) {
   if (!apiKey) throw new Error("Speech configuration is unavailable.");
-  if (!/^[a-z0-9-]+$/i.test(region))
+  if (!isAzureSpeechRegion(region))
     throw new Error("Speech configuration is unavailable.");
   const normalized = normalizeTtsText(text);
   if (!normalized) throw new Error("Speech text is empty.");
   const voice = AZURE_VOICES[locale];
-  const body = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.language}"><voice name="${voice.name}"><prosody rate="0%">${technicalSsml(normalized)}</prosody></voice></speak>`;
+  const spokenText = technicalSsml(normalized);
+  const body =
+    model === "hd"
+      ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${voice.language}"><voice name="${AZURE_HD_INTERVIEW_VOICE}" parameters="temperature=0.65;top_p=0.65;top_k=20;cfg_scale=1.4;enhancePronunciation=true"><lang xml:lang="${voice.language}"><p><s>${spokenText}</s></p></lang></voice></speak>`
+      : `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.language}"><voice name="${voice.name}"><prosody rate="-2%">${spokenText}</prosody></voice></speak>`;
 
   return {
     url: `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
@@ -151,10 +272,71 @@ export function buildAzureSpeechRequest({
         Accept: "audio/mpeg",
         "Content-Type": "application/ssml+xml",
         "Ocp-Apim-Subscription-Key": apiKey,
-        "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
+        "X-Microsoft-OutputFormat": "audio-48khz-192kbitrate-mono-mp3",
         "User-Agent": "InterviewThread",
       },
       body,
     } satisfies RequestInit,
   };
+}
+
+export function buildElevenLabsSpeechRequest({
+  text,
+  locale,
+  apiKey,
+  voiceId,
+}: {
+  text: string;
+  locale: LocaleCode;
+  apiKey: string;
+  voiceId: string;
+}) {
+  if (!apiKey || !isElevenLabsVoiceId(voiceId))
+    throw new Error("Speech configuration is unavailable.");
+  const normalized = normalizeTtsText(text);
+  if (!normalized) throw new Error("Speech text is empty.");
+  const spokenText = normalizeTechnicalTermsForSpeech(normalized);
+
+  return {
+    url: `${ELEVENLABS_TTS_ENDPOINT}/${encodeURIComponent(voiceId)}/stream?output_format=mp3_44100_128`,
+    init: {
+      method: "POST",
+      headers: {
+        Accept: "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        // Keep the first release neutral. v3 audio tags can materially change
+        // delivery and must be introduced only after voice-by-voice listening
+        // tests so a tag is never spoken aloud by an incompatible voice.
+        text: spokenText,
+        model_id: TTS_MODEL_ID,
+        language_code: ELEVENLABS_LANGUAGE_CODES[locale],
+        voice_settings: {
+          stability: 0.5,
+        },
+        seed: 20260827,
+        apply_text_normalization: "auto",
+      }),
+    } satisfies RequestInit,
+  };
+}
+
+export function buildAzureSpeechRequest(input: {
+  text: string;
+  locale: LocaleCode;
+  apiKey: string;
+  region: string;
+}) {
+  return azureSpeechRequest({ ...input, model: "hd" });
+}
+
+export function buildAzureStandardSpeechRequest(input: {
+  text: string;
+  locale: LocaleCode;
+  apiKey: string;
+  region: string;
+}) {
+  return azureSpeechRequest({ ...input, model: "standard" });
 }

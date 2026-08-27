@@ -1,5 +1,7 @@
 import type { LocaleCode } from "./i18n";
 import { accountIntroCopyFor } from "./account-copy.ts";
+import { cloudReadAloudNoticeFor } from "./speech-privacy-copy.ts";
+import { voiceConsentCopyFor } from "./voice-consent-copy.ts";
 
 export type FaqItem = {
   question: string;
@@ -64,163 +66,163 @@ const optionalCareerSourceCopy = {
 const speechPrivacyFaqCopy = {
   en: {
     question: "What is sent when I use Read question aloud?",
-    answer: "When cloud read-aloud is configured, only the current question text and selected language are sent to Microsoft Azure Speech. This feature does not send your resume, job description, answer, transcript, or raw voice recording, and InterviewThread does not save the returned audio. If cloud speech is unavailable, it falls back to the browser or device voice.",
+    answer: "When cloud read-aloud is configured, only the current question text and selected language are sent to Microsoft Azure Speech. The question itself may include short role, evidence, or gap terms derived from your resume or job post, but the full documents are not sent. Your answer, transcript, and raw audio are not sent, and InterviewThread does not save the returned audio. If cloud speech is unavailable, it falls back to the browser or device voice.",
   },
   ja: {
     question: "「質問を読み上げる」を使うと、何が送信されますか？",
-    answer: "クラウド読み上げが設定されている場合、現在の質問文と選択した言語だけが Microsoft Azure Speech に送信されます。履歴書、求人票、回答、文字起こし、元の音声は送信されず、返された音声を InterviewThread が保存することもありません。クラウド音声が利用できない場合は、ブラウザまたは端末の音声に切り替わります。",
+    answer: "クラウド読み上げが設定されている場合、Microsoft Azure Speech に送信されるのは、現在の質問文と選択した言語だけです。質問文には、履歴書や求人票をもとにした職種、根拠、ギャップに関する短い語句が含まれることがありますが、書類全体は送信されません。回答、文字起こし、元の音声も送信されず、InterviewThread は返された音声を保存しません。クラウド音声が利用できない場合は、ブラウザまたは端末の音声に切り替わります。",
   },
   ko: {
     question: "질문 읽어주기를 사용하면 어떤 정보가 전송되나요?",
-    answer: "클라우드 읽어주기가 설정된 경우 현재 질문 텍스트와 선택한 언어만 Microsoft Azure Speech로 전송됩니다. 이 기능은 이력서, 채용 공고, 답변, 전사 내용 또는 원본 음성을 보내지 않으며 InterviewThread는 반환된 오디오를 저장하지 않습니다. 클라우드 음성을 사용할 수 없으면 브라우저 또는 기기 음성으로 전환됩니다.",
+    answer: "클라우드 읽어주기가 설정된 경우 Microsoft Azure Speech로 전송되는 정보는 현재 질문 텍스트와 선택한 언어뿐입니다. 질문에는 이력서나 채용 공고에서 가져온 직무·근거·격차 관련 짧은 용어가 포함될 수 있지만, 문서 전체는 전송되지 않습니다. 답변, 전사 내용, 원본 오디오도 전송되지 않으며 InterviewThread는 반환된 오디오를 저장하지 않습니다. 클라우드 음성을 사용할 수 없으면 브라우저 또는 기기 음성으로 전환됩니다.",
   },
   "zh-CN": {
     question: "使用“朗读问题”时会发送哪些资料？",
-    answer: "配置云端朗读后，只会把当前问题文字和所选语言发送给 Microsoft Azure Speech。此功能不会发送你的简历、职位描述、回答、逐字稿或原始录音，InterviewThread 也不会保存返回的音频。若云端语音不可用，系统会改用浏览器或设备语音。",
+    answer: "配置云端朗读后，只会将当前问题文字和所选语言发送给 Microsoft Azure Speech。问题本身可能包含从你的简历或职位描述中提取的少量职位、证据或差距相关词语，但不会发送完整文件；你的回答、逐字稿和原始音频也不会被发送。InterviewThread 不会保存返回的音频。若云端语音不可用，系统会改用浏览器或设备语音。",
   },
   "zh-TW": {
     question: "使用「朗讀問題」時會傳送哪些資料？",
-    answer: "雲端朗讀已設定時，只有目前的問題文字與所選語言會傳送至 Microsoft Azure Speech。此功能不會傳送你的履歷、職缺描述、答案、逐字稿或原始錄音，InterviewThread 也不會保存回傳的音訊。若雲端語音無法使用，系統會改用瀏覽器或裝置語音。",
+    answer: "雲端朗讀已設定時，只有目前的問題文字與所選語言會傳送至 Microsoft Azure Speech。問題本身可能包含從你的履歷或職缺描述擷取的少量職務、證據或缺口詞語，但不會傳送完整文件；你的答案、逐字稿與原始音訊也不會傳送。InterviewThread 不會保存回傳的音訊。若雲端語音無法使用，系統會改用瀏覽器或裝置語音。",
   },
   es: {
     question: "¿Qué se envía cuando uso Leer pregunta en voz alta?",
-    answer: "Cuando la lectura en la nube está configurada, solo se envían a Microsoft Azure Speech el texto de la pregunta actual y el idioma elegido. Esta función no envía tu currículum, oferta, respuesta, transcripción ni grabación de voz, e InterviewThread no guarda el audio devuelto. Si la voz en la nube no está disponible, se usa la voz del navegador o del dispositivo.",
+    answer: "Cuando la lectura en la nube está configurada, solo se envían a Microsoft Azure Speech el texto de la pregunta actual y el idioma elegido. La pregunta puede contener términos breves sobre el puesto, las evidencias o las brechas derivados de tu currículum o de la oferta, pero no se envían los documentos completos. Tampoco se envían tu respuesta, la transcripción ni el audio original, e InterviewThread no guarda el audio devuelto. Si la voz en la nube no está disponible, se usa la voz del navegador o del dispositivo.",
   },
   fr: {
     question: "Qu’est-ce qui est envoyé quand j’utilise Lire la question à voix haute ?",
-    answer: "Lorsque la lecture cloud est configurée, seuls le texte de la question actuelle et la langue choisie sont envoyés à Microsoft Azure Speech. Cette fonction n’envoie ni votre CV, ni l’offre, ni votre réponse, ni la transcription, ni l’enregistrement vocal, et InterviewThread ne conserve pas l’audio renvoyé. Si la voix cloud est indisponible, la voix du navigateur ou de l’appareil prend le relais.",
+    answer: "Lorsque la lecture cloud est configurée, seuls le texte de la question actuelle et la langue choisie sont envoyés à Microsoft Azure Speech. La question peut contenir de courts termes liés au poste, aux preuves ou aux écarts, issus de votre CV ou de l’offre d’emploi, mais les documents complets ne sont pas envoyés. Votre réponse, la transcription et l’audio brut ne le sont pas non plus, et InterviewThread ne conserve pas l’audio renvoyé. Si la voix cloud est indisponible, la voix du navigateur ou de l’appareil prend le relais.",
   },
   de: {
     question: "Was wird bei „Frage vorlesen“ gesendet?",
-    answer: "Wenn Cloud-Vorlesen eingerichtet ist, werden nur der aktuelle Fragetext und die gewählte Sprache an Microsoft Azure Speech gesendet. Lebenslauf, Stellenanzeige, Antwort, Transkript oder Sprachaufnahme werden dabei nicht gesendet, und InterviewThread speichert das zurückgegebene Audio nicht. Ist Cloud-Sprache nicht verfügbar, wird die Stimme des Browsers oder Geräts verwendet.",
+    answer: "Wenn Cloud-Vorlesen eingerichtet ist, werden nur der aktuelle Fragetext und die gewählte Sprache an Microsoft Azure Speech gesendet. Die Frage kann kurze Begriffe zu Rolle, Nachweisen oder Lücken enthalten, die aus Ihrem Lebenslauf oder der Stellenanzeige abgeleitet sind; die vollständigen Dokumente werden jedoch nicht gesendet. Auch Ihre Antwort, das Transkript und das Roh-Audio werden nicht gesendet, und InterviewThread speichert das zurückgegebene Audio nicht. Ist Cloud-Sprache nicht verfügbar, wird die Stimme des Browsers oder Geräts verwendet.",
   },
   "pt-BR": {
     question: "O que é enviado ao usar Ler pergunta em voz alta?",
-    answer: "Quando a leitura em nuvem está configurada, somente o texto da pergunta atual e o idioma selecionado são enviados ao Microsoft Azure Speech. O recurso não envia currículo, vaga, resposta, transcrição nem gravação de voz, e o InterviewThread não salva o áudio retornado. Se a voz em nuvem não estiver disponível, ele usa a voz do navegador ou do dispositivo.",
+    answer: "Quando a leitura em nuvem está configurada, somente o texto da pergunta atual e o idioma selecionado são enviados ao Microsoft Azure Speech. A pergunta pode conter termos curtos sobre cargo, evidências ou lacunas derivados do seu currículo ou da vaga, mas os documentos completos não são enviados. Sua resposta, transcrição e áudio original também não são enviados, e o InterviewThread não salva o áudio retornado. Se a voz em nuvem não estiver disponível, ele usa a voz do navegador ou do dispositivo.",
   },
   it: {
     question: "Cosa viene inviato quando uso Leggi la domanda ad alta voce?",
-    answer: "Quando la lettura cloud è configurata, a Microsoft Azure Speech vengono inviati solo il testo della domanda corrente e la lingua scelta. La funzione non invia CV, annuncio, risposta, trascrizione o registrazione vocale, e InterviewThread non salva l’audio restituito. Se la voce cloud non è disponibile, usa la voce del browser o del dispositivo.",
+    answer: "Quando la lettura cloud è configurata, a Microsoft Azure Speech vengono inviati solo il testo della domanda corrente e la lingua scelta. La domanda può contenere brevi termini relativi a ruolo, prove o lacune ricavati dal CV o dall’annuncio, ma i documenti completi non vengono inviati. Non vengono inviati neppure la risposta, la trascrizione o l’audio originale, e InterviewThread non salva l’audio restituito. Se la voce cloud non è disponibile, usa la voce del browser o del dispositivo.",
   },
   nl: {
     question: "Wat wordt verzonden als ik Vraag voorlezen gebruik?",
-    answer: "Als voorlezen via de cloud is ingesteld, worden alleen de huidige vraagtekst en de gekozen taal naar Microsoft Azure Speech gestuurd. Je cv, vacature, antwoord, transcript of stemopname worden niet meegestuurd en InterviewThread slaat de ontvangen audio niet op. Als cloudspraak niet beschikbaar is, wordt de stem van de browser of het apparaat gebruikt.",
+    answer: "Als voorlezen via de cloud is ingesteld, worden alleen de huidige vraagtekst en de gekozen taal naar Microsoft Azure Speech gestuurd. De vraag kan korte termen over de functie, bewijzen of hiaten bevatten die uit je cv of vacature zijn afgeleid, maar de volledige documenten worden niet meegestuurd. Ook je antwoord, transcript en ruwe audio worden niet verstuurd en InterviewThread slaat de ontvangen audio niet op. Als cloudspraak niet beschikbaar is, wordt de stem van de browser of het apparaat gebruikt.",
   },
   pl: {
     question: "Co jest wysyłane, gdy używam opcji Czytaj pytanie na głos?",
-    answer: "Gdy skonfigurowano odczyt w chmurze, do Microsoft Azure Speech trafiają tylko tekst bieżącego pytania i wybrany język. Funkcja nie wysyła CV, ogłoszenia, odpowiedzi, transkrypcji ani nagrania głosu, a InterviewThread nie zapisuje zwróconego dźwięku. Jeśli usługa chmurowa jest niedostępna, używany jest głos przeglądarki lub urządzenia.",
+    answer: "Gdy skonfigurowano odczyt w chmurze, do Microsoft Azure Speech trafiają tylko tekst bieżącego pytania i wybrany język. Pytanie może zawierać krótkie określenia roli, dowodów lub luk wyprowadzone z CV albo ogłoszenia, ale pełne dokumenty nie są wysyłane. Nie są też wysyłane odpowiedź, transkrypcja ani surowe nagranie, a InterviewThread nie zapisuje zwróconego dźwięku. Jeśli usługa chmurowa jest niedostępna, używany jest głos przeglądarki lub urządzenia.",
   },
   tr: {
     question: "Soruyu sesli oku seçeneğinde hangi bilgiler gönderilir?",
-    answer: "Bulut üzerinden sesli okuma yapılandırıldığında Microsoft Azure Speech’e yalnızca geçerli soru metni ve seçilen dil gönderilir. Özgeçmişiniz, iş ilanı, yanıt, döküm veya ham ses kaydı gönderilmez; InterviewThread dönen sesi kaydetmez. Bulut sesi kullanılamazsa tarayıcı ya da cihaz sesi kullanılır.",
+    answer: "Bulut üzerinden sesli okuma yapılandırıldığında Microsoft Azure Speech’e yalnızca geçerli soru metni ve seçilen dil gönderilir. Soruda özgeçmişinizden veya iş ilanından türetilmiş role, kanıta ya da eksiklere ilişkin kısa terimler bulunabilir; ancak belgelerin tamamı gönderilmez. Yanıtınız, dökümünüz ve ham ses kaydınız da gönderilmez; InterviewThread dönen sesi kaydetmez. Bulut sesi kullanılamazsa tarayıcı ya da cihaz sesi kullanılır.",
   },
   ru: {
     question: "Какие данные отправляются при озвучивании вопроса?",
-    answer: "Если настроено облачное озвучивание, в Microsoft Azure Speech отправляются только текст текущего вопроса и выбранный язык. Резюме, вакансия, ответ, расшифровка и исходная запись голоса не отправляются, а InterviewThread не сохраняет полученное аудио. Если облачная речь недоступна, используется голос браузера или устройства.",
+    answer: "Если настроено облачное озвучивание, в Microsoft Azure Speech отправляются только текст текущего вопроса и выбранный язык. Сам вопрос может содержать короткие термины о роли, подтверждениях или пробелах, полученные из резюме или вакансии, но документы целиком не отправляются. Ответ, расшифровка и исходная аудиозапись также не отправляются, а InterviewThread не сохраняет полученное аудио. Если облачная речь недоступна, используется голос браузера или устройства.",
   },
   uk: {
     question: "Які дані надсилаються під час озвучення запитання?",
-    answer: "Якщо налаштовано хмарне озвучення, до Microsoft Azure Speech надсилаються лише текст поточного запитання та вибрана мова. Резюме, вакансія, відповідь, розшифрування й оригінальний запис голосу не надсилаються, а InterviewThread не зберігає отримане аудіо. Якщо хмарне мовлення недоступне, використовується голос браузера або пристрою.",
+    answer: "Якщо налаштовано хмарне озвучення, до Microsoft Azure Speech надсилаються лише текст поточного запитання та вибрана мова. Саме запитання може містити короткі терміни про роль, докази або прогалини, отримані з резюме чи вакансії, але повні документи не надсилаються. Відповідь, розшифрування та оригінальне аудіо також не надсилаються, а InterviewThread не зберігає отримане аудіо. Якщо хмарне мовлення недоступне, використовується голос браузера або пристрою.",
   },
   ar: {
     question: "ما البيانات التي تُرسل عند استخدام قراءة السؤال بصوت عالٍ؟",
-    answer: "عند إعداد القراءة السحابية، يُرسل إلى Microsoft Azure Speech نص السؤال الحالي واللغة المحددة فقط. لا ترسل هذه الميزة سيرتك الذاتية أو إعلان الوظيفة أو إجابتك أو النص المفرغ أو التسجيل الصوتي الأصلي، ولا يحفظ InterviewThread الصوت الناتج. إذا تعذر الصوت السحابي، يُستخدم صوت المتصفح أو الجهاز.",
+    answer: "عند إعداد القراءة السحابية، لا يُرسل إلى Microsoft Azure Speech سوى نص السؤال الحالي واللغة المحددة. وقد يتضمن السؤال عبارات قصيرة عن الدور أو الأدلة أو الفجوات مستمدة من سيرتك الذاتية أو إعلان الوظيفة، لكن لا تُرسل المستندات كاملة. كذلك لا تُرسل إجابتك أو النص المفرغ أو الصوت الخام، ولا يحفظ InterviewThread الصوت الناتج. إذا تعذر الصوت السحابي، يُستخدم صوت المتصفح أو الجهاز.",
   },
   he: {
     question: "אילו נתונים נשלחים כשמשתמשים בהקראת השאלה?",
-    answer: "כאשר הקראה בענן מוגדרת, רק טקסט השאלה הנוכחית והשפה שנבחרה נשלחים אל Microsoft Azure Speech. קורות החיים, מודעת התפקיד, התשובה, התמלול והקלטת הקול המקורית אינם נשלחים, ו‑InterviewThread אינו שומר את האודיו שמוחזר. אם שירות הענן אינו זמין, נעשה שימוש בקול של הדפדפן או המכשיר.",
+    answer: "כאשר הקראה בענן מוגדרת, רק טקסט השאלה הנוכחית והשפה שנבחרה נשלחים אל Microsoft Azure Speech. השאלה עשויה לכלול מונחים קצרים על התפקיד, הראיות או הפערים, שנגזרו מקורות החיים או ממודעת התפקיד, אך המסמכים המלאים אינם נשלחים. גם התשובה, התמלול והשמע הגולמי אינם נשלחים, ו‑InterviewThread אינו שומר את האודיו שמוחזר. אם שירות הענן אינו זמין, נעשה שימוש בקול של הדפדפן או המכשיר.",
   },
   hi: {
     question: "प्रश्न को ज़ोर से पढ़ें इस्तेमाल करने पर क्या भेजा जाता है?",
-    answer: "क्लाउड रीड-अलाउड सेट होने पर केवल मौजूदा प्रश्न का टेक्स्ट और चुनी हुई भाषा Microsoft Azure Speech को भेजी जाती है। आपका रिज़्यूमे, नौकरी विवरण, उत्तर, ट्रांसक्रिप्ट या मूल वॉइस रिकॉर्डिंग नहीं भेजी जाती और InterviewThread लौटे हुए ऑडियो को सहेजता नहीं है। क्लाउड वॉइस उपलब्ध न होने पर ब्राउज़र या डिवाइस की आवाज़ इस्तेमाल होती है।",
+    answer: "क्लाउड रीड-अलाउड सेट होने पर Microsoft Azure Speech को केवल मौजूदा प्रश्न का टेक्स्ट और चुनी हुई भाषा भेजी जाती है। प्रश्न में आपके रिज़्यूमे या नौकरी विवरण से निकले भूमिका, प्रमाण या कमी से जुड़े छोटे शब्द हो सकते हैं, लेकिन पूरे दस्तावेज़ नहीं भेजे जाते। आपका उत्तर, ट्रांसक्रिप्ट और रॉ ऑडियो भी नहीं भेजे जाते, और InterviewThread लौटे हुए ऑडियो को सहेजता नहीं है। क्लाउड वॉइस उपलब्ध न होने पर ब्राउज़र या डिवाइस की आवाज़ इस्तेमाल होती है।",
   },
   bn: {
     question: "প্রশ্নটি জোরে পড়ুন ব্যবহার করলে কী পাঠানো হয়?",
-    answer: "ক্লাউড রিড-অ্যালাউড সেট করা থাকলে শুধু বর্তমান প্রশ্নের লেখা ও নির্বাচিত ভাষা Microsoft Azure Speech-এ পাঠানো হয়। আপনার জীবনবৃত্তান্ত, চাকরির বিবরণ, উত্তর, ট্রান্সক্রিপ্ট বা মূল ভয়েস রেকর্ডিং পাঠানো হয় না এবং InterviewThread ফেরত আসা অডিও সংরক্ষণ করে না। ক্লাউড ভয়েস না থাকলে ব্রাউজার বা ডিভাইসের ভয়েস ব্যবহার করা হয়।",
+    answer: "ক্লাউড রিড-অ্যালাউড সেট করা থাকলে Microsoft Azure Speech-এ শুধু বর্তমান প্রশ্নের লেখা ও নির্বাচিত ভাষা পাঠানো হয়। প্রশ্নে আপনার জীবনবৃত্তান্ত বা চাকরির বিবরণ থেকে নেওয়া ভূমিকা, প্রমাণ বা ঘাটতি-সংক্রান্ত ছোট শব্দ থাকতে পারে, তবে সম্পূর্ণ নথি পাঠানো হয় না। আপনার উত্তর, ট্রান্সক্রিপ্ট ও কাঁচা অডিওও পাঠানো হয় না, এবং InterviewThread ফেরত আসা অডিও সংরক্ষণ করে না। ক্লাউড ভয়েস না থাকলে ব্রাউজার বা ডিভাইসের ভয়েস ব্যবহার করা হয়।",
   },
   ur: {
     question: "سوال بلند آواز سے پڑھنے پر کون سی معلومات بھیجی جاتی ہیں؟",
-    answer: "کلاؤڈ ریڈ الاؤڈ ترتیب دیا گیا ہو تو صرف موجودہ سوال کا متن اور منتخب زبان Microsoft Azure Speech کو بھیجی جاتی ہے۔ آپ کا ریزیومے، ملازمت کی تفصیل، جواب، ٹرانسکرپٹ یا اصل آواز کی ریکارڈنگ نہیں بھیجی جاتی اور InterviewThread واپس آنے والی آڈیو محفوظ نہیں کرتا۔ کلاؤڈ آواز دستیاب نہ ہو تو براؤزر یا ڈیوائس کی آواز استعمال ہوتی ہے۔",
+    answer: "کلاؤڈ ریڈ الاؤڈ ترتیب دیا گیا ہو تو Microsoft Azure Speech کو صرف موجودہ سوال کا متن اور منتخب زبان بھیجی جاتی ہے۔ سوال میں آپ کے ریزیومے یا ملازمت کی تفصیل سے اخذ کردہ کردار، ثبوت یا کمیوں سے متعلق مختصر اصطلاحات شامل ہو سکتی ہیں، لیکن مکمل دستاویزات نہیں بھیجی جاتیں۔ آپ کا جواب، ٹرانسکرپٹ اور خام آڈیو بھی نہیں بھیجے جاتے، اور InterviewThread واپس آنے والی آڈیو محفوظ نہیں کرتا۔ کلاؤڈ آواز دستیاب نہ ہو تو براؤزر یا ڈیوائس کی آواز استعمال ہوتی ہے۔",
   },
   id: {
     question: "Data apa yang dikirim saat memakai Bacakan pertanyaan?",
-    answer: "Jika pembacaan cloud dikonfigurasi, hanya teks pertanyaan saat ini dan bahasa pilihan yang dikirim ke Microsoft Azure Speech. Fitur ini tidak mengirim resume, lowongan, jawaban, transkrip, atau rekaman suara asli Anda, dan InterviewThread tidak menyimpan audio yang dikembalikan. Jika suara cloud tidak tersedia, suara browser atau perangkat akan digunakan.",
+    answer: "Jika pembacaan cloud dikonfigurasi, hanya teks pertanyaan saat ini dan bahasa pilihan yang dikirim ke Microsoft Azure Speech. Pertanyaan dapat memuat istilah singkat tentang peran, bukti, atau kesenjangan yang berasal dari resume atau lowongan Anda, tetapi dokumen lengkap tidak dikirim. Jawaban, transkrip, dan audio mentah Anda juga tidak dikirim, dan InterviewThread tidak menyimpan audio yang dikembalikan. Jika suara cloud tidak tersedia, suara browser atau perangkat akan digunakan.",
   },
   ms: {
     question: "Apakah data yang dihantar apabila menggunakan Baca soalan dengan kuat?",
-    answer: "Apabila bacaan awan dikonfigurasi, hanya teks soalan semasa dan bahasa pilihan dihantar kepada Microsoft Azure Speech. Ciri ini tidak menghantar resume, iklan kerja, jawapan, transkrip atau rakaman suara asal anda, dan InterviewThread tidak menyimpan audio yang diterima. Jika suara awan tidak tersedia, suara pelayar atau peranti digunakan.",
+    answer: "Apabila bacaan awan dikonfigurasi, hanya teks soalan semasa dan bahasa pilihan dihantar kepada Microsoft Azure Speech. Soalan itu mungkin mengandungi istilah ringkas tentang peranan, bukti atau jurang yang diambil daripada resume atau iklan kerja anda, tetapi dokumen penuh tidak dihantar. Jawapan, transkrip dan audio mentah anda juga tidak dihantar, dan InterviewThread tidak menyimpan audio yang diterima. Jika suara awan tidak tersedia, suara pelayar atau peranti digunakan.",
   },
   th: {
     question: "เมื่อใช้การอ่านคำถามออกเสียง จะส่งข้อมูลอะไรบ้าง?",
-    answer: "เมื่อกำหนดค่าการอ่านผ่านคลาวด์แล้ว ระบบจะส่งเฉพาะข้อความคำถามปัจจุบันและภาษาที่เลือกไปยัง Microsoft Azure Speech ฟีเจอร์นี้จะไม่ส่งเรซูเม่ รายละเอียดงาน คำตอบ ข้อความถอดเสียง หรือไฟล์เสียงต้นฉบับ และ InterviewThread จะไม่บันทึกเสียงที่ส่งกลับมา หากเสียงบนคลาวด์ใช้ไม่ได้ ระบบจะใช้เสียงของเบราว์เซอร์หรืออุปกรณ์แทน",
+    answer: "เมื่อกำหนดค่าการอ่านผ่านคลาวด์แล้ว ระบบจะส่งไปยัง Microsoft Azure Speech เฉพาะข้อความคำถามปัจจุบันและภาษาที่เลือก คำถามอาจมีคำสั้น ๆ เกี่ยวกับบทบาท หลักฐาน หรือช่องว่างที่มาจากเรซูเม่หรือรายละเอียดงานของคุณ แต่จะไม่ส่งเอกสารฉบับเต็ม รวมถึงจะไม่ส่งคำตอบ ข้อความถอดเสียง หรือเสียงดิบของคุณ และ InterviewThread จะไม่บันทึกเสียงที่ส่งกลับมา หากเสียงบนคลาวด์ใช้ไม่ได้ ระบบจะใช้เสียงของเบราว์เซอร์หรืออุปกรณ์แทน",
   },
   vi: {
     question: "Dữ liệu nào được gửi khi tôi dùng Đọc câu hỏi thành tiếng?",
-    answer: "Khi tính năng đọc trên đám mây được cấu hình, chỉ nội dung câu hỏi hiện tại và ngôn ngữ đã chọn được gửi tới Microsoft Azure Speech. Tính năng này không gửi CV, tin tuyển dụng, câu trả lời, bản chép lời hay bản ghi âm gốc, và InterviewThread không lưu âm thanh trả về. Nếu giọng nói đám mây không khả dụng, hệ thống dùng giọng của trình duyệt hoặc thiết bị.",
+    answer: "Khi tính năng đọc trên đám mây được cấu hình, chỉ nội dung câu hỏi hiện tại và ngôn ngữ đã chọn được gửi tới Microsoft Azure Speech. Câu hỏi có thể chứa một số thuật ngữ ngắn về vai trò, bằng chứng hoặc khoảng trống được rút ra từ CV hay tin tuyển dụng của bạn, nhưng toàn bộ tài liệu không được gửi. Câu trả lời, bản chép lời và âm thanh gốc của bạn cũng không được gửi, và InterviewThread không lưu âm thanh trả về. Nếu giọng nói đám mây không khả dụng, hệ thống dùng giọng của trình duyệt hoặc thiết bị.",
   },
   fil: {
     question: "Anong data ang ipinapadala kapag ginamit ko ang Basahin nang malakas ang tanong?",
-    answer: "Kapag naka-configure ang cloud read-aloud, ang kasalukuyang tanong at napiling wika lamang ang ipinapadala sa Microsoft Azure Speech. Hindi ipinapadala ang résumé, job post, sagot, transcript, o orihinal na voice recording, at hindi sine-save ng InterviewThread ang ibinalik na audio. Kung hindi available ang cloud voice, boses ng browser o device ang gagamitin.",
+    answer: "Kapag naka-configure ang cloud read-aloud, ang kasalukuyang tanong at napiling wika lamang ang ipinapadala sa Microsoft Azure Speech. Maaaring may maiikling terminong tungkol sa role, ebidensya, o gaps sa tanong na hango sa résumé o job post mo, pero hindi ipinapadala ang buong dokumento. Hindi rin ipinapadala ang sagot, transcript, o raw audio mo, at hindi sine-save ng InterviewThread ang ibinalik na audio. Kung hindi available ang cloud voice, boses ng browser o device ang gagamitin.",
   },
   sv: {
     question: "Vad skickas när jag använder Läs frågan högt?",
-    answer: "När molnbaserad uppläsning är konfigurerad skickas endast den aktuella frågetexten och valt språk till Microsoft Azure Speech. Ditt CV, jobbannonsen, svaret, transkriberingen eller den ursprungliga röstinspelningen skickas inte, och InterviewThread sparar inte ljudet som returneras. Om molnrösten inte är tillgänglig används webbläsarens eller enhetens röst.",
+    answer: "När molnbaserad uppläsning är konfigurerad skickas endast den aktuella frågetexten och valt språk till Microsoft Azure Speech. Frågan kan innehålla korta termer om rollen, belägg eller luckor som hämtats från ditt CV eller jobbannonsen, men de fullständiga dokumenten skickas inte. Ditt svar, transkriberingen och råljudet skickas inte heller, och InterviewThread sparar inte ljudet som returneras. Om molnrösten inte är tillgänglig används webbläsarens eller enhetens röst.",
   },
   no: {
     question: "Hva sendes når jeg bruker Les spørsmålet høyt?",
-    answer: "Når skybasert opplesning er konfigurert, sendes bare teksten i det gjeldende spørsmålet og valgt språk til Microsoft Azure Speech. CV-en, stillingsannonsen, svaret, transkripsjonen eller det opprinnelige taleopptaket sendes ikke, og InterviewThread lagrer ikke lyden som returneres. Hvis skytalen ikke er tilgjengelig, brukes stemmen i nettleseren eller enheten.",
+    answer: "Når skybasert opplesning er konfigurert, sendes bare teksten i det gjeldende spørsmålet og valgt språk til Microsoft Azure Speech. Spørsmålet kan inneholde korte begreper om rolle, dokumentasjon eller mangler som er hentet fra CV-en eller stillingsannonsen, men hele dokumentene sendes ikke. Svaret, transkripsjonen og rålyden sendes heller ikke, og InterviewThread lagrer ikke lyden som returneres. Hvis skytalen ikke er tilgjengelig, brukes stemmen i nettleseren eller enheten.",
   },
   da: {
     question: "Hvad sendes, når jeg bruger Læs spørgsmålet højt?",
-    answer: "Når cloudoplæsning er konfigureret, sendes kun den aktuelle spørgsmålstekst og det valgte sprog til Microsoft Azure Speech. Dit CV, jobopslaget, svaret, transskriptionen eller den oprindelige stemmeoptagelse sendes ikke, og InterviewThread gemmer ikke den returnerede lyd. Hvis cloudstemmen ikke er tilgængelig, bruges browserens eller enhedens stemme.",
+    answer: "Når cloudoplæsning er konfigureret, sendes kun den aktuelle spørgsmålstekst og det valgte sprog til Microsoft Azure Speech. Spørgsmålet kan indeholde korte begreber om rolle, dokumentation eller mangler, som er hentet fra dit CV eller jobopslaget, men de fulde dokumenter sendes ikke. Dit svar, transskriptionen og rå lyd sendes heller ikke, og InterviewThread gemmer ikke den returnerede lyd. Hvis cloudstemmen ikke er tilgængelig, bruges browserens eller enhedens stemme.",
   },
   fi: {
     question: "Mitä tietoja lähetetään, kun käytän Lue kysymys ääneen -toimintoa?",
-    answer: "Kun pilviluenta on määritetty, Microsoft Azure Speechille lähetetään vain nykyisen kysymyksen teksti ja valittu kieli. Ansioluetteloa, työpaikkailmoitusta, vastausta, litterointia tai alkuperäistä äänitallennetta ei lähetetä, eikä InterviewThread tallenna palautettua ääntä. Jos pilvipuhe ei ole käytettävissä, käytetään selaimen tai laitteen ääntä.",
+    answer: "Kun pilviluenta on määritetty, Microsoft Azure Speechille lähetetään vain nykyisen kysymyksen teksti ja valittu kieli. Kysymys voi sisältää lyhyitä rooliin, näyttöön tai puutteisiin liittyviä termejä, jotka on johdettu ansioluettelostasi tai työpaikkailmoituksesta, mutta kokonaisia asiakirjoja ei lähetetä. Myöskään vastaustasi, litterointia tai raakaa ääntä ei lähetetä, eikä InterviewThread tallenna palautettua ääntä. Jos pilvipuhe ei ole käytettävissä, käytetään selaimen tai laitteen ääntä.",
   },
   cs: {
     question: "Co se odesílá při použití funkce Přečíst otázku nahlas?",
-    answer: "Když je nastaveno cloudové čtení, do Microsoft Azure Speech se odešle jen text aktuální otázky a zvolený jazyk. Životopis, nabídka práce, odpověď, přepis ani původní hlasová nahrávka se neodesílají a InterviewThread vrácený zvuk neukládá. Pokud cloudový hlas není dostupný, použije se hlas prohlížeče nebo zařízení.",
+    answer: "Když je nastaveno cloudové čtení, do Microsoft Azure Speech se odešle jen text aktuální otázky a zvolený jazyk. Otázka může obsahovat krátké pojmy o roli, důkazech nebo mezerách odvozené z vašeho životopisu či nabídky práce, celé dokumenty se však neodesílají. Neodesílá se ani vaše odpověď, přepis nebo surový zvuk a InterviewThread vrácený zvuk neukládá. Pokud cloudový hlas není dostupný, použije se hlas prohlížeče nebo zařízení.",
   },
   sk: {
     question: "Čo sa odosiela pri použití funkcie Prečítať otázku nahlas?",
-    answer: "Keď je nastavené cloudové čítanie, do Microsoft Azure Speech sa odošle iba text aktuálnej otázky a zvolený jazyk. Životopis, pracovná ponuka, odpoveď, prepis ani pôvodná hlasová nahrávka sa neodosielajú a InterviewThread vrátený zvuk neukladá. Ak cloudový hlas nie je dostupný, použije sa hlas prehliadača alebo zariadenia.",
+    answer: "Keď je nastavené cloudové čítanie, do Microsoft Azure Speech sa odošle iba text aktuálnej otázky a zvolený jazyk. Otázka môže obsahovať krátke pojmy o role, dôkazoch alebo medzerách odvodené zo životopisu či pracovnej ponuky, celé dokumenty sa však neodosielajú. Neodosiela sa ani vaša odpoveď, prepis alebo surový zvuk a InterviewThread vrátený zvuk neukladá. Ak cloudový hlas nie je dostupný, použije sa hlas prehliadača alebo zariadenia.",
   },
   hu: {
     question: "Milyen adat kerül elküldésre a Kérdés felolvasása használatakor?",
-    answer: "Ha a felhőalapú felolvasás be van állítva, csak az aktuális kérdés szövege és a kiválasztott nyelv kerül a Microsoft Azure Speech szolgáltatáshoz. Az önéletrajz, az álláshirdetés, a válasz, az átirat és az eredeti hangfelvétel nem kerül elküldésre, az InterviewThread pedig nem menti a visszakapott hangot. Ha a felhőhang nem érhető el, a böngésző vagy az eszköz hangja használatos.",
+    answer: "Ha a felhőalapú felolvasás be van állítva, csak az aktuális kérdés szövege és a kiválasztott nyelv kerül a Microsoft Azure Speech szolgáltatáshoz. A kérdés tartalmazhat az önéletrajzból vagy álláshirdetésből származó rövid, a szerepkörre, bizonyítékokra vagy hiányokra utaló kifejezéseket, de a teljes dokumentumok nem kerülnek elküldésre. A válasz, az átirat és a nyers hang sem kerül elküldésre, az InterviewThread pedig nem menti a visszakapott hangot. Ha a felhőhang nem érhető el, a böngésző vagy az eszköz hangja használatos.",
   },
   ro: {
     question: "Ce date sunt trimise când folosesc Citește întrebarea cu voce tare?",
-    answer: "Când citirea din cloud este configurată, doar textul întrebării curente și limba selectată sunt trimise către Microsoft Azure Speech. Funcția nu trimite CV-ul, anunțul, răspunsul, transcrierea sau înregistrarea vocală originală, iar InterviewThread nu salvează sunetul primit. Dacă vocea din cloud nu este disponibilă, este folosită vocea browserului sau a dispozitivului.",
+    answer: "Când citirea din cloud este configurată, doar textul întrebării curente și limba selectată sunt trimise către Microsoft Azure Speech. Întrebarea poate include termeni scurți despre rol, dovezi sau lacune derivați din CV-ul ori anunțul dvs., însă documentele complete nu sunt trimise. Nici răspunsul, transcrierea sau sunetul brut nu sunt trimise, iar InterviewThread nu salvează sunetul primit. Dacă vocea din cloud nu este disponibilă, este folosită vocea browserului sau a dispozitivului.",
   },
   el: {
     question: "Ποια δεδομένα αποστέλλονται όταν χρησιμοποιώ την εκφώνηση ερώτησης;",
-    answer: "Όταν έχει ρυθμιστεί η εκφώνηση μέσω cloud, αποστέλλονται στο Microsoft Azure Speech μόνο το κείμενο της τρέχουσας ερώτησης και η επιλεγμένη γλώσσα. Δεν αποστέλλονται το βιογραφικό, η αγγελία, η απάντηση, η απομαγνητοφώνηση ή η αρχική εγγραφή φωνής και το InterviewThread δεν αποθηκεύει τον ήχο που επιστρέφεται. Αν η φωνή cloud δεν είναι διαθέσιμη, χρησιμοποιείται η φωνή του προγράμματος περιήγησης ή της συσκευής.",
+    answer: "Όταν έχει ρυθμιστεί η εκφώνηση μέσω cloud, αποστέλλονται στο Microsoft Azure Speech μόνο το κείμενο της τρέχουσας ερώτησης και η επιλεγμένη γλώσσα. Η ερώτηση μπορεί να περιέχει σύντομους όρους για τον ρόλο, τα στοιχεία ή τα κενά που προέρχονται από το βιογραφικό ή την αγγελία σας, αλλά δεν αποστέλλονται ολόκληρα τα έγγραφα. Δεν αποστέλλονται επίσης η απάντηση, η απομαγνητοφώνηση ή ο αρχικός ήχος, και το InterviewThread δεν αποθηκεύει τον ήχο που επιστρέφεται. Αν η φωνή cloud δεν είναι διαθέσιμη, χρησιμοποιείται η φωνή του προγράμματος περιήγησης ή της συσκευής.",
   },
   bg: {
     question: "Какви данни се изпращат при прочитане на въпроса на глас?",
-    answer: "Когато е настроено облачно прочитане, към Microsoft Azure Speech се изпращат само текстът на текущия въпрос и избраният език. Автобиографията, обявата, отговорът, транскрипцията и оригиналният гласов запис не се изпращат, а InterviewThread не съхранява получения звук. Ако облачният глас не е наличен, се използва гласът на браузъра или устройството.",
+    answer: "Когато е настроено облачно прочитане, към Microsoft Azure Speech се изпращат само текстът на текущия въпрос и избраният език. Въпросът може да съдържа кратки термини за роля, доказателства или пропуски, извлечени от автобиографията или обявата ви, но пълните документи не се изпращат. Отговорът, транскрипцията и необработеният звук също не се изпращат, а InterviewThread не съхранява получения звук. Ако облачният глас не е наличен, се използва гласът на браузъра или устройството.",
   },
   hr: {
     question: "Koji se podaci šalju pri korištenju opcije Pročitaj pitanje naglas?",
-    answer: "Kada je postavljeno čitanje u oblaku, u Microsoft Azure Speech šalju se samo tekst trenutačnog pitanja i odabrani jezik. Životopis, oglas, odgovor, transkript i izvorna glasovna snimka ne šalju se, a InterviewThread ne sprema vraćeni zvuk. Ako glas u oblaku nije dostupan, koristi se glas preglednika ili uređaja.",
+    answer: "Kada je postavljeno čitanje u oblaku, u Microsoft Azure Speech šalju se samo tekst trenutačnog pitanja i odabrani jezik. Pitanje može sadržavati kratke pojmove o ulozi, dokazima ili nedostacima izvedene iz vašeg životopisa ili oglasa, ali cijeli dokumenti ne šalju se. Ne šalju se ni odgovor, transkript ni sirovi zvuk, a InterviewThread ne sprema vraćeni zvuk. Ako glas u oblaku nije dostupan, koristi se glas preglednika ili uređaja.",
   },
   sr: {
     question: "Који подаци се шаљу при коришћењу опције Прочитај питање наглас?",
-    answer: "Када је подешено читање у облаку, у Microsoft Azure Speech шаљу се само текст тренутног питања и изабрани језик. Биографија, оглас, одговор, транскрипт и изворни гласовни снимак се не шаљу, а InterviewThread не чува враћени звук. Ако глас у облаку није доступан, користи се глас прегледача или уређаја.",
+    answer: "Када је подешено читање у облаку, у Microsoft Azure Speech шаљу се само текст тренутног питања и изабрани језик. Питање може садржати кратке појмове о улози, доказима или недостацима изведене из ваше биографије или огласа, али се цели документи не шаљу. Не шаљу се ни одговор, транскрипт ни необрађени звук, а InterviewThread не чува враћени звук. Ако глас у облаку није доступан, користи се глас прегледача или уређаја.",
   },
   sl: {
     question: "Kateri podatki se pošljejo pri uporabi možnosti Preberi vprašanje na glas?",
-    answer: "Ko je nastavljeno branje v oblaku, se v Microsoft Azure Speech pošljeta samo besedilo trenutnega vprašanja in izbrani jezik. Življenjepis, oglas, odgovor, prepis in izvirni glasovni posnetek se ne pošljejo, InterviewThread pa prejetega zvoka ne shrani. Če glas v oblaku ni na voljo, se uporabi glas brskalnika ali naprave.",
+    answer: "Ko je nastavljeno branje v oblaku, se v Microsoft Azure Speech pošljeta samo besedilo trenutnega vprašanja in izbrani jezik. Vprašanje lahko vsebuje kratke izraze o vlogi, dokazih ali vrzelih, izpeljane iz vašega življenjepisa ali oglasa, vendar se celotni dokumenti ne pošljejo. Prav tako se ne pošljejo odgovor, prepis ali surovi zvok, InterviewThread pa prejetega zvoka ne shrani. Če glas v oblaku ni na voljo, se uporabi glas brskalnika ali naprave.",
   },
   sw: {
     question: "Ni data gani hutumwa ninapotumia Soma swali kwa sauti?",
-    answer: "Usomaji wa wingu ukiwa umewekwa, maandishi ya swali la sasa na lugha iliyochaguliwa pekee hutumwa kwa Microsoft Azure Speech. Wasifu, tangazo la kazi, jibu, nakala ya mazungumzo au rekodi asili ya sauti haitumwi, na InterviewThread haihifadhi sauti inayorudishwa. Sauti ya wingu isipatikane, sauti ya kivinjari au kifaa hutumika.",
+    answer: "Usomaji wa wingu ukiwa umewekwa, maandishi ya swali la sasa na lugha iliyochaguliwa pekee hutumwa kwa Microsoft Azure Speech. Swali linaweza kuwa na maneno mafupi kuhusu nafasi, ushahidi au mapengo yaliyotokana na wasifu au tangazo lako la kazi, lakini hati kamili hazitumwi. Jibu, nakala ya mazungumzo na sauti ghafi pia havitumwi, na InterviewThread haihifadhi sauti inayorudishwa. Sauti ya wingu isipatikane, sauti ya kivinjari au kifaa hutumika.",
   },
   fa: {
     question: "هنگام استفاده از خواندن سؤال با صدای بلند چه داده‌ای ارسال می‌شود؟",
-    answer: "وقتی خواندن ابری تنظیم شده باشد، فقط متن سؤال فعلی و زبان انتخاب‌شده به Microsoft Azure Speech فرستاده می‌شود. رزومه، آگهی شغل، پاسخ، متن پیاده‌شده یا فایل اصلی صدا ارسال نمی‌شود و InterviewThread صدای بازگشتی را ذخیره نمی‌کند. اگر صدای ابری در دسترس نباشد، صدای مرورگر یا دستگاه استفاده می‌شود.",
+    answer: "وقتی خواندن ابری تنظیم شده باشد، فقط متن سؤال فعلی و زبان انتخاب‌شده به Microsoft Azure Speech فرستاده می‌شود. خود سؤال ممکن است شامل عبارت‌های کوتاهی درباره نقش، شواهد یا فاصله‌ها باشد که از رزومه یا آگهی شغلی شما گرفته شده‌اند، اما اسناد کامل ارسال نمی‌شوند. پاسخ، متن پیاده‌شده و صدای خام شما نیز ارسال نمی‌شود و InterviewThread صدای بازگشتی را ذخیره نمی‌کند. اگر صدای ابری در دسترس نباشد، صدای مرورگر یا دستگاه استفاده می‌شود.",
   },
 } satisfies Record<LocaleCode, FaqItem>;
 
@@ -954,6 +956,8 @@ const faqCopy = {
 
 export function faqCopyFor(locale: LocaleCode): FaqCopy {
   const copy = faqCopy[locale];
+  const readAloudPrivacy = speechPrivacyFaqCopy[locale];
+  const voiceConsent = voiceConsentCopyFor(locale);
   return {
     ...copy,
     items: [
@@ -967,8 +971,17 @@ export function faqCopyFor(locale: LocaleCode): FaqCopy {
             ? { ...item, answer: accountIntroCopyFor(locale).description }
             : item,
       ),
-      speechPrivacyFaqCopy[locale],
-      voiceAnswerPrivacyFaqCopy[locale],
+      {
+        ...readAloudPrivacy,
+        answer: readAloudPrivacy.answer.replaceAll(
+          "Microsoft Azure Speech",
+          "ElevenLabs / Microsoft Azure Speech",
+        ) + ` ${cloudReadAloudNoticeFor(locale)}`,
+      },
+      {
+        ...voiceAnswerPrivacyFaqCopy[locale],
+        answer: `${voiceConsent.cloudBody} ${voiceConsent.browserBody} ${voiceConsent.coachedNotice}`,
+      },
     ],
   };
 }

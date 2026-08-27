@@ -222,7 +222,12 @@ export const SEO_PAGES: Record<SeoPageKey, SeoPageSpec> = {
       {
         question: "Does voice practice upload my audio?",
         answer:
-          "The public workspace uses browser speech capabilities when available. The interface explains when a configured model or external service would be involved.",
+          "Browser-only captions do not upload your recording to InterviewThread, although your browser vendor may process speech under its own terms. If you are signed in and separately consent to cloud transcription, the recording, selected language, and up to 80 role terms go to ElevenLabs Scribe first, with Microsoft Azure Speech as a fallback. InterviewThread does not store or log the raw audio, but those providers may process or retain it under their policies. You can edit the transcript before sending; it is never submitted automatically.",
+      },
+      {
+        question: "What happens when I try coached voice?",
+        answer:
+          "Coached voice requires separate consent each time. The current recording is sent to ElevenLabs, and the transformed practice audio is kept only temporarily in your browser for playback. It is not automatically submitted as an interview answer. InterviewThread does not store or log the recording or returned audio, while ElevenLabs may process or retain provider-side data under its policy.",
       },
     ],
     keywords: [

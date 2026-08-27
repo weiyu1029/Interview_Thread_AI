@@ -12,6 +12,10 @@ export type JsonBodyResult<T> =
   | { ok: true; payload: T }
   | JsonRequestGuardFailure;
 
+export type MultipartBodyResult =
+  | { ok: true; payload: FormData }
+  | JsonRequestGuardFailure;
+
 export function hasSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return false;
@@ -116,6 +120,70 @@ export async function readJsonBody<T = unknown>(
     return { ok: true, payload: JSON.parse(decoded) as T };
   } catch {
     return { ok: false, status: 400, error: "Invalid JSON body." };
+  }
+}
+
+/**
+ * Reads multipart data through a byte-counting boundary before invoking the
+ * platform parser. This prevents a missing or dishonest Content-Length header
+ * from turning a small voice upload endpoint into an unbounded body read.
+ */
+export async function readMultipartBody(
+  request: Request,
+  maximumBytes: number,
+): Promise<MultipartBodyResult> {
+  const contentType = request.headers.get("content-type")?.trim() || "";
+  if (!contentType.toLowerCase().startsWith("multipart/form-data;"))
+    return {
+      ok: false,
+      status: 415,
+      error: "Multipart form data is required.",
+    };
+  const contentLength = validateContentLength(request, maximumBytes);
+  if (!contentLength.ok) return contentLength;
+  if (!request.body)
+    return { ok: false, status: 400, error: "Invalid multipart body." };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value?.byteLength) continue;
+      totalBytes += value.byteLength;
+      if (totalBytes > maximumBytes) {
+        await reader.cancel("multipart_body_too_large").catch(() => undefined);
+        return {
+          ok: false,
+          status: 413,
+          error: "Request body is too large.",
+        };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return { ok: false, status: 400, error: "Invalid multipart body." };
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    const parsedRequest = new Request(request.url, {
+      method: "POST",
+      headers: { "content-type": contentType },
+      body,
+    });
+    return { ok: true, payload: await parsedRequest.formData() };
+  } catch {
+    return { ok: false, status: 400, error: "Invalid multipart body." };
   }
 }
 

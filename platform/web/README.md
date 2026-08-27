@@ -62,18 +62,34 @@ those authenticated routes.
 
 ## Neural question read-aloud
 
-Interview questions use server-side Microsoft Azure Speech when both
-`AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` are configured. Keep the key in
-the server environment; it must never use a `NEXT_PUBLIC_` name or be included
-in client code. The speech route accepts only the current question text and one
-of the 40 supported locale codes, returns private no-store audio, and does not
-persist the generated audio. If either setting is absent or Azure Speech is
-unavailable, the client falls back to the browser or device voice.
+Interview questions use ElevenLabs `eleven_v3` when `ELEVENLABS_API_KEY` and a
+natural female interviewer `ELEVENLABS_VOICE_ID` are configured. Keep both in
+the server environment; they must never use a `NEXT_PUBLIC_` name or be
+included in client code. The speech route accepts only the current question
+text and one of the 40 supported locale codes, calls ElevenLabs' streaming
+endpoint, validates and buffers at most 5 MiB of provider audio, returns
+private no-store audio, and does not persist the generated audio. If
+ElevenLabs is unavailable, the
+server tries multilingual Azure Dragon HD Omni and then the locale's standard
+Azure Neural voice before the client uses a clearly labelled browser/device
+fallback. Each cloud attempt is bounded and the complete cloud chain has a
+45-second hard deadline. Signed-in requests and guest requests have separate
+per-visitor quotas plus a D1-backed global safety cap; guest quota keys are
+one-way hashes of Cloudflare's connecting address and are kept only in Worker
+memory, never logged or persisted. A separate D1-backed daily character budget
+defaults to 50,000 characters and can be lowered with
+`TTS_DAILY_CHARACTER_LIMIT`; set a provider-side spending limit as the final
+billing guardrail.
 
-Read-aloud does not send the resume, job description, interview answer,
-transcript, or raw voice recording to Azure Speech. Voice recognition remains a
-separate capability. Keep the public privacy policy and FAQ aligned if this
-data flow changes.
+Read-aloud sends only the current question text and selected language to
+ElevenLabs, or to Azure Speech when a fallback is needed. Because questions are
+tailored, that text can include short role, evidence, or gap terms derived from
+the resume or job description; it does not include either full document, the
+interview answer, transcript, or raw voice recording. Voice recognition
+remains a separate capability. Keep the public privacy policy and FAQ aligned
+if this data flow changes. InterviewThread does not retain the returned audio,
+but provider-side processing and retention still follow the configured
+ElevenLabs or Microsoft account settings and provider privacy terms.
 
 ## Two-stage interview voice answers
 

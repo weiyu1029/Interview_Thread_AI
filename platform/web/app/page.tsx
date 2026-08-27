@@ -77,10 +77,21 @@ import {
 } from "./interview-speech";
 import { normalizeTtsText } from "./interview-tts";
 import {
+  speechModelDisplayName,
+  speechStatusCopyFor,
+} from "./interview-speech-status-copy";
+import {
+  CLOUD_READ_ALOUD_CONSENT_KEY,
+  cloudReadAloudNoticeFor,
+} from "./speech-privacy-copy";
+import {
   normalizeSttTranscript,
+  STT_CONSENT_VERSION,
   STT_MAX_AUDIO_BYTES,
 } from "./interview-stt";
+import { STS_CONSENT_VERSION } from "./interview-sts";
 import { sttCopyFor } from "./interview-stt-copy";
+import { voiceConsentCopyFor } from "./voice-consent-copy";
 import {
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
@@ -208,6 +219,7 @@ type WorkspaceView =
   | "Feedback";
 type ApplicationMode = "Manual" | "Hybrid" | "Automatic";
 type InterviewMode = "Coaching" | "Realistic";
+type VoiceInputMode = "cloud" | "browser";
 type InterviewScore = {
   relevance: number;
   evidence: number;
@@ -1912,6 +1924,34 @@ function appendTranscript(current: string, next: string, locale: LocaleCode) {
 }
 
 const INTERVIEW_RECORDING_MAX_MILLISECONDS = 3 * 60 * 1_000;
+const VOICE_INPUT_CONSENT_STORAGE_KEY =
+  "interviewthread-voice-input-consent";
+
+function storedVoiceInputMode() {
+  try {
+    const stored = window.sessionStorage.getItem(
+      VOICE_INPUT_CONSENT_STORAGE_KEY,
+    );
+    const [version, mode] = (stored || "").split(":");
+    return version === STT_CONSENT_VERSION &&
+      (mode === "cloud" || mode === "browser")
+      ? mode
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberVoiceInputMode(mode: VoiceInputMode) {
+  try {
+    window.sessionStorage.setItem(
+      VOICE_INPUT_CONSENT_STORAGE_KEY,
+      `${STT_CONSENT_VERSION}:${mode}`,
+    );
+  } catch {
+    // Session storage is optional; consent still applies to this action.
+  }
+}
 
 function preferredInterviewAudioMimeType() {
   if (typeof MediaRecorder === "undefined") return "";
@@ -2784,8 +2824,16 @@ export default function Home({
   const [isListening, setIsListening] = useState(false);
   const [isRefiningVoice, setIsRefiningVoice] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceInputSupported, setVoiceInputSupported] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
   const [voiceInterim, setVoiceInterim] = useState("");
+  const [voiceConsentOpen, setVoiceConsentOpen] = useState(false);
+  const [voiceTransformConsentOpen, setVoiceTransformConsentOpen] =
+    useState(false);
+  const [isTransformingVoice, setIsTransformingVoice] = useState(false);
+  const [hasCoachedVoiceSource, setHasCoachedVoiceSource] = useState(false);
+  const [coachedVoiceUrl, setCoachedVoiceUrl] = useState("");
+  const [restartNotice, setRestartNotice] = useState("");
   const [, setRecognitionConfidence] = useState<number | null>(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
@@ -2794,6 +2842,7 @@ export default function Home({
     useState<LocaleCode | null>(null);
   const copy = copyFor(locale);
   const sttUi = sttCopyFor(locale);
+  const voiceConsentUi = voiceConsentCopyFor(locale);
   const jobSearchUi = jobSearchCopyFor(locale);
   const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
@@ -2803,6 +2852,7 @@ export default function Home({
   const openSourceLabel = openSourceLabelFor(locale);
   const interview = interviewCopyFor(locale);
   const interviewFlow = interviewFlowCopyFor(locale);
+  const speechStatusUi = speechStatusCopyFor(locale);
   const interviewStudioUi = interviewStudioUiFor(locale);
   const technicalResourceUi = technicalResourceCopyFor(locale);
   const resourceAction = technicalResourceUi.action;
@@ -2825,13 +2875,19 @@ export default function Home({
   const walkthroughVideoRef = useRef<HTMLVideoElement>(null);
   const walkthroughCueRef = useRef(-1);
   const walkthroughSpeechTokenRef = useRef(0);
+  const interviewAudioContextRef = useRef<AudioContext | null>(null);
+  const interviewAudioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const interviewAudioRef = useRef<HTMLAudioElement | null>(null);
   const interviewSpeechAbortRef = useRef<AbortController | null>(null);
   const interviewSpeechUrlRef = useRef("");
+  const interviewSpeechModelRef = useRef("");
   const interviewSpeechRequestIdRef = useRef(0);
   const speechRecognitionRef = useRef<{
     start: () => void;
     stop: () => void;
+    onresult?: unknown;
+    onend?: unknown;
+    onerror?: unknown;
   } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const voiceMediaStreamRef = useRef<MediaStream | null>(null);
@@ -2839,11 +2895,18 @@ export default function Home({
   const voiceRecordingMimeRef = useRef("audio/webm");
   const voiceRecordingBaseRef = useRef("");
   const voiceBrowserTranscriptRef = useRef("");
+  const lastVoiceRecordingRef = useRef<Blob | null>(null);
+  const coachedVoiceUrlRef = useRef("");
+  const voiceConsentPrimaryActionRef = useRef<HTMLButtonElement | null>(null);
+  const voiceTransformPrimaryActionRef =
+    useRef<HTMLButtonElement | null>(null);
   const interviewAnswerRef = useRef("");
   const voiceTranscriptionAbortRef = useRef<AbortController | null>(null);
   const voiceTranscriptionRequestIdRef = useRef(0);
+  const voiceTransformAbortRef = useRef<AbortController | null>(null);
   const voiceRecordingTimerRef = useRef<number | null>(null);
   const speechRestartTimerRef = useRef<number | null>(null);
+  const restartNoticeTimerRef = useRef<number | null>(null);
   const keepListeningRef = useRef(false);
   const interviewLocaleRef = useRef(locale);
   const lastFinalSpeechRef = useRef({ text: "", at: 0 });
@@ -2984,8 +3047,12 @@ export default function Home({
               setInterviewTurn(session.turn || 0);
             if (Number.isInteger(session.topicIndex))
               setInterviewTopicIndex(Math.max(0, session.topicIndex || 0));
-            if (typeof session.autoRead === "boolean")
-              setAutoReadInterviewQuestions(session.autoRead);
+            if (
+              session.autoRead === true &&
+              window.localStorage.getItem(CLOUD_READ_ALOUD_CONSENT_KEY) ===
+                "accepted"
+            )
+              setAutoReadInterviewQuestions(true);
             if (session.scores) setInterviewScores(session.scores);
             if (Array.isArray(session.scoreHistory))
               setInterviewScoreHistory(session.scoreHistory.slice(-20));
@@ -3078,6 +3145,8 @@ export default function Home({
     voiceTranscriptionRequestIdRef.current += 1;
     voiceTranscriptionAbortRef.current?.abort();
     voiceTranscriptionAbortRef.current = null;
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = null;
     const recorder = mediaRecorderRef.current;
     if (recorder) {
       recorder.ondataavailable = null;
@@ -3089,9 +3158,25 @@ export default function Home({
     stopInterviewMediaStream(voiceMediaStreamRef.current);
     voiceMediaStreamRef.current = null;
     voiceAudioChunksRef.current = [];
+    lastVoiceRecordingRef.current = null;
+    if (coachedVoiceUrlRef.current) {
+      URL.revokeObjectURL(coachedVoiceUrlRef.current);
+      coachedVoiceUrlRef.current = "";
+    }
     interviewSpeechRequestIdRef.current += 1;
     interviewSpeechAbortRef.current?.abort();
     interviewSpeechAbortRef.current = null;
+    const audioSource = interviewAudioSourceRef.current;
+    interviewAudioSourceRef.current = null;
+    if (audioSource) {
+      audioSource.onended = null;
+      try {
+        audioSource.stop();
+      } catch {
+        // The source may already have ended.
+      }
+      audioSource.disconnect();
+    }
     interviewAudioRef.current?.pause();
     interviewAudioRef.current = null;
     if (interviewSpeechUrlRef.current) {
@@ -3110,6 +3195,9 @@ export default function Home({
       setRealisticReviewOpen(false);
       setVoiceInterim("");
       setRecognitionConfidence(null);
+      setHasCoachedVoiceSource(false);
+      setCoachedVoiceUrl("");
+      setIsTransformingVoice(false);
       setIsListening(false);
       setIsRefiningVoice(false);
       setIsSpeaking(false);
@@ -3123,6 +3211,25 @@ export default function Home({
   useEffect(() => {
     interviewAnswerRef.current = interviewAnswer;
   }, [interviewAnswer]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const voiceWindow = window as typeof window & {
+        SpeechRecognition?: unknown;
+        webkitSpeechRecognition?: unknown;
+      };
+      setVoiceInputSupported(
+        Boolean(
+          voiceWindow.SpeechRecognition ||
+            voiceWindow.webkitSpeechRecognition ||
+            (authenticated &&
+              typeof MediaRecorder !== "undefined" &&
+              navigator.mediaDevices?.getUserMedia),
+        ),
+      );
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [authenticated]);
 
   useEffect(() => {
     if (!preferencesLoaded.current || guestMode) return;
@@ -3197,8 +3304,26 @@ export default function Home({
         window.clearTimeout(speechRestartTimerRef.current);
       if (voiceRecordingTimerRef.current !== null)
         window.clearTimeout(voiceRecordingTimerRef.current);
+      if (restartNoticeTimerRef.current !== null)
+        window.clearTimeout(restartNoticeTimerRef.current);
       voiceTranscriptionRequestIdRef.current += 1;
       voiceTranscriptionAbortRef.current?.abort();
+      voiceTransformAbortRef.current?.abort();
+      const audioSource = interviewAudioSourceRef.current;
+      interviewAudioSourceRef.current = null;
+      if (audioSource) {
+        audioSource.onended = null;
+        try {
+          audioSource.stop();
+        } catch {
+          // The source may already have ended.
+        }
+        audioSource.disconnect();
+      }
+      const audioContext = interviewAudioContextRef.current;
+      interviewAudioContextRef.current = null;
+      if (audioContext && audioContext.state !== "closed")
+        void audioContext.close();
       const recorder = mediaRecorderRef.current;
       if (recorder) {
         recorder.ondataavailable = null;
@@ -3208,6 +3333,10 @@ export default function Home({
       }
       stopInterviewMediaStream(voiceMediaStreamRef.current);
       voiceAudioChunksRef.current = [];
+      lastVoiceRecordingRef.current = null;
+      if (coachedVoiceUrlRef.current)
+        URL.revokeObjectURL(coachedVoiceUrlRef.current);
+      coachedVoiceUrlRef.current = "";
       interviewSpeechRequestIdRef.current += 1;
       interviewSpeechAbortRef.current?.abort();
       interviewAudioRef.current?.pause();
@@ -3230,6 +3359,25 @@ export default function Home({
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
   }, [walkthroughOpen]);
+
+  useEffect(() => {
+    if (!voiceConsentOpen && !voiceTransformConsentOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setVoiceConsentOpen(false);
+      setVoiceTransformConsentOpen(false);
+    };
+    const focusTimer = window.setTimeout(() => {
+      if (voiceTransformConsentOpen)
+        voiceTransformPrimaryActionRef.current?.focus();
+      else voiceConsentPrimaryActionRef.current?.focus();
+    }, 0);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [voiceConsentOpen, voiceTransformConsentOpen]);
 
   useEffect(() => {
     if (!walkthroughOpen) return;
@@ -3985,9 +4133,13 @@ export default function Home({
   }
 
   function startInterview() {
-    keepListeningRef.current = false;
-    speechRecognitionRef.current?.stop();
-    stopInterviewSpeech();
+    const isRestart = interviewMessages.length > 0;
+    cancelInterviewVoiceSession();
+    if (restartNoticeTimerRef.current !== null) {
+      window.clearTimeout(restartNoticeTimerRef.current);
+      restartNoticeTimerRef.current = null;
+    }
+    setRestartNotice("");
     const candidates = questionsForInterviewRole(
       interviewPersona,
       interviewQuestionTrack,
@@ -3995,9 +4147,15 @@ export default function Home({
       interviewQuestionDifficulty,
       interviewQuestionLens,
     );
+    const randomCandidates =
+      selectedOpenQuestionId === "random" && candidates.length > 1
+        ? candidates.filter((item) => item.id !== activeOpenQuestionId)
+        : candidates;
     const chosenQuestion =
       candidates.find((item) => item.id === selectedOpenQuestionId) ||
-      candidates[questionShuffleIndex % Math.max(candidates.length, 1)];
+      randomCandidates[
+        questionShuffleIndex % Math.max(randomCandidates.length, 1)
+      ];
     const plannedOpening = chosenQuestion
       ? openQuestionForInterview(chosenQuestion, matches, locale, 0)
       : questionForInterview(interviewPersona, 0, matches, locale, 0);
@@ -4020,15 +4178,20 @@ export default function Home({
     setRecognitionConfidence(null);
     setIsListening(false);
     setIsSpeaking(false);
+    if (isRestart) {
+      setRestartNotice(`✓ ${interview.restart}`);
+      restartNoticeTimerRef.current = window.setTimeout(() => {
+        setRestartNotice("");
+        restartNoticeTimerRef.current = null;
+      }, 2_000);
+    }
     recordActivity("interview_started");
     if (autoReadInterviewQuestions) scheduleInterviewSpeech(opening);
   }
 
   function changeInterviewMode(mode: InterviewMode) {
     if (mode === interviewMode) return;
-    keepListeningRef.current = false;
-    speechRecognitionRef.current?.stop();
-    stopInterviewSpeech();
+    cancelInterviewVoiceSession();
     setInterviewMode(mode);
     setInterviewMessages([]);
     setInterviewAnswer("");
@@ -4045,11 +4208,7 @@ export default function Home({
   }
 
   function finishRealisticInterview() {
-    keepListeningRef.current = false;
-    speechRecognitionRef.current?.stop();
-    stopInterviewSpeech();
-    setIsListening(false);
-    setIsSpeaking(false);
+    cancelInterviewVoiceSession();
     setRealisticReviewOpen(true);
   }
 
@@ -4069,8 +4228,7 @@ export default function Home({
       startInterview();
       return;
     }
-    keepListeningRef.current = false;
-    speechRecognitionRef.current?.stop();
+    cancelInterviewVoiceSession();
     const next = nextInterviewCoordinates(forceNewTopic);
     const nextQuestion = questionForInterview(
       interviewPersona,
@@ -4160,6 +4318,11 @@ export default function Home({
     setInterviewTopicIndex(next.topicIndex);
     interviewAnswerRef.current = "";
     setInterviewAnswer("");
+    lastVoiceRecordingRef.current = null;
+    setHasCoachedVoiceSource(false);
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = null;
+    releaseCoachedVoice();
     setVoiceMessage("");
     setVoiceInterim("");
     setRecognitionConfidence(null);
@@ -4197,6 +4360,17 @@ export default function Home({
   }
 
   function releaseInterviewAudio() {
+    const source = interviewAudioSourceRef.current;
+    interviewAudioSourceRef.current = null;
+    if (source) {
+      source.onended = null;
+      try {
+        source.stop();
+      } catch {
+        // The source may already have ended.
+      }
+      source.disconnect();
+    }
     const audio = interviewAudioRef.current;
     if (audio) {
       audio.pause();
@@ -4207,6 +4381,82 @@ export default function Home({
       URL.revokeObjectURL(interviewSpeechUrlRef.current);
       interviewSpeechUrlRef.current = "";
     }
+    interviewSpeechModelRef.current = "";
+  }
+
+  async function unlockInterviewAudioContext() {
+    type AudioContextConstructor = new () => AudioContext;
+    const audioWindow = window as typeof window & {
+      webkitAudioContext?: AudioContextConstructor;
+    };
+    const AudioContextClass =
+      window.AudioContext || audioWindow.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    let context = interviewAudioContextRef.current;
+    if (!context || context.state === "closed") {
+      context = new AudioContextClass();
+      interviewAudioContextRef.current = context;
+    }
+    try {
+      if (context.state !== "running") await context.resume();
+      return context.state === "running" ? context : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function cancelInterviewVoiceSession() {
+    keepListeningRef.current = false;
+    const recognition = speechRecognitionRef.current;
+    if (recognition) {
+      recognition.onresult = null;
+      recognition.onend = null;
+      recognition.onerror = null;
+      recognition.stop();
+    }
+    speechRecognitionRef.current = null;
+    if (speechRestartTimerRef.current !== null) {
+      window.clearTimeout(speechRestartTimerRef.current);
+      speechRestartTimerRef.current = null;
+    }
+    if (voiceRecordingTimerRef.current !== null) {
+      window.clearTimeout(voiceRecordingTimerRef.current);
+      voiceRecordingTimerRef.current = null;
+    }
+    voiceTranscriptionRequestIdRef.current += 1;
+    voiceTranscriptionAbortRef.current?.abort();
+    voiceTranscriptionAbortRef.current = null;
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = null;
+    const recorder = mediaRecorderRef.current;
+    if (recorder) {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      recorder.onerror = null;
+      if (recorder.state !== "inactive") recorder.stop();
+    }
+    mediaRecorderRef.current = null;
+    stopInterviewMediaStream(voiceMediaStreamRef.current);
+    voiceMediaStreamRef.current = null;
+    voiceAudioChunksRef.current = [];
+    voiceBrowserTranscriptRef.current = "";
+    lastVoiceRecordingRef.current = null;
+    setHasCoachedVoiceSource(false);
+    releaseCoachedVoice();
+    setVoiceInterim("");
+    setRecognitionConfidence(null);
+    setIsListening(false);
+    setIsRefiningVoice(false);
+    stopInterviewSpeech();
+  }
+
+  function releaseCoachedVoice() {
+    if (coachedVoiceUrlRef.current) {
+      URL.revokeObjectURL(coachedVoiceUrlRef.current);
+      coachedVoiceUrlRef.current = "";
+    }
+    setCoachedVoiceUrl("");
+    setIsTransformingVoice(false);
   }
 
   function stopInterviewSpeech(setIdle = true) {
@@ -4262,11 +4512,14 @@ export default function Home({
     window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
     setVoiceMessage(
-      `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocale}${voice ? ` · ${voice.name}` : ""}`,
+      `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocale} · ${speechStatusUi.deviceFallback}${voice ? ` · ${voice.name}` : ""}`,
     );
   }
 
-  async function speakInterviewQuestion(content: string) {
+  async function speakInterviewQuestion(
+    content: string,
+    unlockedAudioContext: AudioContext | null = null,
+  ) {
     stopInterviewSpeech();
     const requestId = interviewSpeechRequestIdRef.current;
     const questionText = normalizeTtsText(questionOnly(content));
@@ -4308,10 +4561,54 @@ export default function Home({
         requestId !== interviewSpeechRequestIdRef.current
       )
         return;
+      const speechModel =
+        response.headers.get("x-interviewthread-speech-model") ||
+        "cloud-voice";
+      const speechModelName = speechModelDisplayName(speechModel);
+      const activeAudioContext =
+        unlockedAudioContext ||
+        (interviewAudioContextRef.current?.state === "running"
+          ? interviewAudioContextRef.current
+          : null);
+      if (activeAudioContext) {
+        try {
+          const decoded = await activeAudioContext.decodeAudioData(
+            await blob.arrayBuffer(),
+          );
+          if (
+            controller.signal.aborted ||
+            requestId !== interviewSpeechRequestIdRef.current
+          )
+            return;
+          const source = activeAudioContext.createBufferSource();
+          source.buffer = decoded;
+          source.connect(activeAudioContext.destination);
+          interviewAudioSourceRef.current = source;
+          interviewSpeechModelRef.current = speechModel;
+          source.onended = () => {
+            if (source !== interviewAudioSourceRef.current) return;
+            source.disconnect();
+            interviewAudioSourceRef.current = null;
+            setIsSpeaking(false);
+          };
+          source.start();
+          setVoiceMessage(
+            `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModelName}`,
+          );
+          return;
+        } catch {
+          if (
+            controller.signal.aborted ||
+            requestId !== interviewSpeechRequestIdRef.current
+          )
+            return;
+        }
+      }
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       interviewAudioRef.current = audio;
       interviewSpeechUrlRef.current = audioUrl;
+      interviewSpeechModelRef.current = speechModel;
       audio.onended = () => {
         if (requestId !== interviewSpeechRequestIdRef.current) return;
         releaseInterviewAudio();
@@ -4324,10 +4621,15 @@ export default function Home({
         return;
       }
       setVoiceMessage(
-        `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · Azure Neural`,
+        `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModelName}`,
       );
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
+      if (error instanceof DOMException && error.name === "NotAllowedError") {
+        setIsSpeaking(false);
+        setVoiceMessage(speechStatusUi.readyToPlay);
+        return;
+      }
       await fallbackToDeviceVoice();
     } finally {
       if (interviewSpeechAbortRef.current === controller)
@@ -4344,10 +4646,29 @@ export default function Home({
       stopInterviewSpeech();
       return;
     }
+    const audioContextPromise = unlockInterviewAudioContext();
+    const readyAudio = interviewAudioRef.current;
+    if (readyAudio && interviewSpeechUrlRef.current) {
+      try {
+        setIsSpeaking(true);
+        await readyAudio.play();
+        setVoiceMessage(
+          `${interviewFlow.languageLocked} ${interview.speechLanguage}: ${speechLocaleFor(locale)} · ${speechStatusUi.hdVoice} · ${speechModelDisplayName(interviewSpeechModelRef.current || "cloud-voice")}`,
+        );
+        return;
+      } catch {
+        releaseInterviewAudio();
+        setIsSpeaking(false);
+      }
+    }
     const latest = [...interviewMessages]
       .reverse()
       .find((message) => message.role === "assistant");
-    if (latest) await speakInterviewQuestion(questionOnly(latest.content));
+    if (latest)
+      await speakInterviewQuestion(
+        questionOnly(latest.content),
+        await audioContextPromise,
+      );
   }
 
   async function refineRecordedInterviewAnswer({
@@ -4378,6 +4699,7 @@ export default function Home({
     try {
       const form = new FormData();
       form.append("audio", audio, "interview-answer");
+      form.append("consent_version", STT_CONSENT_VERSION);
       form.append("locale", locale);
       form.append("vocabulary", JSON.stringify(speechVocabulary.slice(0, 80)));
       const response = await fetch("/api/transcribe", {
@@ -4449,7 +4771,27 @@ export default function Home({
     setVoiceInterim("");
   }
 
-  async function toggleInterviewListening() {
+  function toggleInterviewListening() {
+    if (isListening) {
+      stopInterviewListening();
+      return;
+    }
+    const remembered = storedVoiceInputMode();
+    if (!remembered || (!authenticated && remembered === "cloud")) {
+      setVoiceConsentOpen(true);
+      return;
+    }
+    void startInterviewListening(remembered);
+  }
+
+  async function acceptVoiceInputMode(mode: VoiceInputMode) {
+    const permittedMode = authenticated ? mode : "browser";
+    rememberVoiceInputMode(permittedMode);
+    setVoiceConsentOpen(false);
+    await startInterviewListening(permittedMode);
+  }
+
+  async function startInterviewListening(mode: VoiceInputMode) {
     type RecognitionAlternative = {
       transcript: string;
       confidence?: number;
@@ -4487,6 +4829,7 @@ export default function Home({
     const Recognition =
       voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
     const canRecord =
+      mode === "cloud" &&
       authenticated &&
       typeof MediaRecorder !== "undefined" &&
       Boolean(navigator.mediaDevices?.getUserMedia);
@@ -4494,11 +4837,6 @@ export default function Home({
       setVoiceMessage(sttUi.unavailable);
       return;
     }
-    if (isListening) {
-      stopInterviewListening();
-      return;
-    }
-
     voiceTranscriptionRequestIdRef.current += 1;
     const requestId = voiceTranscriptionRequestIdRef.current;
     voiceTranscriptionAbortRef.current?.abort();
@@ -4544,6 +4882,9 @@ export default function Home({
             type: voiceRecordingMimeRef.current,
           });
           voiceAudioChunksRef.current = [];
+          lastVoiceRecordingRef.current = audio.size ? audio : null;
+          setHasCoachedVoiceSource(Boolean(audio.size));
+          releaseCoachedVoice();
           void refineRecordedInterviewAnswer({
             audio,
             baseAnswer: voiceRecordingBaseRef.current,
@@ -4600,6 +4941,7 @@ export default function Home({
       }
     }
     recognition.onresult = (event) => {
+      if (requestId !== voiceTranscriptionRequestIdRef.current) return;
       const finalSegments: string[] = [];
       const interimSegments: string[] = [];
       const confidences: number[] = [];
@@ -4662,6 +5004,7 @@ export default function Home({
         );
     };
     recognition.onend = () => {
+      if (requestId !== voiceTranscriptionRequestIdRef.current) return;
       if (
         keepListeningRef.current &&
         speechRecognitionRef.current === recognition
@@ -4691,6 +5034,7 @@ export default function Home({
       }
     };
     recognition.onerror = (event) => {
+      if (requestId !== voiceTranscriptionRequestIdRef.current) return;
       const error = event.error || "";
       if (["not-allowed", "service-not-allowed"].includes(error)) {
         keepListeningRef.current = false;
@@ -4743,6 +5087,46 @@ export default function Home({
       }
     }
   }
+
+  async function transformRecordedInterviewVoice() {
+    const audio = lastVoiceRecordingRef.current;
+    setVoiceTransformConsentOpen(false);
+    if (!authenticated || !audio?.size || audio.size > STT_MAX_AUDIO_BYTES) {
+      setVoiceMessage(voiceConsentUi.coachedUnavailable);
+      return;
+    }
+    const controller = new AbortController();
+    voiceTransformAbortRef.current?.abort();
+    voiceTransformAbortRef.current = controller;
+    releaseCoachedVoice();
+    setIsTransformingVoice(true);
+    try {
+      const form = new FormData();
+      form.append("audio", audio, "interview-answer");
+      form.append("consent_version", STS_CONSENT_VERSION);
+      const response = await fetch("/api/speech-to-speech", {
+        method: "POST",
+        body: form,
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("voice transform unavailable");
+      const transformed = await response.blob();
+      if (!transformed.size || controller.signal.aborted)
+        throw new Error("voice transform unavailable");
+      const url = URL.createObjectURL(transformed);
+      coachedVoiceUrlRef.current = url;
+      setCoachedVoiceUrl(url);
+      setVoiceMessage(voiceConsentUi.coachedReady);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError"))
+        setVoiceMessage(voiceConsentUi.coachedUnavailable);
+    } finally {
+      if (voiceTransformAbortRef.current === controller)
+        voiceTransformAbortRef.current = null;
+      setIsTransformingVoice(false);
+    }
+  }
+
   async function sendFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedbackSubmitting(true);
@@ -5279,6 +5663,143 @@ export default function Home({
           </div>
         </div>
       </section>
+
+      {voiceConsentOpen && (
+        <div
+          className="voice-consent-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setVoiceConsentOpen(false);
+          }}
+        >
+          <section
+            className="voice-consent-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="voice-consent-title"
+            aria-describedby="voice-consent-description"
+          >
+            <button
+              className="walkthrough-close"
+              type="button"
+              aria-label={detail.verifyClose}
+              onClick={() => setVoiceConsentOpen(false)}
+            >
+              ×
+            </button>
+            <p className="eyebrow">{interview.answer}</p>
+            <h2 id="voice-consent-title">{voiceConsentUi.title}</h2>
+            <div id="voice-consent-description" className="voice-consent-options">
+              {authenticated && (
+                <article>
+                  <b>{voiceConsentUi.cloudButton}</b>
+                  <p>{voiceConsentUi.cloudBody}</p>
+                </article>
+              )}
+              <article>
+                <b>{voiceConsentUi.browserButton}</b>
+                <p>{voiceConsentUi.browserBody}</p>
+              </article>
+            </div>
+            <div className="voice-consent-actions">
+              {authenticated && (
+                <button
+                  ref={voiceConsentPrimaryActionRef}
+                  className="button primary"
+                  type="button"
+                  onClick={() => void acceptVoiceInputMode("cloud")}
+                >
+                  {voiceConsentUi.cloudButton}
+                </button>
+              )}
+              <button
+                ref={authenticated ? undefined : voiceConsentPrimaryActionRef}
+                className={authenticated ? "button secondary" : "button primary"}
+                type="button"
+                onClick={() => void acceptVoiceInputMode("browser")}
+              >
+                {voiceConsentUi.browserButton}
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setVoiceConsentOpen(false)}
+              >
+                {voiceConsentUi.typeButton}
+              </button>
+            </div>
+            <a
+              className="voice-consent-privacy"
+              href={localizedPath(locale, "privacy")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {voiceConsentUi.privacyLink} ↗
+            </a>
+          </section>
+        </div>
+      )}
+
+      {voiceTransformConsentOpen && (
+        <div
+          className="voice-consent-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setVoiceTransformConsentOpen(false);
+          }}
+        >
+          <section
+            className="voice-consent-dialog voice-transform-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="voice-transform-title"
+            aria-describedby="voice-transform-description"
+          >
+            <button
+              className="walkthrough-close"
+              type="button"
+              aria-label={detail.verifyClose}
+              onClick={() => setVoiceTransformConsentOpen(false)}
+            >
+              ×
+            </button>
+            <p className="eyebrow">{interview.answer}</p>
+            <h2 id="voice-transform-title">
+              {voiceConsentUi.coachedButton}
+            </h2>
+            <p id="voice-transform-description">
+              {voiceConsentUi.coachedNotice}
+            </p>
+            <div className="voice-consent-actions">
+              <button
+                ref={voiceTransformPrimaryActionRef}
+                className="button primary"
+                type="button"
+                onClick={() => void transformRecordedInterviewVoice()}
+              >
+                {voiceConsentUi.coachedButton}
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setVoiceTransformConsentOpen(false)}
+              >
+                {voiceConsentUi.typeButton}
+              </button>
+            </div>
+            <a
+              className="voice-consent-privacy"
+              href={localizedPath(locale, "privacy")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {voiceConsentUi.privacyLink} ↗
+            </a>
+          </section>
+        </div>
+      )}
 
       {walkthroughOpen && (
         <div
@@ -6354,6 +6875,7 @@ export default function Home({
                     value={interviewPersona}
                     disabled={interviewThinking}
                     onChange={(event) => {
+                      cancelInterviewVoiceSession();
                       setInterviewPersona(
                         event.target.value as InterviewPersonaId,
                       );
@@ -6419,6 +6941,13 @@ export default function Home({
                 >
                   {interviewMessages.length ? interview.restart : interview.start}
                 </button>
+                <span
+                  className="interview-restart-notice"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {restartNotice}
+                </span>
               </div>
 
               <section
@@ -6936,7 +7465,11 @@ export default function Home({
                           !interviewMessages.length ||
                           interviewThinking ||
                           isRefiningVoice ||
-                          realisticReviewOpen
+                          realisticReviewOpen ||
+                          !voiceInputSupported
+                        }
+                        title={
+                          voiceInputSupported ? undefined : sttUi.unavailable
                         }
                         aria-pressed={isListening}
                       >
@@ -6960,9 +7493,57 @@ export default function Home({
                           : interview.send}
                       </button>
                     </div>
+                    {(hasCoachedVoiceSource || coachedVoiceUrl) && (
+                      <div className="coached-voice-panel">
+                        <button
+                          type="button"
+                          className="button secondary"
+                          disabled={
+                            isListening ||
+                            isRefiningVoice ||
+                            isTransformingVoice ||
+                            realisticReviewOpen
+                          }
+                          onClick={() => setVoiceTransformConsentOpen(true)}
+                        >
+                          {isTransformingVoice
+                            ? sttUi.refining
+                            : voiceConsentUi.coachedButton}
+                        </button>
+                        {coachedVoiceUrl && (
+                          // The editable answer immediately above is the
+                          // synchronized transcript for this temporary audio.
+                          // eslint-disable-next-line jsx-a11y/media-has-caption
+                          <audio
+                            controls
+                            preload="metadata"
+                            src={coachedVoiceUrl}
+                            aria-label={voiceConsentUi.coachedReady}
+                            aria-describedby="interview-answer"
+                          />
+                        )}
+                      </div>
+                    )}
                     <small className="voice-disclosure">
                       {voiceMessage ||
                         `${sttUi.privacy} ${interview.speechLanguage}: ${speechLocaleFor(locale)}.`}
+                      {voiceInputSupported && !isListening && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              window.sessionStorage.removeItem(
+                                VOICE_INPUT_CONSENT_STORAGE_KEY,
+                              );
+                            } catch {
+                              // The modal can still be opened without storage.
+                            }
+                            setVoiceConsentOpen(true);
+                          }}
+                        >
+                          {voiceConsentUi.title}
+                        </button>
+                      )}
                     </small>
                     <div
                       className={`speech-vocabulary ${realisticSessionActive ? "practice-hidden" : ""}`}
@@ -6979,12 +7560,34 @@ export default function Home({
                       <input
                         type="checkbox"
                         checked={autoReadInterviewQuestions}
-                        onChange={(event) =>
-                          setAutoReadInterviewQuestions(event.target.checked)
-                        }
+                        onChange={(event) => {
+                          const enabled = event.target.checked;
+                          if (enabled) {
+                            const alreadyAccepted =
+                              window.localStorage.getItem(
+                                CLOUD_READ_ALOUD_CONSENT_KEY,
+                              ) === "accepted";
+                            if (
+                              !alreadyAccepted &&
+                              !window.confirm(
+                                `${cloudReadAloudNoticeFor(locale)}\n\n${interviewFlow.autoRead}?`,
+                              )
+                            )
+                              return;
+                            window.localStorage.setItem(
+                              CLOUD_READ_ALOUD_CONSENT_KEY,
+                              "accepted",
+                            );
+                            void unlockInterviewAudioContext();
+                          }
+                          setAutoReadInterviewQuestions(enabled);
+                        }}
                       />
                       <span>{interviewFlow.autoRead}</span>
                     </label>
+                    <small className="voice-disclosure">
+                      {cloudReadAloudNoticeFor(locale)}
+                    </small>
                   </form>
                 </section>
 
