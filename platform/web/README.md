@@ -62,16 +62,23 @@ those authenticated routes.
 
 ## Neural question read-aloud
 
-Interview questions use server-side Microsoft Azure Speech when both
+Interview questions use the multilingual Azure Dragon HD Omni model when both
 `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` are configured. Keep the key in
 the server environment; it must never use a `NEXT_PUBLIC_` name or be included
 in client code. The speech route accepts only the current question text and one
 of the 40 supported locale codes, returns private no-store audio, and does not
-persist the generated audio. If either setting is absent or Azure Speech is
-unavailable, the client falls back to the browser or device voice.
+persist the generated audio. If HD Omni is unavailable for the configured
+resource, the server tries the locale's Azure Neural voice before the client
+uses a clearly labelled browser/device fallback. Signed-in requests and guest
+requests have separate per-visitor quotas plus a D1-backed global safety cap;
+guest quota keys are one-way hashes of Cloudflare's connecting address and are
+kept only in Worker memory, never logged or persisted.
 
-Read-aloud does not send the resume, job description, interview answer,
-transcript, or raw voice recording to Azure Speech. Voice recognition remains a
+Read-aloud sends only the current question text and selected language to Azure
+Speech. Because questions are tailored, that text can include short role,
+evidence, or gap terms derived from the resume or job description; it does not
+include either full document, the interview answer, transcript, or raw voice
+recording. Voice recognition remains a
 separate capability. Keep the public privacy policy and FAQ aligned if this
 data flow changes.
 

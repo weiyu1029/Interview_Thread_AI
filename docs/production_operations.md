@@ -28,6 +28,8 @@ Non-secret values:
 - `EMAIL_FROM=InterviewThread Website <notifications@send.interviewthreadai.com>`
 - `EMAIL_FEEDBACK_TO=feedback@interviewthreadai.com`
 - `EMAIL_PARTNERSHIPS_TO=partnerships@interviewthreadai.com`
+- `AZURE_SPEECH_REGION=<Azure Speech resource region>`
+- `AZURE_SPEECH_ENDPOINT=https://<resource>.cognitiveservices.azure.com`
 
 Encrypted secrets:
 

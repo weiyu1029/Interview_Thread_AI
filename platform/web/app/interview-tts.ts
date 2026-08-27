@@ -1,7 +1,14 @@
 import type { LocaleCode } from "./i18n";
 
-export const TTS_MODEL_ID = "azure-standard-neural";
+export const TTS_MODEL_ID = "azure-dragon-hd-omni";
+export const TTS_FALLBACK_MODEL_ID = "azure-standard-neural";
 export const TTS_MAX_CHARACTERS = 1_600;
+
+// Dragon HD Omni is Azure's multilingual, context-aware speech model. One
+// consistent interviewer persona is used across locales while <lang> locks the
+// pronunciation and accent to the language selected in InterviewThread.
+const AZURE_HD_INTERVIEW_VOICE =
+  "en-US-Ava:DragonHDOmniLatestNeural";
 
 type AzureVoice = {
   language: string;
@@ -58,6 +65,11 @@ export function isTtsLocale(value: unknown): value is LocaleCode {
 }
 
 export function azureVoiceForLocale(locale: LocaleCode) {
+  void locale;
+  return AZURE_HD_INTERVIEW_VOICE;
+}
+
+export function azureStandardVoiceForLocale(locale: LocaleCode) {
   return AZURE_VOICES[locale].name;
 }
 
@@ -124,16 +136,18 @@ function technicalSsml(text: string) {
     .join("");
 }
 
-export function buildAzureSpeechRequest({
+function azureSpeechRequest({
   text,
   locale,
   apiKey,
   region,
+  model,
 }: {
   text: string;
   locale: LocaleCode;
   apiKey: string;
   region: string;
+  model: "hd" | "standard";
 }) {
   if (!apiKey) throw new Error("Speech configuration is unavailable.");
   if (!/^[a-z0-9-]+$/i.test(region))
@@ -141,7 +155,11 @@ export function buildAzureSpeechRequest({
   const normalized = normalizeTtsText(text);
   if (!normalized) throw new Error("Speech text is empty.");
   const voice = AZURE_VOICES[locale];
-  const body = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.language}"><voice name="${voice.name}"><prosody rate="0%">${technicalSsml(normalized)}</prosody></voice></speak>`;
+  const spokenText = technicalSsml(normalized);
+  const body =
+    model === "hd"
+      ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${voice.language}"><voice name="${AZURE_HD_INTERVIEW_VOICE}" parameters="temperature=0.65;top_p=0.65;top_k=20;cfg_scale=1.4;enhancePronunciation=true"><lang xml:lang="${voice.language}"><p><s>${spokenText}</s></p></lang></voice></speak>`
+      : `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.language}"><voice name="${voice.name}"><prosody rate="-2%">${spokenText}</prosody></voice></speak>`;
 
   return {
     url: `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
@@ -151,10 +169,28 @@ export function buildAzureSpeechRequest({
         Accept: "audio/mpeg",
         "Content-Type": "application/ssml+xml",
         "Ocp-Apim-Subscription-Key": apiKey,
-        "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
+        "X-Microsoft-OutputFormat": "audio-48khz-192kbitrate-mono-mp3",
         "User-Agent": "InterviewThread",
       },
       body,
     } satisfies RequestInit,
   };
+}
+
+export function buildAzureSpeechRequest(input: {
+  text: string;
+  locale: LocaleCode;
+  apiKey: string;
+  region: string;
+}) {
+  return azureSpeechRequest({ ...input, model: "hd" });
+}
+
+export function buildAzureStandardSpeechRequest(input: {
+  text: string;
+  locale: LocaleCode;
+  apiKey: string;
+  region: string;
+}) {
+  return azureSpeechRequest({ ...input, model: "standard" });
 }

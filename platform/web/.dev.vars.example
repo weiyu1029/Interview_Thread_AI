@@ -15,7 +15,7 @@ LINKEDIN_CLIENT_ID=
 LINKEDIN_CLIENT_SECRET=
 
 # Optional server-side Microsoft Azure Speech. Keep the subscription key private.
-# Neural read-aloud needs the key and region. Signed-in final transcript
+# Dragon HD Omni read-aloud needs the key and region. Signed-in final transcript
 # correction needs the key and resource endpoint. Without the required values,
 # voice answers keep the browser/device transcript and read-aloud uses the
 # browser/device voice.

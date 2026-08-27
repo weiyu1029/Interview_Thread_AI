@@ -4237,6 +4237,14 @@ input:focus {
   font-size: 15px;
   font-weight: 720;
 }
+.interview-restart-notice {
+  min-height: 20px;
+  grid-column: 3;
+  color: #315f4a;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+}
 .interview-mode {
   height: 42px;
   display: grid;
@@ -6272,6 +6280,9 @@ input:focus {
     .open-question-filters,
     .interview-brief {
     grid-template-columns: 1fr;
+  }
+  .interview-restart-notice {
+    grid-column: auto;
   }
   .open-question-picker {
     grid-column: auto;
