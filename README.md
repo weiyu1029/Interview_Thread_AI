@@ -109,8 +109,9 @@ The production platform includes:
 - guest mode plus Google, GitHub and LinkedIn OAuth accounts;
 - server-side document parsing, evidence mapping, job adapters and mock
   interview APIs;
-- a 4,362-record English open interview bank plus a 2,025-record localized
-  matrix for every supported locale, with source, license and pinned revision;
+- a continuously updated, reviewed interview question bank: currently 4,362
+  English records plus a 2,025-record localized matrix for every supported
+  locale, with source, license, deduplication and pinned revision checks;
 - turn-based AI voice interviews with ElevenLabs conversational question
   delivery, corrected transcripts, adaptive follow-ups and safe Azure/device
   fallbacks;

@@ -10,6 +10,7 @@ import {
   questionsForInterviewRole as filterQuestionsForInterviewRole,
 } from "../app/interview-question-bank.ts";
 import { LANGUAGES } from "../app/i18n.ts";
+import { questionBankPolicyCopyFor } from "../app/question-bank-policy-copy.ts";
 
 const OPEN_INTERVIEW_QUESTIONS = await questionsForInterviewLocale("en");
 
@@ -377,4 +378,30 @@ test("returns the reviewed English source bank only for English", async () => {
       `${locale} should only receive the localized InterviewThread matrix`,
     );
   }
+});
+
+test("describes the question bank as continuously updated and reviewed in every locale", () => {
+  for (const [locale] of LANGUAGES) {
+    const copy = questionBankPolicyCopyFor(locale);
+    assert.ok(copy.title.trim(), `${locale} needs a question-bank policy title`);
+    assert.ok(copy.policy.trim(), `${locale} needs a question-bank policy`);
+    assert.match(copy.policy, /InterviewThread/);
+  }
+
+  assert.equal(
+    questionBankPolicyCopyFor("zh-TW").title,
+    "持續更新的受審核題庫",
+  );
+  assert.match(
+    questionBankPolicyCopyFor("zh-TW").policy,
+    /不會為了題量犧牲授權、品質或安全性/,
+  );
+  assert.equal(
+    questionBankPolicyCopyFor("en").title,
+    "Continuously updated, reviewed question bank",
+  );
+  assert.match(
+    questionBankPolicyCopyFor("en").policy,
+    /does not run an unreviewed real-time web crawler/,
+  );
 });

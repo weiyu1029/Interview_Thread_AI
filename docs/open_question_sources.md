@@ -1,12 +1,18 @@
 # Open interview question sources
 
-InterviewThread ships a structured, auditable interview question bank rather than claiming to include “every question on the internet.” The current bank contains **4,362 structured practice records**:
+InterviewThread maintains a continuously updated, reviewed interview question bank rather than running an unreviewed real-time web crawler or claiming to include “every question on the internet.” New material is added only after source licensing, quality, duplication, attribution, and safety review. The current bank contains **4,362 structured practice records**:
 
 - **2,025 original InterviewThread questions** generated from a complete `15 personas × 5 answer stages × 3 difficulty levels × 9 lenses` matrix.
 - **26 hand-reviewed adaptations** from three license-compatible open-source projects.
 - **2,311 deduplicated, complete interview prompts** generated from three pinned, license-reviewed repositories.
 
 Every bundled question has a stable ID, filtering metadata, and a source record. Original questions are grounded in the user’s resume evidence and job description at render time. Adapted questions retain their upstream source and license links in the product interface.
+
+“Continuously updated” means the reviewed collection can grow through pinned,
+reproducible imports and attributed contributions. It does not mean that
+InterviewThread continuously crawls the public web or publishes newly found
+material before review. Coverage will never be increased at the expense of
+licensing, quality, privacy, or safety.
 
 ## Original InterviewThread matrix
 

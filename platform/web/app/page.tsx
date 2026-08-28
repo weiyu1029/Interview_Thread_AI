@@ -119,6 +119,7 @@ import {
   type TechnicalResourceTag,
 } from "./technical-resources";
 import { technicalResourceCopyFor } from "./technical-resource-copy";
+import { questionBankPolicyCopyFor } from "./question-bank-policy-copy";
 import {
   walkthroughCuesFor,
   walkthroughNarrationLabelFor,
@@ -2387,6 +2388,7 @@ function scoringGuideFor(locale: LocaleCode) {
 }
 
 function interviewStudioUiFor(locale: LocaleCode) {
+  const questionBankPolicy = questionBankPolicyCopyFor(locale);
   if (locale === "zh-TW")
     return {
       round: "面試關卡",
@@ -2397,8 +2399,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resources: "本關推薦練習資源",
       resourcesIntro:
         "依目前面試官的決策重點推薦。只提供外部連結，不複製第三方題目；開啟前請確認帳號、價格與隱私條款。",
-      questionBank: "開源面試題庫",
+      questionBank: questionBankPolicy.title,
       questionBankIntro: "依面試官角色、題型、回答階段、難度與追問焦點選題；L1、L2、L3 每個組合都有題目，且保留來源與授權。",
+      questionBankPolicy: questionBankPolicy.policy,
       category: "題型分類",
       allCategories: "全部題型",
       focus: "追問焦點",
@@ -2437,8 +2440,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
       resources: "本轮推荐练习资源",
       resourcesIntro:
         "按当前面试官的决策重点推荐。这里只提供外部链接，不复制第三方题目；打开前请确认账号、价格和隐私条款。",
-      questionBank: "开源面试题库",
+      questionBank: questionBankPolicy.title,
       questionBankIntro: "按面试官角色、题型、回答阶段、难度和追问重点选题；L1、L2、L3 每种组合都有题目，并保留来源和授权。",
+      questionBankPolicy: questionBankPolicy.policy,
       category: "题型分类",
       allCategories: "全部题型",
       focus: "追问重点",
@@ -2476,8 +2480,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
     resources: "Recommended practice for this round",
     resourcesIntro:
       "Selected for this interviewer’s decision criteria. We link out without copying third-party questions; external sites have their own accounts, pricing, privacy, and terms.",
-    questionBank: "Open-source interview question bank",
+    questionBank: questionBankPolicy.title,
     questionBankIntro: "Filter by interviewer role, question type, answer stage, level, and follow-up focus. Every L1, L2, and L3 combination is covered, with source and license preserved.",
+    questionBankPolicy: questionBankPolicy.policy,
     category: "Question type",
     allCategories: "All question types",
     focus: "Follow-up focus",
@@ -2517,8 +2522,9 @@ function interviewStudioUiFor(locale: LocaleCode) {
     prep: `${core.interview} · ${detail.evidenceCoverage}`,
     resources: `${core.interview} · ${detail.source}`,
     resourcesIntro: core.heroBody,
-    questionBank: `${openSourceLabelFor(locale)} · ${core.interview}`,
+    questionBank: questionBankPolicy.title,
     questionBankIntro: `${core.interview} · ${flow.topic} · ${flow.stages.join(" → ")}`,
+    questionBankPolicy: questionBankPolicy.policy,
     category: flow.topic,
     allCategories: `${core.interview} · ${flow.topic}`,
     focus: flow.nextQuestion,
@@ -7372,7 +7378,12 @@ export default function Home({
                     <h3 id="open-question-library-title">
                       {interviewStudioUi.questionBank}
                     </h3>
-                    <p>{interviewStudioUi.questionBankIntro}</p>
+                    <p className="question-bank-method">
+                      {interviewStudioUi.questionBankIntro}
+                    </p>
+                    <p className="question-bank-policy">
+                      {interviewStudioUi.questionBankPolicy}
+                    </p>
                   </div>
                   <span className="status-pill light">
                     {filteredOpenQuestions.length} {interviewStudioUi.questionsAvailable}

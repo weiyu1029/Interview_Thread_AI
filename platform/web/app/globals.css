@@ -4638,12 +4638,24 @@ input:focus {
   font-size: 18px;
   line-height: 1.25;
 }
-.open-question-library-heading > div > p:last-child {
+.open-question-library-heading .question-bank-method,
+.open-question-library-heading .question-bank-policy {
   max-width: 720px;
   margin: 6px 0 0;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
+}
+.open-question-library-heading .question-bank-policy {
+  padding-left: 10px;
+  border-left: 3px solid #9bb5c5;
+  color: var(--ink);
+}
+[dir="rtl"] .open-question-library-heading .question-bank-policy {
+  padding-right: 10px;
+  padding-left: 0;
+  border-right: 3px solid #9bb5c5;
+  border-left: 0;
 }
 .open-question-filters {
   display: grid;
