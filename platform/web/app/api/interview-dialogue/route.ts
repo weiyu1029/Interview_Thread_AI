@@ -12,6 +12,7 @@ import {
   isElevenLabsVoiceId,
   isTtsLocale,
   normalizeTtsText,
+  ttsVoiceProfileHeader,
 } from "../../interview-tts.ts";
 import { getAppUser } from "../../auth";
 import {
@@ -292,6 +293,10 @@ export async function POST(request: Request) {
               "X-InterviewThread-Speech-Provider": "elevenlabs",
               "X-InterviewThread-Speech-Fallback":
                 model === ELEVENLABS_DIALOGUE_MODEL_ID ? "none" : model,
+              "X-InterviewThread-Voice-Profile": ttsVoiceProfileHeader(
+                locale,
+                "elevenlabs-dialogue",
+              ),
             },
           });
         }

@@ -39,6 +39,12 @@ Every public page has an indexable, canonical language URL and reciprocal hrefla
 - Application tracking, model selection, and public feedback
 - Localized public pages and interface support
 
+## Interview question bank policy
+InterviewThread maintains a continuously updated, reviewed question bank. New
+questions are added only after source licensing, quality, deduplication,
+attribution, and safety checks. It does not run an unreviewed real-time web
+crawler or trade licensing, quality, privacy, or safety for question volume.
+
 ## Access
 - Every public feature is open source
 - There are no paid tiers, billing flows, or priority support levels

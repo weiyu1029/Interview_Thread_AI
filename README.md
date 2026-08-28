@@ -50,7 +50,9 @@ starts with evidence, then builds the preparation workflow around what is true:
 3. **Story Builder** — shape only supported actions and outcomes into concise,
    defensible interview narratives.
 4. **Mock Interview** — rehearse with role-specific follow-ups that probe the
-   weakest evidence without coaching the answer in realistic mode.
+   weakest evidence without coaching the answer in realistic mode. Voice mode
+   reads each question aloud, waits for an explicit finished answer, then asks
+   an evidence-aware follow-up or opens a new topic.
 
 The result is a preparation system a candidate can inspect, correct, and trust—not
 a polished story they cannot substantiate.
@@ -107,7 +109,12 @@ The production platform includes:
 - guest mode plus Google, GitHub and LinkedIn OAuth accounts;
 - server-side document parsing, evidence mapping, job adapters and mock
   interview APIs;
-- authenticated Azure speech routes with device fallback;
+- a continuously updated, reviewed interview question bank: currently 4,362
+  English records plus a 2,025-record localized matrix for every supported
+  locale, with source, license, deduplication and pinned revision checks;
+- turn-based AI voice interviews with ElevenLabs conversational question
+  delivery, corrected transcripts, adaptive follow-ups and safe Azure/device
+  fallbacks;
 - D1-backed activity, beta and feedback records;
 - privacy-minimized structured logs, a D1 health endpoint, scheduled smoke
   checks and a private aggregate-only operator dashboard;

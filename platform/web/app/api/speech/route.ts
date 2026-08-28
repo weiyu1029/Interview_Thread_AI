@@ -7,6 +7,7 @@ import {
   isElevenLabsVoiceId,
   isTtsLocale,
   normalizeTtsText,
+  ttsVoiceProfileHeader,
   TTS_FALLBACK_MODEL_ID,
   TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
   TTS_MAX_CHARACTERS,
@@ -362,6 +363,7 @@ export async function POST(request: Request) {
       model: string;
       provider: "elevenlabs" | "azure_speech";
       fallback: "none" | "azure-dragon-hd-omni" | "azure-standard-neural";
+      voiceProfile: string;
       request: ReturnType<
         | typeof buildElevenLabsSpeechRequest
         | typeof buildAzureSpeechRequest
@@ -373,6 +375,7 @@ export async function POST(request: Request) {
         model: TTS_MODEL_ID,
         provider: "elevenlabs",
         fallback: "none",
+        voiceProfile: ttsVoiceProfileHeader(locale, "elevenlabs-tts"),
         request: buildElevenLabsSpeechRequest({
           text,
           locale,
@@ -382,30 +385,36 @@ export async function POST(request: Request) {
       });
     }
     if (azureConfigured) {
-      attempts.push(
-        {
+      const azureNativeAttempt = {
+        model: TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
+        provider: "azure_speech" as const,
+        fallback: "azure-standard-neural" as const,
+        voiceProfile: ttsVoiceProfileHeader(locale, "azure-native"),
+        request: buildAzureStandardSpeechRequest({
+          text,
+          locale,
+          apiKey: azureApiKey!,
+          region: azureRegion!,
+        }),
+      };
+      if (locale === "en") {
+        attempts.push({
           model: TTS_FALLBACK_MODEL_ID,
           provider: "azure_speech",
           fallback: "azure-dragon-hd-omni",
+          voiceProfile: ttsVoiceProfileHeader(locale, "azure-hd-en"),
           request: buildAzureSpeechRequest({
             text,
             locale,
             apiKey: azureApiKey!,
             region: azureRegion!,
           }),
-        },
-        {
-          model: TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
-          provider: "azure_speech",
-          fallback: "azure-standard-neural",
-          request: buildAzureStandardSpeechRequest({
-            text,
-            locale,
-            apiKey: azureApiKey!,
-            region: azureRegion!,
-          }),
-        },
-      );
+        });
+      }
+      // Non-English locales receive only their exact locale-native Azure
+      // voice. The English-trained Ava Dragon voice is never constructed for
+      // them, even after the native provider attempt fails.
+      attempts.push(azureNativeAttempt);
     }
 
     const providerDeadline = Date.now() + PROVIDER_TOTAL_TIMEOUT_MS;
@@ -477,6 +486,8 @@ export async function POST(request: Request) {
                 "X-InterviewThread-Speech-Model": attempt.model,
                 "X-InterviewThread-Speech-Provider": attempt.provider,
                 "X-InterviewThread-Speech-Fallback": attempt.fallback,
+                "X-InterviewThread-Speech-Locale": locale,
+                "X-InterviewThread-Voice-Profile": attempt.voiceProfile,
                 "X-Request-ID": requestId,
               },
             });

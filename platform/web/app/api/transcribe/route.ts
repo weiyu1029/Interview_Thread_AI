@@ -254,7 +254,10 @@ export async function POST(request: Request) {
     try {
       const providerResponse = await fetch(attempt.request.url, {
         ...attempt.request.init,
-        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+        signal: AbortSignal.any([
+          request.signal,
+          AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+        ]),
       });
       if (!providerResponse.ok) {
         everyAttemptRateLimited &&= providerResponse.status === 429;

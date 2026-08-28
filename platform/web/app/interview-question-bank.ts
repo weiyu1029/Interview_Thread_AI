@@ -1,4 +1,5 @@
 import type { InterviewPersonaId } from "./interview-speech";
+import type { LocaleCode } from "./i18n";
 
 export type InterviewQuestionTrack =
   | "role-fit"
@@ -18,13 +19,21 @@ export type InterviewQuestionLens =
   | "evidence"
   | "ownership"
   | "judgment"
-  | "pressure";
+  | "pressure"
+  | "collaboration"
+  | "learning"
+  | "stakeholder"
+  | "communication"
+  | "scale";
 
 export type OpenInterviewQuestionSourceId =
   | "interviewthread"
   | "system-design-primer"
   | "frontend-interview-questions"
-  | "javascript-questions";
+  | "javascript-questions"
+  | "data-science-interview-questions"
+  | "ai-llm-interview-guide"
+  | "ai-interview-questions";
 
 export type OpenInterviewQuestionSource = {
   id: OpenInterviewQuestionSourceId;
@@ -33,6 +42,8 @@ export type OpenInterviewQuestionSource = {
   license: "MIT" | "CC BY 4.0";
   licenseHref: string;
   note: string;
+  sourceCommit?: string;
+  attribution?: string;
 };
 
 export type OpenInterviewQuestion = {
@@ -50,6 +61,11 @@ export type OpenInterviewQuestion = {
    */
   prompt?: string;
   topic?: string;
+  sourcePath?: string;
+  sourceLine?: number;
+  sourceCommit?: string;
+  sourceMode?: "selected" | "adapted" | "original";
+  difficultyMode?: "declared" | "calibrated";
 };
 
 export const OPEN_INTERVIEW_QUESTION_SOURCES: readonly OpenInterviewQuestionSource[] = [
@@ -87,6 +103,40 @@ export const OPEN_INTERVIEW_QUESTION_SOURCES: readonly OpenInterviewQuestionSour
     licenseHref:
       "https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE",
     note: "JavaScript concepts adapted into interviewer-style questions.",
+  },
+  {
+    id: "data-science-interview-questions",
+    name: "Data Science Interview Questions & Answers",
+    href: "https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers",
+    license: "MIT",
+    licenseHref:
+      "https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers/blob/main/LICENSE",
+    note: "Data-science prompts selected, reviewed, and adapted for spoken practice.",
+    sourceCommit: "ffd17a108d7087035568747eafc88c07f5b6bc6c",
+    attribution: "Copyright (c) 2022 Ajit Kumar Singh.",
+  },
+  {
+    id: "ai-llm-interview-guide",
+    name: "AI & LLM Interview Guide",
+    href: "https://github.com/bettyguo/ai-llm-interview-guide",
+    license: "CC BY 4.0",
+    licenseHref:
+      "https://github.com/bettyguo/ai-llm-interview-guide/blob/main/LICENSE",
+    note: "AI and LLM prompts adapted with attribution and a change notice.",
+    sourceCommit: "4dc2fa6e76e003aef029361cfc4ca44d16696faf",
+    attribution:
+      "Betty Guo (Dongxin Guo / 郭东欣), llm-interview-prep (https://github.com/bettyguo/llm-interview-prep), University of Hong Kong, 2026. Adapted under CC BY 4.0.",
+  },
+  {
+    id: "ai-interview-questions",
+    name: "Landed AI Interview Questions",
+    href: "https://github.com/landedjobs/ai-interview-questions",
+    license: "MIT",
+    licenseHref:
+      "https://github.com/landedjobs/ai-interview-questions/blob/main/LICENSE",
+    note: "AI, ML, product, and system-design prompts adapted for interview simulation.",
+    sourceCommit: "401541b7e89b67686e5eaaa8b9523f1b99f0f096",
+    attribution: "Copyright (c) 2026 Landed (b100x).",
   },
 ] as const;
 
@@ -131,6 +181,11 @@ export const INTERVIEW_QUESTION_LENSES: readonly InterviewQuestionLens[] = [
   "ownership",
   "judgment",
   "pressure",
+  "collaboration",
+  "learning",
+  "stakeholder",
+  "communication",
+  "scale",
 ];
 
 const COMMUNITY_PROBES: Record<
@@ -146,6 +201,16 @@ const COMMUNITY_PROBES: Record<
       "What decision did you make, and what information made that choice reasonable at the time?",
     pressure:
       "What is one honest limitation or uncertainty in this example?",
+    collaboration:
+      "Who else helped make this outcome possible, and how did you work together?",
+    learning:
+      "What did this experience teach you that changed how you work now?",
+    stakeholder:
+      "Who was affected by your work, and how did you understand what they needed?",
+    communication:
+      "How did you explain the work to someone who did not share your context or expertise?",
+    scale:
+      "What would you keep the same, and what would you change, if the scope doubled?",
   },
   2: {
     evidence:
@@ -156,6 +221,16 @@ const COMMUNITY_PROBES: Record<
       "Which alternative did you reject, and what trade-off did you accept by choosing this path?",
     pressure:
       "What was the most likely failure mode, and what did you do to detect or reduce it?",
+    collaboration:
+      "Where did collaboration become difficult, and what did you do to restore progress without taking over someone else's work?",
+    learning:
+      "Which assumption proved wrong, how did you discover it, and what did you change because of it?",
+    stakeholder:
+      "Which stakeholder needs conflicted, and how did you decide whose constraint carried the most weight?",
+    communication:
+      "What was misunderstood at first, and how did you change the message, medium, or evidence to create alignment?",
+    scale:
+      "Which part of your approach would fail first at ten times the users, data, or team size, and why?",
   },
   3: {
     evidence:
@@ -166,6 +241,16 @@ const COMMUNITY_PROBES: Record<
       "If a key constraint reversed tomorrow, which part of your decision would change first and why?",
     pressure:
       "Assume the interviewer challenges your result as correlation rather than impact. How would you respond without overstating it?",
+    collaboration:
+      "If a key collaborator described the conflict differently, which evidence would help an interviewer reconcile both accounts?",
+    learning:
+      "Which lesson might be overfit to this one experience, and how would you test whether it generalizes?",
+    stakeholder:
+      "If the least powerful stakeholder challenged the outcome, what harm or blind spot might they reveal?",
+    communication:
+      "Give the same recommendation to an executive, a domain expert, and an affected user. What changes, and what must remain consistent?",
+    scale:
+      "At one hundred times the scale, which cost, reliability, governance, or organizational constraint becomes the binding limit first?",
   },
 };
 
@@ -257,12 +342,39 @@ const JAVASCRIPT_QUESTIONS: readonly OpenInterviewQuestion[] = [
   topic: topic as string,
 }));
 
+/**
+ * The evidence-aware InterviewThread matrix and the small hand-reviewed bank
+ * stay in the initial application bundle. The larger licensed English source
+ * bank is loaded only when someone opens the English Interview Studio.
+ */
 export const OPEN_INTERVIEW_QUESTIONS: readonly OpenInterviewQuestion[] = [
   ...COMMUNITY_QUESTIONS,
   ...SYSTEM_DESIGN_QUESTIONS,
   ...FRONTEND_QUESTIONS,
   ...JAVASCRIPT_QUESTIONS,
 ];
+
+/**
+ * Returns only prompts that are safe to present and read aloud in the active
+ * locale. The imported open-source bank is currently reviewed in English;
+ * every other locale therefore receives the InterviewThread matrix, whose
+ * question text is localized at render time.
+ */
+export function baselineQuestionsForInterviewLocale(
+  locale: LocaleCode,
+): readonly OpenInterviewQuestion[] {
+  return locale === "en" ? OPEN_INTERVIEW_QUESTIONS : COMMUNITY_QUESTIONS;
+}
+
+export async function questionsForInterviewLocale(
+  locale: LocaleCode,
+): Promise<readonly OpenInterviewQuestion[]> {
+  if (locale !== "en") return COMMUNITY_QUESTIONS;
+  const { LICENSED_SOURCE_QUESTIONS } = await import(
+    "./interview-question-bank-generated.ts"
+  );
+  return [...OPEN_INTERVIEW_QUESTIONS, ...LICENSED_SOURCE_QUESTIONS];
+}
 
 export const INTERVIEW_QUESTION_TRACKS: readonly InterviewQuestionTrack[] = [
   "role-fit",
@@ -289,8 +401,9 @@ export function questionsForInterviewRole(
   depth: OpenInterviewQuestion["depth"] | "all",
   difficulty: InterviewQuestionDifficulty | "all",
   lens: InterviewQuestionLens | "all" = "all",
+  questions: readonly OpenInterviewQuestion[] = OPEN_INTERVIEW_QUESTIONS,
 ) {
-  return OPEN_INTERVIEW_QUESTIONS.filter(
+  return questions.filter(
     (question) =>
       question.persona === persona &&
       (track === "all" || question.track === track) &&

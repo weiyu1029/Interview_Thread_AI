@@ -94,19 +94,30 @@ ElevenLabs or Microsoft account settings and provider privacy terms.
 ## Two-stage interview voice answers
 
 Voice answers show provisional captions from the browser or device while the
-candidate speaks. For signed-in users, when `AZURE_SPEECH_KEY` and
-`AZURE_SPEECH_ENDPOINT` are configured, the completed recording is sent to the
-Microsoft Azure Speech Fast Transcription endpoint for a final correction pass.
+candidate speaks. In Voice mode, **Finish answer & continue** ends that turn,
+corrects the transcript, scores it, and lets the interview engine either ask an
+evidence-aware follow-up or open a new topic. The next question is then spoken
+aloud. Text mode keeps the transcript editable and sends it only when the user
+presses **Submit answer**. The microphone is never intentionally left open
+between turns.
+
+For signed-in users, the completed recording first uses ElevenLabs Scribe v2
+when configured, then Azure Speech Fast Transcription as a bounded fallback.
 The request contains the recorded answer audio, one of the 40 supported locale
 codes, and at most 80 short vocabulary hints derived from the selected role,
 resume, and job description. It never sends the full resume or job description
-as transcription context.
+as transcription context. Signed-in Voice mode delivers questions through the
+same-origin `/api/interview-dialogue` route using
+`eleven_v3_conversational`; failure safely falls back to `/api/speech` and then
+the reviewed device voice. Follow-up decisions remain in InterviewThread's
+evidence-aware application logic rather than being delegated to the voice
+model.
 
 The transcription route is same-origin, sign-in protected, size and media-type
 limited, and returns private no-store JSON. InterviewThread does not persist or
-log the raw recording. The user can edit the final text before submitting it.
-Guest mode remains browser-only, and any unavailable or failed cloud correction
-keeps the existing browser/device transcript instead of clearing the answer.
+log the raw recording. Guest mode remains browser-only, and any unavailable or
+failed cloud correction keeps the existing browser/device transcript instead
+of clearing the answer.
 
 Resume text, job descriptions, tracker items, and Story Signal alert settings
 remain on the device until an authenticated persistence feature explicitly

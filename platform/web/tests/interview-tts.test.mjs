@@ -23,6 +23,10 @@ import {
   isTtsLocale,
   normalizeTechnicalTermsForSpeech,
   normalizeTtsText,
+  ttsVoiceProfileCompleteness,
+  ttsVoiceProfileForLocale,
+  ttsVoiceProfileHeader,
+  TTS_VOICE_PROFILE_VERSION,
 } from "../app/interview-tts.ts";
 
 const LOCALES = LANGUAGES.map(([locale]) => locale);
@@ -163,20 +167,40 @@ function restoreEnvironment(previous) {
   }
 }
 
-test("builds bounded ElevenLabs v3 and Azure fallback requests for all 40 locales", async () => {
+test("defines complete, auditable, bounded voice profiles for all 40 locales", async () => {
   assert.equal(LOCALES.length, 40);
   assert.equal(TTS_MODEL_ID, "eleven_v3");
   assert.equal(TTS_FALLBACK_MODEL_ID, "azure-dragon-hd-omni");
   assert.equal(TTS_FINAL_CLOUD_FALLBACK_MODEL_ID, "azure-standard-neural");
-  assert.ok(
-    Number.isInteger(TTS_MAX_CHARACTERS) &&
-      TTS_MAX_CHARACTERS >= 800 &&
-      TTS_MAX_CHARACTERS <= 3_000,
-    `provider text limit must be explicit and conservative: ${TTS_MAX_CHARACTERS}`,
-  );
+  assert.equal(TTS_MAX_CHARACTERS, 900);
+  assert.match(TTS_VOICE_PROFILE_VERSION, /^itvp\d+$/);
+  assert.deepEqual(ttsVoiceProfileCompleteness(LOCALES), {
+    version: TTS_VOICE_PROFILE_VERSION,
+    expectedCount: 40,
+    configuredCount: 40,
+    missing: [],
+    extra: [],
+    duplicateProfileIds: [],
+    complete: true,
+  });
 
   for (const locale of LOCALES) {
     assert.equal(isTtsLocale(locale), true, `${locale} should be accepted`);
+    const profile = ttsVoiceProfileForLocale(locale);
+    assert.equal(profile.locale, locale);
+    assert.equal(profile.version, TTS_VOICE_PROFILE_VERSION);
+    assert.match(profile.profileId, /^\d{2}$/);
+    assert.equal(profile.elevenLabsLanguage, elevenLabsLanguageForLocale(locale));
+    assert.equal(profile.azureNativeVoice, azureStandardVoiceForLocale(locale));
+    assert.match(
+      ttsVoiceProfileHeader(locale, "elevenlabs-tts"),
+      /^itvp\d+-\d{2}-a$/,
+    );
+    assert.match(
+      ttsVoiceProfileHeader(locale, "azure-native"),
+      /^itvp\d+-\d{2}-d$/,
+    );
+
     const elevenLabs = requestParts(
       buildElevenLabsSpeechRequest({
         apiKey: "test-elevenlabs-key",
@@ -199,38 +223,92 @@ test("builds bounded ElevenLabs v3 and Azure fallback requests for all 40 locale
     assert.equal(elevenLabsBody.voice_settings.stability, 0.5);
     assert.deepEqual(elevenLabsBody.voice_settings, { stability: 0.5 });
     assert.doesNotMatch(elevenLabsBody.text, /^\[[^\]]+\]/);
-    assert.match(elevenLabsBody.text, /strongest S Q L example/);
+    assert.match(
+      elevenLabsBody.text,
+      locale === "en"
+        ? /strongest S Q L example/
+        : /strongest SQL example/,
+    );
     assert.doesNotMatch(elevenLabsBody.text, /<speak|<voice/i);
 
-    const voice = azureVoiceForLocale(locale);
-    assert.equal(typeof voice, "string", locale);
-    assert.equal(voice, "en-US-Ava:DragonHDOmniLatestNeural");
-    assert.match(azureStandardVoiceForLocale(locale), /Neural$/);
-    const request = await parsedProviderRequest(locale);
+    const standard = requestParts(
+      buildAzureStandardSpeechRequest({
+        apiKey: "test-azure-speech-key",
+        locale,
+        region: "eastus",
+        text: "Explain your strongest SQL example.",
+      }),
+    );
+    const standardBody = await standard.body;
 
     assert.equal(
-      request.url,
+      standard.url,
       "https://eastus.tts.speech.microsoft.com/cognitiveservices/v1",
     );
-    assert.doesNotMatch(request.url, /test-azure-speech-key/);
-    assert.equal(request.method, "POST");
+    assert.doesNotMatch(standard.url, /test-azure-speech-key/);
+    assert.equal(standard.method, "POST");
     assert.equal(
-      request.headers.get("ocp-apim-subscription-key"),
+      standard.headers.get("ocp-apim-subscription-key"),
       "test-azure-speech-key",
     );
-    assert.match(request.headers.get("content-type") ?? "", /application\/ssml\+xml/i);
+    assert.match(standard.headers.get("content-type") ?? "", /application\/ssml\+xml/i);
     assert.match(
-      request.headers.get("x-microsoft-outputformat") ?? "",
+      standard.headers.get("x-microsoft-outputformat") ?? "",
       /mp3|opus|riff|pcm/i,
     );
-    assert.match(request.body, /<speak\b/i);
-    assert.match(request.body, new RegExp(`name=["']${voice}["']`));
-    assert.match(request.body, /DragonHDOmniLatestNeural/);
-    assert.match(request.body, /enhancePronunciation=true/);
-    assert.match(request.body, /<lang\s+xml:lang=/);
-    assert.doesNotMatch(request.body, /<prosody\b/);
-    assert.match(request.body, /Explain your strongest/);
+    assert.match(standardBody, /<speak\b/i);
+    assert.match(
+      standardBody,
+      new RegExp(`name=["']${profile.azureNativeVoice}["']`),
+    );
+    assert.match(standardBody, /<prosody\b/);
+    assert.doesNotMatch(standardBody, /en-US-Ava:DragonHDOmniLatestNeural/);
+
+    if (locale === "en") {
+      const request = await parsedProviderRequest(locale);
+      assert.equal(
+        azureVoiceForLocale(locale),
+        "en-US-Ava:DragonHDOmniLatestNeural",
+      );
+      assert.equal(
+        profile.azureHdVoice,
+        "en-US-Ava:DragonHDOmniLatestNeural",
+      );
+      assert.match(request.body, /DragonHDOmniLatestNeural/);
+      assert.match(request.body, /enhancePronunciation=true/);
+      assert.match(request.body, /<lang\s+xml:lang=/);
+      assert.doesNotMatch(request.body, /<prosody\b/);
+    } else {
+      assert.equal(azureVoiceForLocale(locale), null);
+      assert.equal(profile.azureHdVoice, null);
+      assert.throws(
+        () =>
+          buildAzureSpeechRequest({
+            apiKey: "test-azure-speech-key",
+            locale,
+            region: "eastus",
+            text: "Explain your strongest example.",
+          }),
+        /English Azure HD voice cannot be used/,
+      );
+      assert.throws(
+        () => ttsVoiceProfileHeader(locale, "azure-hd-en"),
+        /English Azure HD voice cannot be used/,
+      );
+    }
   }
+
+  const simplifiedChinese = ttsVoiceProfileForLocale("zh-CN");
+  const traditionalChinese = ttsVoiceProfileForLocale("zh-TW");
+  assert.notEqual(simplifiedChinese.profileId, traditionalChinese.profileId);
+  assert.equal(simplifiedChinese.azureLanguage, "zh-CN");
+  assert.equal(traditionalChinese.azureLanguage, "zh-TW");
+  assert.equal(simplifiedChinese.azureNativeVoice, "zh-CN-XiaoxiaoNeural");
+  assert.equal(traditionalChinese.azureNativeVoice, "zh-TW-HsiaoChenNeural");
+  assert.notEqual(
+    ttsVoiceProfileHeader("zh-CN", "azure-native"),
+    ttsVoiceProfileHeader("zh-TW", "azure-native"),
+  );
 
   for (const invalid of ["", "en-US", "zh", "xx", "__proto__", null, 42]) {
     assert.equal(isTtsLocale(invalid), false, `${String(invalid)} must be rejected`);
@@ -269,7 +347,14 @@ test("uses locale-native ElevenLabs voices and never reuses the English default 
     elevenLabsVoiceIdForLocale("ja", TEST_ELEVENLABS_VOICE_ID, undefined),
     null,
   );
-  assert.equal(elevenLabsVoiceIdForLocale("en", "unsafe", localeMap), null);
+  assert.equal(
+    elevenLabsVoiceIdForLocale("zh-TW", "unsafe", localeMap),
+    "XB0fDUnXU5powFXDhCwa",
+  );
+  assert.equal(
+    elevenLabsVoiceIdForLocale("en", "unsafe", localeMap),
+    "21m00Tcm4TlvDq8ikWAM",
+  );
 });
 
 test("normalizes and SSML-escapes speech text without reducing a question to an acronym", async () => {
@@ -289,6 +374,10 @@ test("normalizes and SSML-escapes speech text without reducing a question to an 
   assert.equal(
     normalizeTechnicalTermsForSpeech("Compare C++, API, SQL, and PostgreSQL."),
     "Compare C plus plus, A P I, S Q L, and PostgreSQL.",
+  );
+  assert.equal(
+    normalizeTechnicalTermsForSpeech("請比較 C++、API、SQL 與 JD。", "zh-TW"),
+    "請比較 C++、API、SQL 與 JD。",
   );
 
   const oversized = normalizeTtsText("a".repeat(20_000));
@@ -380,6 +469,14 @@ test("speech route streams private audio and never exposes provider credentials"
   assert.equal(
     response.headers.get("x-interviewthread-speech-fallback"),
     "none",
+  );
+  assert.match(
+    response.headers.get("x-interviewthread-voice-profile") ?? "",
+    /^itvp\d+-\d{2}-a$/,
+  );
+  assert.notEqual(
+    response.headers.get("x-interviewthread-voice-profile"),
+    "21m00Tcm4TlvDq8ikWAM",
   );
   assert.equal(
     upstream.input,
@@ -476,7 +573,7 @@ test("speech route rejects oversized provider audio before and during buffered s
   });
 });
 
-test("speech route gives a guest natural voice and falls back server-side when HD is unavailable", async (t) => {
+test("guest non-English speech uses locale-native Azure when no reviewed ElevenLabs voice exists", async (t) => {
   const originalFetch = globalThis.fetch;
   const previous = {
     ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
@@ -500,9 +597,11 @@ test("speech route gives a guest natural voice and falls back server-side when H
     fetchCount += 1;
     if (String(input).includes("api.elevenlabs.io"))
       return new Response("ElevenLabs unavailable", { status: 503 });
-    const body = String(init?.body || "");
-    if (body.includes("DragonHDOmniLatestNeural"))
-      return new Response("HD unavailable in this resource", { status: 400 });
+    assert.match(String(init?.body || ""), /zh-TW-HsiaoChenNeural/);
+    assert.doesNotMatch(
+      String(init?.body || ""),
+      /en-US-Ava:DragonHDOmniLatestNeural/,
+    );
     return new Response(Uint8Array.from([73, 68, 51, 4]), {
       status: 200,
       headers: { "content-type": "audio/mpeg" },
@@ -517,8 +616,8 @@ test("speech route gives a guest natural voice and falls back server-side when H
   assert.equal(response.status, 200);
   assert.equal(
     fetchCount,
-    2,
-    "a non-English locale without a native ElevenLabs voice must start at Azure",
+    1,
+    "a non-English locale without an ElevenLabs locale override must start with Azure's locale-native voice",
   );
   assert.equal(
     response.headers.get("x-interviewthread-speech-model"),
@@ -531,6 +630,51 @@ test("speech route gives a guest natural voice and falls back server-side when H
   assert.equal(
     response.headers.get("x-interviewthread-speech-fallback"),
     "azure-standard-neural",
+  );
+  assert.match(
+    response.headers.get("x-interviewthread-voice-profile") ?? "",
+    /^itvp\d+-05-d$/,
+  );
+});
+
+test("non-English Azure failure never attempts the English Ava Dragon voice", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const previous = {
+    ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
+    ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
+    ELEVENLABS_VOICE_IDS_JSON: process.env.ELEVENLABS_VOICE_IDS_JSON,
+    AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY,
+    AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION,
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    restoreEnvironment(previous);
+  });
+
+  process.env.ELEVENLABS_API_KEY = "route-elevenlabs-secret";
+  process.env.ELEVENLABS_VOICE_ID = TEST_ELEVENLABS_VOICE_ID;
+  delete process.env.ELEVENLABS_VOICE_IDS_JSON;
+  process.env.AZURE_SPEECH_KEY = "route-azure-secret";
+  process.env.AZURE_SPEECH_REGION = "eastus";
+  const providerBodies = [];
+  globalThis.fetch = async (_input, init) => {
+    providerBodies.push(String(init?.body || ""));
+    return new Response("native voice unavailable", { status: 503 });
+  };
+
+  const response = await requestBuiltSpeech({
+    payload: { locale: "zh-TW", text: "請介紹一個你最有把握的專案。" },
+  });
+  assert.equal(response.status, 503);
+  assert.equal(providerBodies.length, 1);
+  assert.match(providerBodies[0], /zh-TW-HsiaoChenNeural/);
+  assert.doesNotMatch(
+    providerBodies.join("\n"),
+    /en-US-Ava:DragonHDOmniLatestNeural/,
+  );
+  assert.equal(
+    response.headers.get("x-interviewthread-speech-fallback"),
+    "device",
   );
 });
 

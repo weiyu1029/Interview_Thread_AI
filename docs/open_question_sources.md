@@ -1,15 +1,22 @@
 # Open interview question sources
 
-InterviewThread ships a structured, auditable interview question bank rather than claiming to include “every question on the internet.” The current bank contains **926 questions**:
+InterviewThread maintains a continuously updated, reviewed interview question bank rather than running an unreviewed real-time web crawler or claiming to include “every question on the internet.” New material is added only after source licensing, quality, duplication, attribution, and safety review. The current bank contains **4,362 structured practice records**:
 
-- **900 original InterviewThread questions** generated from a complete `15 personas × 5 answer stages × 3 difficulty levels × 4 lenses` matrix.
-- **26 attributed adaptations** from three license-compatible open-source projects.
+- **2,025 original InterviewThread questions** generated from a complete `15 personas × 5 answer stages × 3 difficulty levels × 9 lenses` matrix.
+- **26 hand-reviewed adaptations** from three license-compatible open-source projects.
+- **2,311 deduplicated, complete interview prompts** generated from three pinned, license-reviewed repositories.
 
 Every bundled question has a stable ID, filtering metadata, and a source record. Original questions are grounded in the user’s resume evidence and job description at render time. Adapted questions retain their upstream source and license links in the product interface.
 
+“Continuously updated” means the reviewed collection can grow through pinned,
+reproducible imports and attributed contributions. It does not mean that
+InterviewThread continuously crawls the public web or publishes newly found
+material before review. Coverage will never be increased at the expense of
+licensing, quality, privacy, or safety.
+
 ## Original InterviewThread matrix
 
-The 900 original records cover every combination below, so no persona, stage, difficulty, or lens selection is empty.
+The 2,025 original records cover every combination below, so no persona, stage, difficulty, or lens selection is empty.
 
 ### 15 interviewer personas
 
@@ -47,23 +54,40 @@ The 900 original records cover every combination below, so no persona, stage, di
 
 Difficulty is independent of seniority. A new graduate can receive an L3 pressure question about a school project, while an executive can receive an L1 context question.
 
-### Four question lenses
+### Nine question lenses
 
 - **Evidence:** asks for a specific detail, artifact, baseline, metric, observable result, or disconfirming evidence that makes the claim auditable.
 - **Ownership:** establishes what the candidate personally did, where their authority ended, and how collaborators or dependencies affected the outcome.
 - **Judgment:** examines the decision, information available at the time, alternatives considered, trade-offs accepted, and how changed constraints would affect the choice.
 - **Pressure:** tests limitations, uncertainty, failure modes, risk controls, attribution, and whether the candidate can defend the story without inventing or exaggerating evidence.
+- **Collaboration:** separates shared outcomes from the candidate’s contribution and explores how difficult dependencies were handled.
+- **Learning:** tests changed assumptions, lessons, and whether a lesson transfers beyond one example.
+- **Stakeholder:** surfaces competing needs, affected users, and the consequences of prioritization.
+- **Communication:** asks how the candidate adapted evidence and recommendations for different audiences.
+- **Scale:** probes which technical, operational, cost, governance, or organizational constraint breaks first as scope grows.
 
 ## Bundled sources
 
 | Source | Included use | License |
 | --- | --- | --- |
-| [InterviewThread Community Question Bank](https://github.com/weiyu1029/Interview_Thread_AI) | 900 original, evidence-grounded questions covering the full matrix above | MIT |
+| [InterviewThread Community Question Bank](https://github.com/weiyu1029/Interview_Thread_AI) | 2,025 original, evidence-grounded questions covering the full matrix above | MIT |
 | [The System Design Primer](https://github.com/donnemartin/system-design-primer) | 10 attributed and adapted system-design prompts | [CC BY 4.0](https://github.com/donnemartin/system-design-primer/blob/master/LICENSE.txt) |
 | [Front-end Developer Interview Questions](https://github.com/h5bp/front-end-developer-interview-questions) | 8 selected and adapted front-end prompts | [MIT](https://github.com/h5bp/front-end-developer-interview-questions/blob/main/LICENSE.md) |
 | [JavaScript Questions](https://github.com/lydiahallie/javascript-questions) | 8 JavaScript concepts adapted into spoken interview prompts | [MIT](https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE) |
+| [Data Science Interview Questions & Answers](https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers) | 1,494 complete prompts, pinned to `ffd17a108d7087035568747eafc88c07f5b6bc6c` | [MIT](https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers/blob/main/LICENSE) |
+| [AI & LLM Interview Guide](https://github.com/bettyguo/ai-llm-interview-guide) | 491 complete prompts, pinned to `4dc2fa6e76e003aef029361cfc4ca44d16696faf` | [CC BY 4.0](https://github.com/bettyguo/ai-llm-interview-guide/blob/main/LICENSE) |
+| [Landed AI Interview Questions](https://github.com/landedjobs/ai-interview-questions) | 326 interviewer-worded prompts, pinned to `401541b7e89b67686e5eaaa8b9523f1b99f0f096` | [MIT](https://github.com/landedjobs/ai-interview-questions/blob/main/LICENSE) |
 
-The three external projects contribute **26 attributed adaptations**, bringing the bundled total to **926 questions**. Their upstream licenses continue to apply to those adaptations; they are not relicensed merely because InterviewThread’s original question bank and application code use MIT.
+The six external projects contribute **2,337 attributed questions**, bringing the bundled total to **4,362 structured practice records**. The generated subset is mechanically reproducible; every generated record stores its source path, source line, exact commit, transformation status, and whether its difficulty was declared upstream or calibrated locally. Check out the three repositories at the exact commits in the table, then run from `platform/web`:
+
+```bash
+npm run questions:generate -- \
+  --data-science /absolute/path/to/Data-Science-Interview-Questions-Answers \
+  --ai-llm /absolute/path/to/ai-llm-interview-guide \
+  --ai-interview /absolute/path/to/ai-interview-questions
+```
+
+The generator rejects a checkout whose commit does not match the reviewed pin and fails if fewer than 2,000 complete, deduplicated prompts are produced. Upstream licenses continue to apply to those questions and adaptations; they are not relicensed merely because InterviewThread’s original question bank and application code use MIT.
 
 ## Linked-only and excluded sources
 
@@ -79,7 +103,7 @@ New question contributions must include:
 2. A recognized license that permits redistribution and adaptation.
 3. The source license URL, required copyright notice, and attribution.
 4. An original or properly adapted prompt; do not copy questions from paid platforms, employer interview loops, or websites without reuse permission.
-5. A persona, question track, answer stage, difficulty level, and—when applicable—one of the four supported lenses.
+5. A persona, question track, answer stage, difficulty level, and—when applicable—one of the nine supported lenses.
 6. No claim that a company is guaranteed to ask the question.
 7. No personal data, confidential interview-loop material, or content obtained in violation of an NDA or website terms.
 

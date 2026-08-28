@@ -3,11 +3,33 @@ import test from "node:test";
 import {
   INTERVIEW_QUESTION_LENSES,
   INTERVIEW_QUESTION_TRACKS,
-  OPEN_INTERVIEW_QUESTIONS,
+  OPEN_INTERVIEW_QUESTIONS as BASE_INTERVIEW_QUESTIONS,
   OPEN_INTERVIEW_QUESTION_SOURCES,
   openInterviewQuestionSource,
-  questionsForInterviewRole,
+  questionsForInterviewLocale,
+  questionsForInterviewRole as filterQuestionsForInterviewRole,
 } from "../app/interview-question-bank.ts";
+import { LANGUAGES } from "../app/i18n.ts";
+import { questionBankPolicyCopyFor } from "../app/question-bank-policy-copy.ts";
+
+const OPEN_INTERVIEW_QUESTIONS = await questionsForInterviewLocale("en");
+
+function questionsForInterviewRole(
+  persona,
+  track,
+  depth,
+  difficulty,
+  lens = "all",
+) {
+  return filterQuestionsForInterviewRole(
+    persona,
+    track,
+    depth,
+    difficulty,
+    lens,
+    OPEN_INTERVIEW_QUESTIONS,
+  );
+}
 
 const PERSONAS = [
   "hr",
@@ -34,10 +56,10 @@ function normalized(value) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
 }
 
-test("bundles at least 500 unique, fully attributed interview questions", () => {
+test("bundles at least 2,000 stable, fully attributed practice records", () => {
   assert.ok(
-    OPEN_INTERVIEW_QUESTIONS.length >= 500,
-    `expected at least 500 questions, received ${OPEN_INTERVIEW_QUESTIONS.length}`,
+    OPEN_INTERVIEW_QUESTIONS.length >= 2_000,
+    `expected at least 2,000 questions, received ${OPEN_INTERVIEW_QUESTIONS.length}`,
   );
 
   const questionIds = new Set();
@@ -84,9 +106,9 @@ test("bundles at least 500 unique, fully attributed interview questions", () => 
   );
 });
 
-test("bundles four stable community lenses and at least 900 community questions", () => {
-  assert.equal(INTERVIEW_QUESTION_LENSES.length, 4);
-  assert.equal(new Set(INTERVIEW_QUESTION_LENSES).size, 4);
+test("bundles nine stable community lenses and at least 2,025 community questions", () => {
+  assert.equal(INTERVIEW_QUESTION_LENSES.length, 9);
+  assert.equal(new Set(INTERVIEW_QUESTION_LENSES).size, 9);
   assert.ok(
     INTERVIEW_QUESTION_LENSES.every(
       (lens) => typeof lens === "string" && lens.trim().length > 0,
@@ -97,8 +119,8 @@ test("bundles four stable community lenses and at least 900 community questions"
     (question) => question.sourceId === "interviewthread",
   );
   assert.ok(
-    community.length >= 900,
-    `expected at least 900 community questions, received ${community.length}`,
+    community.length >= 2_025,
+    `expected at least 2,025 community questions, received ${community.length}`,
   );
   assert.ok(
     community.every((question) =>
@@ -284,5 +306,102 @@ test("keeps imported prompts concrete instead of generic coaching instructions",
     imported.some((question) =>
       question.prompt?.includes("Design a URL-shortening service"),
     ),
+  );
+});
+
+test("pins every generated open-source prompt to a reviewed source path and commit", () => {
+  const generatedSourceIds = new Set([
+    "data-science-interview-questions",
+    "ai-llm-interview-guide",
+    "ai-interview-questions",
+  ]);
+  const generated = OPEN_INTERVIEW_QUESTIONS.filter(
+    (question) => generatedSourceIds.has(question.sourceId),
+  );
+  assert.ok(
+    generated.length >= 2_000,
+    `expected at least 2,000 generated source prompts, received ${generated.length}`,
+  );
+  assert.ok(
+    generated.every((question) => question.sourceMode === "adapted"),
+    "generated source prompts must declare that InterviewThread adapted them",
+  );
+  assert.ok(generated.every((question) => question.sourcePath?.endsWith(".md")));
+  assert.ok(
+    generated.every(
+      (question) => Number.isInteger(question.sourceLine) && question.sourceLine > 0,
+    ),
+  );
+  assert.ok(
+    generated.every((question) => /^[a-f0-9]{40}$/.test(question.sourceCommit || "")),
+  );
+  assert.ok(
+    generated.every((question) =>
+      ["declared", "calibrated"].includes(question.difficultyMode),
+    ),
+  );
+  assert.ok(
+    generated.every(
+      (question) =>
+        /\?$/.test(question.prompt || "") ||
+        /^(?:compare|define|derive|describe|design|discuss|evaluate|explain|give|how|implement|indicate|list|name|prove|show|state|tell|walk|what|when|where|which|who|why|write|would|can|could|do|does|is|are|should)\b/i.test(
+          question.prompt || "",
+        ),
+    ),
+    "generated prompts must be complete, speakable interview questions rather than topic fragments",
+  );
+  assert.ok(
+    OPEN_INTERVIEW_QUESTION_SOURCES.filter((source) => source.sourceCommit).every(
+      (source) => source.attribution?.trim(),
+    ),
+  );
+});
+
+test("returns the reviewed English source bank only for English", async () => {
+  const englishQuestions = await questionsForInterviewLocale("en");
+  assert.equal(englishQuestions.length, 4_362);
+  assert.deepEqual(englishQuestions, OPEN_INTERVIEW_QUESTIONS);
+  assert.equal(BASE_INTERVIEW_QUESTIONS.length, 2_051);
+
+  for (const [locale] of LANGUAGES) {
+    if (locale === "en") continue;
+    const localizedQuestions = await questionsForInterviewLocale(locale);
+    assert.equal(
+      localizedQuestions.length,
+      2_025,
+      `${locale} must not expose unreviewed English open-source prompts`,
+    );
+    assert.ok(
+      localizedQuestions.every(
+        (question) => question.sourceId === "interviewthread",
+      ),
+      `${locale} should only receive the localized InterviewThread matrix`,
+    );
+  }
+});
+
+test("describes the question bank as continuously updated and reviewed in every locale", () => {
+  for (const [locale] of LANGUAGES) {
+    const copy = questionBankPolicyCopyFor(locale);
+    assert.ok(copy.title.trim(), `${locale} needs a question-bank policy title`);
+    assert.ok(copy.policy.trim(), `${locale} needs a question-bank policy`);
+    assert.match(copy.policy, /InterviewThread/);
+  }
+
+  assert.equal(
+    questionBankPolicyCopyFor("zh-TW").title,
+    "持續更新的受審核題庫",
+  );
+  assert.match(
+    questionBankPolicyCopyFor("zh-TW").policy,
+    /不會為了題量犧牲授權、品質或安全性/,
+  );
+  assert.equal(
+    questionBankPolicyCopyFor("en").title,
+    "Continuously updated, reviewed question bank",
+  );
+  assert.match(
+    questionBankPolicyCopyFor("en").policy,
+    /does not run an unreviewed real-time web crawler/,
   );
 });

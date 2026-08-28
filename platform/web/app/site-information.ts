@@ -227,13 +227,15 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
       {
         title: "2. Information that stays on your device",
         paragraphs: [
-          "For signed-in use, the workspace may keep resume and career-evidence text, job descriptions, optional source text and URLs, interview answers and transcripts, tracker items, alerts, language preferences, and local-model settings in browser memory or local storage unless a feature clearly says it will send data elsewhere. Guest mode keeps interview work only in the current page session and does not save interview history, practice progress, tracker items, or model settings; language preference may still be remembered. A URL alone is provenance; it is not automatically fetched or treated as evidence.",
+          "For signed-in use, the workspace may keep resume and career-evidence text, job descriptions, optional source text and URLs, interview answers and transcripts, manually saved application items, language preferences, and local-model settings in browser memory or local storage unless a feature clearly says it will send data elsewhere. Guest mode keeps interview work only in the current page session and does not save interview history, practice progress, tracker items, or model settings; language preference may still be remembered. A URL alone is provenance; it is not automatically fetched or treated as evidence.",
+          "Background job tracking is the exception: when a signed-in user explicitly connects an official employer board, we store the provider, board identifier, subscription owner, normalized public job listings, content hashes, first/last-seen timestamps, change events, sync health, and notification preferences in D1 so the feed can update across devices. We do not store a resume or interview transcript in this tracking database, and tracking never submits an application.",
         ],
       },
       {
         title: "3. Account information we store",
         paragraphs: [
           "When you choose Google, GitHub, or LinkedIn sign-in, we store the provider name, provider account ID, display name, verified email when available, profile-image URL, and—when GitHub provides them—public username and profile URL. We use this only to create and protect your InterviewThread account and associate your own activity with it.",
+          "Email job alerts are off by default. If you opt in, we store the verified email returned by your sign-in account, locale, consent time, and delivery state. The browser cannot supply a different recipient address. You can turn email alerts off or stop tracking a company at any time.",
           "Provider access and refresh tokens are discarded after the identity response and are not stored. The app does not silently link different providers by matching email and does not automatically import profiles, repositories, contacts, resumes, or posts.",
         ],
       },
@@ -249,7 +251,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
         title: "5. Voice, local models, job data, and ordinary logs",
         paragraphs: [
           "Voice answers use a two-stage flow. While you speak, the browser or device provides provisional live captions. For signed-in users, after you consent to cloud transcription, InterviewThread temporarily sends the recorded answer audio, selected language, and up to 80 short vocabulary hints drawn from the role, resume, and job description to ElevenLabs Scribe first, with Microsoft Azure Speech as a fallback, to produce a more accurate final transcript. The vocabulary hints are terms, not the full resume or job description.",
-          "InterviewThread does not store raw voice audio or write it to logs. The transcription response is returned with private no-store instructions, and you can review and edit the recognized text before submitting it as an answer; nothing is submitted automatically. Browser-only mode does not upload the recording to InterviewThread, although the browser, operating system, or browser speech vendor may process it under their own terms. If recording or cloud correction is unavailable or fails, the browser or device transcript remains in the answer box instead of being erased. ElevenLabs and Microsoft may process or retain provider-side voice data under their own account settings and privacy terms.",
+          "InterviewThread does not store raw voice audio or write it to logs. The transcription response is returned with private no-store instructions. In Voice interview mode, when you choose “Finish answer & continue,” the completed transcript is submitted as your answer so the service can score it and generate a follow-up or new topic. In Text mode, the transcript remains editable in the answer box until you review it and press Send yourself. Browser-only mode does not upload the recording to InterviewThread, although the browser, operating system, or browser speech vendor may process it under their own terms. If recording or cloud correction is unavailable or fails, the browser or device transcript remains in the answer box instead of being erased. ElevenLabs and Microsoft may process or retain provider-side voice data under their own account settings and privacy terms.",
           "Coached voice is optional and requires separate consent each time. If you choose it, the current recording is sent to ElevenLabs to return a transformed practice voice. The returned audio is kept only temporarily in your browser for playback and is not automatically submitted as an answer. InterviewThread does not store the recording or transformed audio or write either to logs, but ElevenLabs may process or retain provider-side data under its own account settings and privacy terms.",
           "When cloud read-aloud is configured and you ask InterviewThread to read a question, only the current question text and selected language are sent to ElevenLabs to generate the primary audio response. If ElevenLabs is unavailable, the same limited data may be sent to Microsoft Azure Speech as a fallback. Because questions are tailored, that text may contain short role, evidence, or gap terms derived from your resume or job description; the full documents, your answer, transcript, and raw voice recording are not sent. InterviewThread returns the audio with private no-store instructions and does not save it; if both cloud providers are unavailable, the feature falls back to the browser or device voice. ElevenLabs and Microsoft may process or retain provider-side request data under their own account settings and privacy terms; InterviewThread's no-store response does not override a provider's retention policy.",
           "If you connect a local or third-party model endpoint, your browser sends the content shown by that feature to the endpoint you configured. Model settings stay in local storage; review that provider’s terms before sending career data. Requests to approved job sources send the board or search parameters needed to retrieve listings. Hosting and security providers may process standard request information such as IP address, user agent, requested URL, and time.",
@@ -273,6 +275,7 @@ const englishPages: Record<InformationPageKey, InformationPageCopy> = {
         title: "8. Retention and deletion",
         paragraphs: [
           "Guest workspace content is not written to an InterviewThread account or local interview history and is lost when the page session ends. Signed-in local workspace data remains until you clear site data or the browser removes it. OAuth state expires after ten minutes. A signed-in session expires after 30 days; only a hash of the session token is stored. Account identity, feedback, and limited activity records are kept while needed to provide the community service, handle requests, secure the service, or meet legal obligations.",
+          "A tracked employer source remains active only while at least one signed-in user subscribes to it. Inactive subscriptions, disabled notification destinations, and unused sources are deleted after 30 days. Completed email-alert delivery records are deleted after 90 days. Removed public postings and change events that are no longer required by an alert are deleted after 180 days. These bounded windows support deduplication, reliable removal detection, retry safety, and abuse investigation without keeping tracking history indefinitely.",
           "To request access, correction, export, or deletion of hosted account data, use the private contact channel and identify your sign-in provider and approximate sign-in date. Do not send passwords or tokens. You may separately revoke InterviewThread in your provider’s connected-app settings. We will verify the request before acting.",
         ],
       },
@@ -362,16 +365,47 @@ const traditionalChinesePages: Record<InformationPageKey, InformationPageCopy> =
     callout: "重點：沒有廣告画像、不販售個人資料、不自動匯入 LinkedIn 或 GitHub，也不保存 OAuth access token。",
     sections: [
       { title: "1. 適用範圍與負責對象", paragraphs: ["本政策適用於託管版 InterviewThread 網站及其帳號、回饋與活動功能。在此社群預覽政策中，「InterviewThread」與「我們」指營運此託管開源服務的維護者。自行架設或第三方 fork 應由各自營運者提供政策。"] },
-      { title: "2. 留在你裝置上的資料", paragraphs: ["登入使用時，工作區可能將履歷與職涯證據文字、職缺描述、選填來源文字與網址、面試答案與逐字稿、追蹤項目、提醒、語言偏好與本機模型設定保留在瀏覽器記憶體或 local storage；只有在功能清楚告知要傳送時才會送往外部。訪客模式只在目前頁面工作階段保留面試內容，不會儲存面試紀錄、練習進度、追蹤項目或模型設定；語言偏好仍可能被記住。單一網址只代表來源，不會自動抓取或直接視為證據。"] },
-      { title: "3. 我們保存的帳號資料", paragraphs: ["當你選擇 Google、GitHub 或 LinkedIn 登入，我們會保存 provider 名稱、provider account ID、顯示名稱、可取得的已驗證 email、頭像網址，以及 GitHub 提供時的公開使用者名稱與個人頁網址。用途限於建立與保護 InterviewThread 帳號，並把你自己的活動連結到帳號。", "取得身分資料後，provider access token 與 refresh token 會被捨棄且不存入資料庫。系統不會只憑相同 email 默默合併不同 provider，也不會自動匯入個人頁、程式庫、聯絡人、履歷或貼文。"] },
+      { title: "2. 留在你裝置上的資料", paragraphs: ["登入使用時，工作區可能將履歷與職涯證據文字、職缺描述、選填來源文字與網址、面試答案與逐字稿、手動儲存的應徵項目、語言偏好與本機模型設定保留在瀏覽器記憶體或 local storage；只有在功能清楚告知要傳送時才會送往外部。訪客模式只在目前頁面工作階段保留面試內容，不會儲存面試紀錄、練習進度、追蹤項目或模型設定；語言偏好仍可能被記住。單一網址只代表來源，不會自動抓取或直接視為證據。", "背景職缺追蹤是例外：當已登入使用者主動連結公司官方職缺看板，我們會在 D1 儲存來源平台、看板代碼、訂閱擁有者、正規化的公開職缺、內容雜湊、首次與最後出現時間、變更事件、同步健康狀態與通知偏好，以便跨裝置更新。這個追蹤資料庫不會儲存履歷或面試逐字稿，也絕不會自動投遞。"] },
+      { title: "3. 我們保存的帳號資料", paragraphs: ["當你選擇 Google、GitHub 或 LinkedIn 登入，我們會保存 provider 名稱、provider account ID、顯示名稱、可取得的已驗證 email、頭像網址，以及 GitHub 提供時的公開使用者名稱與個人頁網址。用途限於建立與保護 InterviewThread 帳號，並把你自己的活動連結到帳號。", "職缺 Email 通知預設關閉。若你主動開啟，我們會保存登入帳號傳回的已驗證 email、語言、同意時間與寄送狀態；網頁不允許另填不同的收件地址。你可以隨時關閉 Email 通知或停止追蹤公司。", "取得身分資料後，provider access token 與 refresh token 會被捨棄且不存入資料庫。系統不會只憑相同 email 默默合併不同 provider，也不會自動匯入個人頁、程式庫、聯絡人、履歷或貼文。"] },
       { title: "4. 回饋、活動與封測申請資料", paragraphs: ["若你主動送出意見回饋，我們會保存分類、評分、訊息、語言、狀態、時間、帳號擁有者、產品版本、功能頁面，以及適用時的封測梯次。登入後也可能保存有限事件，例如完成分析、開始或回答面試、更新追蹤器、送出回饋、申請或退出封測。事件只表示操作曾發生，不包含履歷、職缺描述、答案逐字稿或原始語音。", "當你使用聯絡或合作洽詢表單時，你提供的姓名、回覆信箱、主題、訊息、語言與來源頁面，會透過交易郵件服務商寄送至對應的 InterviewThread 官方信箱。請勿在表單中提供密碼、權杖、完整履歷、面試逐字稿或其他敏感資料。", "若你申請封閉測試，我們會保存結構化的職類、資歷、面試時程、主要需求、語言、梯次狀態、分開選擇的研究／更新同意，以及你接受的條款、隱私與產品版本。封測申請不要求履歷或自由書寫的職涯歷史；你可以退出封測而不刪除帳號。"] },
-      { title: "5. 語音、本機模型、職缺資料與一般紀錄", paragraphs: ["語音作答採兩階段流程。說話時，瀏覽器或裝置會先提供即時草稿字幕。已登入且你同意使用雲端逐字稿時，InterviewThread 會暫時把回答錄音、所選語言，以及從職務、履歷與職缺描述擷取的最多 80 個簡短詞彙提示先傳送至 ElevenLabs Scribe；若無法使用，則改用 Microsoft Azure Speech，以產生較精準的最終逐字稿。詞彙提示只包含短詞，不包含完整履歷或職缺描述。", "InterviewThread 不會儲存原始回答音訊或寫入紀錄。逐字稿回應採私密且不得快取的設定；你可以先檢查並修改辨識文字，系統不會自動送出答案。只使用瀏覽器的模式不會把錄音上傳至 InterviewThread，但瀏覽器、作業系統或瀏覽器語音供應商仍可能依其自身條款處理錄音。若錄音或雲端校正無法使用或失敗，瀏覽器或裝置逐字稿仍會保留在回答欄，不會被清除。ElevenLabs 與 Microsoft 可能依各自帳戶設定和隱私條款處理或保留供應商端語音資料。", "教練語音為選用功能，每次使用都必須另行同意。若你選擇使用，目前的錄音會傳送至 ElevenLabs，以傳回經轉換的練習語音。回傳音訊只會暫存在你的瀏覽器供播放，不會自動當作答案送出。InterviewThread 不會儲存錄音或轉換後音訊，也不會將兩者寫入紀錄；但 ElevenLabs 可能依其自身帳戶設定與隱私條款處理或保留供應商端資料。", "當雲端朗讀已設定，而你要求 InterviewThread 朗讀問題時，只有目前的問題文字與所選語言會先傳送至 ElevenLabs 產生主要音訊；若 ElevenLabs 無法使用，同一份有限資料可能會傳送至 Microsoft Azure Speech 作為備援。由於問題會依使用者情境調整，文字可能包含從履歷或職缺描述衍生的簡短職務、證據或缺口詞彙；完整履歷、完整職缺描述、答案、逐字稿與原始語音都不會傳送。InterviewThread 會以私密且不得快取的指示回傳音訊，且不會保存音訊；若兩個雲端供應商都無法使用，系統會改用瀏覽器或裝置語音。ElevenLabs 與 Microsoft 可能依各自帳戶設定和隱私條款處理或保留供應商端請求資料；InterviewThread 的 no-store 回應不會覆蓋供應商的保存政策。", "若你連結本機或第三方模型端點，瀏覽器會把該功能畫面所示內容傳到你設定的端點。模型設定留在 local storage；傳送職涯資料前請查閱該供應商政策。對核准職缺來源的請求會傳送取得職缺所需的看板或搜尋參數。託管與安全供應商可能處理 IP、瀏覽器資訊、請求網址與時間等標準請求資料。"] },
+      { title: "5. 語音、本機模型、職缺資料與一般紀錄", paragraphs: ["語音作答採兩階段流程。說話時，瀏覽器或裝置會先提供即時草稿字幕。已登入且你同意使用雲端逐字稿時，InterviewThread 會暫時把回答錄音、所選語言，以及從職務、履歷與職缺描述擷取的最多 80 個簡短詞彙提示先傳送至 ElevenLabs Scribe；若無法使用，則改用 Microsoft Azure Speech，以產生較精準的最終逐字稿。詞彙提示只包含短詞，不包含完整履歷或職缺描述。", "InterviewThread 不會儲存原始回答音訊或寫入紀錄。逐字稿回應採私密且不得快取的設定。在語音面試模式中，當你按下「完成回答並繼續」，完成的逐字稿會作為你的回答送出，供系統評分並產生追問或新主題。文字作答模式中，逐字稿會留在回答欄可供編輯，直到你檢查後自行按下「傳送」。只使用瀏覽器的模式不會把錄音上傳至 InterviewThread，但瀏覽器、作業系統或瀏覽器語音供應商仍可能依其自身條款處理錄音。若錄音或雲端校正無法使用或失敗，瀏覽器或裝置逐字稿仍會保留在回答欄，不會被清除。ElevenLabs 與 Microsoft 可能依各自帳戶設定和隱私條款處理或保留供應商端語音資料。", "教練語音為選用功能，每次使用都必須另行同意。若你選擇使用，目前的錄音會傳送至 ElevenLabs，以傳回經轉換的練習語音。回傳音訊只會暫存在你的瀏覽器供播放，不會自動當作答案送出。InterviewThread 不會儲存錄音或轉換後音訊，也不會將兩者寫入紀錄；但 ElevenLabs 可能依其自身帳戶設定與隱私條款處理或保留供應商端資料。", "當雲端朗讀已設定，而你要求 InterviewThread 朗讀問題時，只有目前的問題文字與所選語言會先傳送至 ElevenLabs 產生主要音訊；若 ElevenLabs 無法使用，同一份有限資料可能會傳送至 Microsoft Azure Speech 作為備援。由於問題會依使用者情境調整，文字可能包含從履歷或職缺描述衍生的簡短職務、證據或缺口詞彙；完整履歷、完整職缺描述、答案、逐字稿與原始語音都不會傳送。InterviewThread 會以私密且不得快取的指示回傳音訊，且不會保存音訊；若兩個雲端供應商都無法使用，系統會改用瀏覽器或裝置語音。ElevenLabs 與 Microsoft 可能依各自帳戶設定和隱私條款處理或保留供應商端請求資料；InterviewThread 的 no-store 回應不會覆蓋供應商的保存政策。", "若你連結本機或第三方模型端點，瀏覽器會把該功能畫面所示內容傳到你設定的端點。模型設定留在 local storage；傳送職涯資料前請查閱該供應商政策。對核准職缺來源的請求會傳送取得職缺所需的看板或搜尋參數。託管與安全供應商可能處理 IP、瀏覽器資訊、請求網址與時間等標準請求資料。"] },
       { title: "6. 處理目的", bullets: ["提供並保護登入、工作階段、你要求的產品功能與帳號活動紀錄。", "取得職缺、支援語音與使用者自行設定的模型連線，並記住裝置偏好。", "接收回饋、確認核心流程是否可用、防止濫用、調查事件並遵守法律義務。"] },
       { title: "7. 分享與販售", paragraphs: ["我們使用營運網站所需的服務商，包括 Cloudflare 基礎設施與 D1、你選擇的身分提供者、用於已登入雲端逐字稿、使用者要求的雲端朗讀及每次另行同意之教練語音的 ElevenLabs、作為雲端逐字稿與朗讀備援的 Microsoft Azure Speech，以及負責寄送聯絡表單的交易郵件服務商。只有當你主動選擇，並在畫面要求時同意需要外部端點的功能，資料才會送往該端點。我們不販售個人資料、不建立廣告画像、不把職涯證據分享給雇主，也不使用本服務做出聘僱決策。"] },
-      { title: "8. 保存與刪除", paragraphs: ["訪客工作區內容不會寫入 InterviewThread 帳號或本機面試紀錄，頁面工作階段結束後即會遺失。登入後的本機工作區資料則保留到你清除網站資料或瀏覽器移除為止。OAuth state 十分鐘後失效；登入工作階段 30 天後失效，資料庫只保存 session token 的雜湊。帳號身分、回饋與有限活動紀錄只在提供社群服務、處理請求、維護安全或遵守法律所需期間保存。", "如要存取、更正、匯出或刪除託管帳號資料，請透過私人聯絡管道提供登入 provider 與大約登入日期；不要提供密碼或 token。我們會先驗證請求。你也可以在 provider 的已連結應用程式設定中另行撤銷 InterviewThread。"] },
+      { title: "8. 保存與刪除", paragraphs: ["訪客工作區內容不會寫入 InterviewThread 帳號或本機面試紀錄，頁面工作階段結束後即會遺失。登入後的本機工作區資料則保留到你清除網站資料或瀏覽器移除為止。OAuth state 十分鐘後失效；登入工作階段 30 天後失效，資料庫只保存 session token 的雜湊。帳號身分、回饋與有限活動紀錄只在提供社群服務、處理請求、維護安全或遵守法律所需期間保存。", "只有至少一位已登入使用者仍訂閱時，公司職缺來源才會保持啟用。停用的訂閱、關閉的通知目的地與未使用來源會在 30 天後刪除；已完成的 Email 通知寄送紀錄會在 90 天後刪除；已下架的公開職缺與不再被通知引用的變更事件會在 180 天後刪除。這些有限期間用於去重、可靠的下架偵測、重試安全與濫用調查，不會無限期保留追蹤歷史。", "如要存取、更正、匯出或刪除託管帳號資料，請透過私人聯絡管道提供登入 provider 與大約登入日期；不要提供密碼或 token。我們會先驗證請求。你也可以在 provider 的已連結應用程式設定中另行撤銷 InterviewThread。"] },
       { title: "9. 安全、跨國使用與你的選擇", paragraphs: ["我們採用最小範圍 OAuth、PKCE、短效簽章 state、HttpOnly session cookie、雜湊 session token、傳輸加密與存取檢查，但任何線上服務都無法保證絕對安全。服務可在全球存取，供應商可能在法律不同的國家處理資訊。", "依所在地不同，你可能有權要求存取、更正、刪除、限制、反對、撤回同意或取得個人資料副本，並向主管機關申訴。你可使用訪客模式避免建立帳號活動紀錄，也可不使用語音輸入與朗讀、不連結外部模型或清除瀏覽器資料；訪客的面試紀錄與練習進度不會儲存。"] },
       { title: "10. 兒童、變更與聯絡", paragraphs: ["InterviewThread 為求職者設計，不以 16 歲以下兒童為對象，也不會在知情情況下收集其帳號資料。重大政策變更會更新本頁日期；若法律要求，在以新方式使用資料前會再次取得同意。產品問題請使用聯絡頁，隱私或安全請求請使用私人管道。"] },
     ],
+  },
+};
+
+// Only the material voice-flow disclosure is currently translated for
+// Simplified Chinese. Other policy sections intentionally fall back to the
+// reviewed English source until a complete legal translation is available.
+const simplifiedChinesePages: Partial<
+  Record<InformationPageKey, InformationPageCopy>
+> = {
+  privacy: {
+    ...englishPages.privacy,
+    eyebrow: "隐私政策",
+    title: "你的职业证据应由你掌控。",
+    description:
+      "本说明介绍托管版 InterviewThread 会处理什么、哪些资料留在你的设备上，以及语音作答何时会被提交。",
+    updated: "生效日期：2026 年 8 月 27 日",
+    callout:
+      "重点：不建立广告画像、不出售个人资料、不自动导入 LinkedIn 或 GitHub，也不保存 OAuth access token。",
+    sections: englishPages.privacy.sections.map((section) =>
+      section.title === "5. Voice, local models, job data, and ordinary logs"
+        ? {
+            ...section,
+            title: "5. 语音、本地模型、职位资料与一般日志",
+            paragraphs: [
+              "语音作答采用两阶段流程。说话时，浏览器或设备会先提供实时草稿字幕。登录后并同意使用云端逐字稿时，InterviewThread 会暂时把回答录音、所选语言，以及从职位、简历和职位描述中提取的最多 80 个简短词汇提示，先发送给 ElevenLabs Scribe；若不可用，则改用 Microsoft Azure Speech，以生成更准确的最终逐字稿。词汇提示仅为短词，不包含完整简历或职位描述。",
+              "InterviewThread 不存储原始回答音频，也不会将其写入日志。逐字稿回应采用私密且不得缓存的设置。在语音面试模式中，当你点击“完成回答并继续”时，完成的逐字稿会作为你的回答提交，供系统评分并生成追问或新主题。文字作答模式中，逐字稿会留在回答框内可供编辑，直到你检查后自行点击“发送”。仅使用浏览器的模式不会把录音上传至 InterviewThread，但浏览器、操作系统或浏览器语音服务商仍可能依其自身条款处理录音。若录音或云端校正不可用或失败，浏览器或设备逐字稿会保留在回答框中，不会被清除。ElevenLabs 与 Microsoft 可能依各自帐户设置和隐私条款处理或保留服务商端语音资料。",
+              ...(section.paragraphs || []).slice(2),
+            ],
+          }
+        : section,
+    ),
   },
 };
 
@@ -383,7 +417,10 @@ export function informationPageCopyFor(
   locale: LocaleCode,
   page: InformationPageKey,
 ): InformationPageCopy {
-  return locale === "zh-TW" ? traditionalChinesePages[page] : englishPages[page];
+  if (locale === "zh-TW") return traditionalChinesePages[page];
+  if (locale === "zh-CN" && simplifiedChinesePages[page])
+    return simplifiedChinesePages[page];
+  return englishPages[page];
 }
 
 export function informationPathSegment(page: InformationPageKey) {

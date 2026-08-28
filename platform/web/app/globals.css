@@ -2660,6 +2660,237 @@ input:focus {
   opacity: 0.62;
   transform: none;
 }
+.job-tracking-panel {
+  margin: 0 0 18px;
+  padding: 20px;
+  border: 1px solid #c7d4dc;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f8fafb, #eef3f5);
+}
+.job-tracking-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 24px;
+  margin-block-end: 16px;
+}
+.job-tracking-heading h3 {
+  margin: 0;
+  font-size: clamp(19px, 2.2vw, 26px);
+}
+.job-tracking-heading p:last-child {
+  max-width: 800px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.job-tracking-summary {
+  display: grid;
+  min-width: 230px;
+  padding: 12px 14px;
+  border: 1px solid #d3dde2;
+  border-radius: 12px;
+  background: #fff;
+  text-align: end;
+}
+.job-tracking-summary span,
+.job-tracking-summary small {
+  color: var(--muted);
+}
+.job-tracking-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 14px;
+}
+.job-tracking-trust span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #e3ecef;
+  color: #355263;
+  font-size: 13px;
+  font-weight: 700;
+}
+.job-tracked-sources {
+  display: grid;
+  gap: 10px;
+  margin-block-start: 16px;
+}
+.job-tracked-sources article {
+  padding: 15px;
+  border: 1px solid #d3dde2;
+  border-radius: 12px;
+  background: #fff;
+}
+.job-source-status,
+.job-source-actions,
+.job-source-counts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.job-source-status > div {
+  display: grid;
+}
+.job-source-status > div span,
+.job-tracked-sources article > p {
+  color: var(--muted);
+  font-size: 14px;
+}
+.job-source-status > div span {
+  overflow-wrap: anywhere;
+}
+.job-source-status > span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.job-source-status > span.healthy {
+  background: var(--positive-soft);
+  color: #365a4b;
+}
+.job-source-status > span.delayed {
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+.job-source-status > span.checking {
+  background: #eef2f4;
+  color: #526572;
+}
+.job-source-counts {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-block: 12px 6px;
+}
+.job-source-counts span {
+  min-width: 95px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f2f5f6;
+  color: #526572;
+  font-size: 13px;
+}
+.job-source-counts b {
+  color: var(--ink);
+}
+.job-source-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding-block-start: 9px;
+  border-block-start: 1px solid #e4e9ec;
+}
+.job-source-actions label,
+.job-notification-settings label {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.job-source-actions label > span,
+.job-notification-settings label > span,
+.job-notification-settings bdi {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.job-source-actions label:has(input:disabled),
+.job-notification-settings label:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+.job-source-actions .danger {
+  color: var(--negative);
+}
+.job-source-actions button {
+  min-height: 44px;
+}
+.job-notification-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-block-start: 16px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid #d3dde2;
+}
+.job-notification-settings small {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+.job-tracking-empty {
+  margin: 16px 0 0;
+  padding: 14px;
+  border: 1px dashed #b9c8d1;
+  border-radius: 10px;
+  color: var(--muted);
+}
+.job-tracking-limit {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #d9cfae;
+  border-radius: 10px;
+  background: #fffaf0;
+  color: #665326;
+}
+.job-tracking-activity {
+  margin-block-start: 16px;
+  padding-block-start: 14px;
+  border-block-start: 1px solid #d3dde2;
+}
+.job-tracking-activity h4,
+.job-tracking-activity p {
+  margin: 0;
+}
+.job-tracking-activity p {
+  margin-block-start: 8px;
+  color: var(--muted);
+}
+.job-tracking-activity ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.job-tracking-activity li {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: #fff;
+}
+.job-tracking-activity li > span {
+  color: #466477;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.job-tracking-activity li > div {
+  display: grid;
+  min-width: 0;
+}
+.job-tracking-activity li b,
+.job-tracking-activity li small {
+  overflow-wrap: anywhere;
+}
+.job-tracking-activity li small {
+  color: var(--muted);
+}
+.job-tracking-sign-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.job-tracking-sign-in h3,
+.job-tracking-sign-in p {
+  margin: 5px 0 0;
+}
 .source-message {
   margin: 11px 0 0;
   padding: 10px 12px;
@@ -4293,7 +4524,11 @@ input:focus {
 }
 .interview-setup {
   display: grid;
-  grid-template-columns: minmax(210px, 1fr) minmax(260px, 1.2fr) auto;
+  grid-template-columns:
+    minmax(190px, 0.9fr)
+    minmax(240px, 1.1fr)
+    minmax(240px, 1.1fr)
+    auto;
   align-items: end;
   gap: 12px;
   padding: 15px;
@@ -4315,7 +4550,7 @@ input:focus {
 }
 .interview-restart-notice {
   min-height: 20px;
-  grid-column: 3;
+  grid-column: 4;
   color: #315f4a;
   font-size: 13px;
   font-weight: 750;
@@ -4403,12 +4638,32 @@ input:focus {
   font-size: 18px;
   line-height: 1.25;
 }
-.open-question-library-heading > div > p:last-child {
+.open-question-library-heading .question-bank-method,
+.open-question-library-heading .question-bank-policy {
   max-width: 720px;
   margin: 6px 0 0;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
+}
+.open-question-library-heading .question-bank-policy {
+  padding-left: 10px;
+  border-left: 3px solid #9bb5c5;
+  color: var(--ink);
+}
+.open-question-library-heading .question-bank-release {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+[dir="rtl"] .open-question-library-heading .question-bank-policy {
+  padding-right: 10px;
+  padding-left: 0;
+  border-right: 3px solid #9bb5c5;
+  border-left: 0;
 }
 .open-question-filters {
   display: grid;
@@ -4419,6 +4674,30 @@ input:focus {
     minmax(120px, 0.72fr);
   gap: 10px;
   margin-top: 14px;
+}
+.open-question-advanced {
+  margin-top: 13px;
+  border-top: 1px solid #d6dfe4;
+}
+.open-question-advanced summary {
+  width: fit-content;
+  margin-top: 12px;
+  color: var(--accent-deep);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 760;
+}
+.open-question-plan-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 13px;
+}
+.open-question-plan-actions span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
 }
 .open-question-picker {
   grid-column: 1 / -1;
@@ -5908,6 +6187,13 @@ input:focus {
 }
 
 @media (max-width: 1050px) {
+  .interview-setup,
+  .open-question-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .interview-restart-notice {
+    grid-column: 1 / -1;
+  }
   .market-filters {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -6392,6 +6678,9 @@ input:focus {
   .open-question-empty .button {
     width: 100%;
   }
+  .open-question-plan-actions .button {
+    width: 100%;
+  }
   .workspace-progress li {
     align-items: flex-start;
     gap: 6px;
@@ -6471,6 +6760,31 @@ input:focus {
   }
   .source-connector-form .button {
     width: 100%;
+  }
+  .job-tracking-panel {
+    padding: 15px;
+  }
+  .job-tracking-heading {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .job-tracking-summary {
+    min-width: 0;
+    text-align: start;
+  }
+  .job-source-status,
+  .job-source-actions,
+  .job-tracking-sign-in {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .job-source-actions label,
+  .job-source-actions button,
+  .job-tracking-sign-in .button {
+    width: 100%;
+  }
+  .job-tracking-activity li {
+    grid-template-columns: 1fr;
   }
   .model-connection-fields,
   .model-result {

@@ -14,11 +14,11 @@ export type MicrophoneConsentCopy = {
   coachedUnavailable: string;
 };
 
-export const MICROPHONE_CONSENT_COPY = {
+const ALL_MICROPHONE_CONSENT_COPY = {
   en: {
     title: "Use your microphone?",
-    cloudBody: "When signed in, your browser creates a live draft. After you stop, the audio, selected language, and up to 80 role terms go to ElevenLabs Scribe first, with Microsoft Azure Speech as a fallback. InterviewThread does not store or log the raw audio; providers may process or retain it under their policies. Nothing is submitted until you review and press Send.",
-    browserBody: "Your browser creates captions and may use its vendor’s speech service. InterviewThread does not upload or save audio. Nothing is submitted automatically.",
+    cloudBody: "When signed in, your browser creates a live draft. After you stop, the audio, selected language, and up to 80 role terms go to ElevenLabs Scribe first, with Microsoft Azure Speech as a fallback. InterviewThread does not store or log the raw audio; providers may process or retain it under their policies. In Voice interview mode, choosing “Finish answer & continue” sends the completed transcript as your answer so it can be scored and the interviewer can ask a follow-up or start a new topic. In Text mode, the transcript stays editable until you review it and press Send.",
+    browserBody: "Your browser creates captions and may use its vendor’s speech service. InterviewThread does not upload or save audio. In Voice interview mode, choosing “Finish answer & continue” submits the completed transcript for scoring and the next question. In Text mode, the transcript stays editable until you review it and press Send.",
     cloudButton: "Use cloud voice", browserButton: "Use browser captions", typeButton: "Type instead", privacyLink: "Privacy", coachedButton: "Try coached voice",
     coachedNotice: "Coached voice requires separate consent each time. The current recording is sent to ElevenLabs to return a transformed practice voice. The returned audio is kept only temporarily in this browser for playback and is not automatically submitted. InterviewThread does not store or log it; ElevenLabs may process or retain it under its policy.",
     coachedReady: "Coached voice ready", coachedUnavailable: "Coached voice unavailable",
@@ -41,16 +41,16 @@ export const MICROPHONE_CONSENT_COPY = {
   },
   "zh-CN": {
     title: "使用麦克风？",
-    cloudBody: "登录后，浏览器会实时生成草稿。停止录音后，音频、所选语言和最多 80 个职位术语会先发送给 ElevenLabs Scribe；若不可用，则改用 Microsoft Azure Speech。InterviewThread 不存储或记录原始音频；服务商可能按各自政策处理或保留数据。在你检查内容并点击“发送”前，不会提交任何内容。",
-    browserBody: "浏览器会生成字幕，并可能使用其供应商的语音服务。InterviewThread 不会上传或保存音频，也不会自动提交任何内容。",
+    cloudBody: "登录后，浏览器会实时生成草稿。停止录音后，音频、所选语言和最多 80 个职位术语会先发送给 ElevenLabs Scribe；若不可用，则改用 Microsoft Azure Speech。InterviewThread 不存储或记录原始音频；服务商可能按各自政策处理或保留数据。在语音面试模式中，点击“完成回答并继续”后，完成的逐字稿会作为你的回答提交，用于评分并让面试官提出追问或进入新主题。文字作答模式中，逐字稿会保持可编辑，直到你检查后自行点击“发送”。",
+    browserBody: "浏览器会生成字幕，并可能使用其供应商的语音服务。InterviewThread 不会上传或保存音频。在语音面试模式中，点击“完成回答并继续”会提交完成的逐字稿以评分并进入下一题；文字作答模式中，逐字稿会保持可编辑，直到你检查后自行点击“发送”。",
     cloudButton: "使用云端语音", browserButton: "使用浏览器字幕", typeButton: "改用文字", privacyLink: "隐私", coachedButton: "试用教练语音",
     coachedNotice: "每次使用教练语音都需要单独同意。当前录音会发送给 ElevenLabs，以返回经过转换的练习语音；返回的音频只会临时保留在当前浏览器中供播放，不会自动作为答案提交。InterviewThread 不会存储或记录录音及返回音频；ElevenLabs 可能按其政策处理或保留数据。",
     coachedReady: "教练语音已就绪", coachedUnavailable: "教练语音不可用",
   },
   "zh-TW": {
     title: "使用麥克風？",
-    cloudBody: "登入後，瀏覽器會即時產生草稿。停止錄音後，音訊、所選語言和最多 80 個職務用語會先傳送給 ElevenLabs Scribe；若無法使用，則改用 Microsoft Azure Speech。InterviewThread 不會儲存或記錄原始音訊；服務供應商可能依各自政策處理或保留資料。在你檢查內容並按下「傳送」前，不會提交任何內容。",
-    browserBody: "瀏覽器會產生字幕，並可能使用其供應商的語音服務。InterviewThread 不會上傳或儲存音訊，也不會自動提交任何內容。",
+    cloudBody: "登入後，瀏覽器會即時產生草稿。停止錄音後，音訊、所選語言和最多 80 個職務用語會先傳送給 ElevenLabs Scribe；若無法使用，則改用 Microsoft Azure Speech。InterviewThread 不會儲存或記錄原始音訊；服務供應商可能依各自政策處理或保留資料。在語音面試模式中，按下「完成回答並繼續」後，完成的逐字稿會作為你的回答送出，用於評分並讓面試官追問或進入新主題。文字作答模式中，逐字稿會保持可編輯，直到你檢查後自行按下「傳送」。",
+    browserBody: "瀏覽器會產生字幕，並可能使用其供應商的語音服務。InterviewThread 不會上傳或儲存音訊。在語音面試模式中，按下「完成回答並繼續」會送出完成的逐字稿以評分並進入下一題；文字作答模式中，逐字稿會保持可編輯，直到你檢查後自行按下「傳送」。",
     cloudButton: "使用雲端語音", browserButton: "使用瀏覽器字幕", typeButton: "改用文字", privacyLink: "隱私權", coachedButton: "試用教練語音",
     coachedNotice: "每次使用教練語音都需要另行同意。目前的錄音會傳送給 ElevenLabs，以傳回經轉換的練習語音；回傳音訊只會暫時保留在目前瀏覽器中供播放，不會自動當作答案送出。InterviewThread 不會儲存或記錄錄音及回傳音訊；ElevenLabs 可能依其政策處理或保留資料。",
     coachedReady: "教練語音已就緒", coachedUnavailable: "教練語音無法使用",
@@ -337,12 +337,26 @@ export const MICROPHONE_CONSENT_COPY = {
   },
 } satisfies Record<LocaleCode, MicrophoneConsentCopy>;
 
+/**
+ * Consent disclosures are legally/materially reviewed in English and Chinese.
+ * All other locales deliberately receive the English disclosure until a full
+ * reviewed translation is available; do not imply that all 40 UI locales have
+ * individually reviewed consent text.
+ */
+export const MICROPHONE_CONSENT_COPY = {
+  en: ALL_MICROPHONE_CONSENT_COPY.en,
+  "zh-CN": ALL_MICROPHONE_CONSENT_COPY["zh-CN"],
+  "zh-TW": ALL_MICROPHONE_CONSENT_COPY["zh-TW"],
+} satisfies Partial<Record<LocaleCode, MicrophoneConsentCopy>>;
+
 export function voiceConsentCopyFor(locale: LocaleCode) {
-  const copy = MICROPHONE_CONSENT_COPY[locale];
+  const reviewedCopy = MICROPHONE_CONSENT_COPY as Partial<
+    Record<LocaleCode, MicrophoneConsentCopy>
+  >;
+  const copy = reviewedCopy[locale] || MICROPHONE_CONSENT_COPY.en;
   return {
     ...copy,
-    // Preserve each locale's reviewed wording while keeping the production
-    // provider names precise across all 40 consent dialogs.
+    // Keep provider names precise without overstating translation coverage.
     cloudBody: copy.cloudBody
       .replace(/ElevenLabs(?! Scribe)/, "ElevenLabs Scribe")
       .replace(/Azure(?! Speech)/g, "Microsoft Azure Speech"),

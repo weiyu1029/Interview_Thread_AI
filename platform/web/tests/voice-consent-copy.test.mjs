@@ -3,12 +3,15 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { LANGUAGES } from "../app/i18n.ts";
+import { STT_CONSENT_VERSION } from "../app/interview-stt.ts";
+import { informationPageCopyFor } from "../app/site-information.ts";
 import {
   MICROPHONE_CONSENT_COPY,
   voiceConsentCopyFor,
 } from "../app/voice-consent-copy.ts";
 
 const LOCALES = LANGUAGES.map(([locale]) => locale);
+const REVIEWED_CONSENT_LOCALES = ["en", "zh-CN", "zh-TW"];
 const FIELDS = [
   "title",
   "cloudBody",
@@ -31,11 +34,14 @@ function sourceSection(source, startMarker, endMarker) {
   return source.slice(start, end);
 }
 
-test("defines complete microphone consent copy for all 40 locales", () => {
+test("defines reviewed microphone consent copy and uses English fallback elsewhere", () => {
   assert.equal(LOCALES.length, 40);
-  assert.deepEqual(Object.keys(MICROPHONE_CONSENT_COPY), LOCALES);
+  assert.deepEqual(
+    Object.keys(MICROPHONE_CONSENT_COPY).sort(),
+    [...REVIEWED_CONSENT_LOCALES].sort(),
+  );
 
-  for (const locale of LOCALES) {
+  for (const locale of REVIEWED_CONSENT_LOCALES) {
     const copy = MICROPHONE_CONSENT_COPY[locale];
     assert.ok(copy, `${locale} copy is missing`);
     assert.deepEqual(Object.keys(copy).sort(), [...FIELDS].sort(), `${locale} fields`);
@@ -44,6 +50,15 @@ test("defines complete microphone consent copy for all 40 locales", () => {
       assert.ok(copy[field].trim(), `${locale}.${field} must not be empty`);
     }
   }
+
+  for (const locale of LOCALES.filter(
+    (locale) => !REVIEWED_CONSENT_LOCALES.includes(locale),
+  ))
+    assert.deepEqual(
+      voiceConsentCopyFor(locale),
+      voiceConsentCopyFor("en"),
+      `${locale} must use the English consent fallback until reviewed copy exists`,
+    );
 });
 
 test("cloud consent names the exact transcription providers for every locale", () => {
@@ -80,6 +95,53 @@ test("English and Chinese copy precisely disclose InterviewThread audio handling
   assert.match(
     traditional.coachedNotice,
     /InterviewThread 不會(?:儲存|儲存或記錄)(?:錄音|目前的錄音)/,
+  );
+});
+
+test("clearly distinguishes voice-mode submission from reviewable text mode", () => {
+  const english = voiceConsentCopyFor("en");
+  assert.match(
+    english.cloudBody,
+    /Voice interview mode[\s\S]*Finish answer & continue[\s\S]*(?:sends|submitted)[\s\S]*(?:score|scored)[\s\S]*(?:follow-up|new topic)/i,
+  );
+  assert.match(
+    english.cloudBody,
+    /Text mode[\s\S]*editable[\s\S]*press Send/i,
+  );
+  assert.match(
+    english.browserBody,
+    /Finish answer & continue[\s\S]*(?:submits|submitted)[\s\S]*(?:scoring|next question)/i,
+  );
+
+  const simplified = voiceConsentCopyFor("zh-CN");
+  assert.match(simplified.cloudBody, /完成回答并继续[\s\S]*逐字稿[\s\S]*评分/);
+  assert.match(simplified.cloudBody, /文字作答模式[\s\S]*可编辑[\s\S]*发送/);
+
+  const traditional = voiceConsentCopyFor("zh-TW");
+  assert.match(traditional.cloudBody, /完成回答並繼續[\s\S]*逐字稿[\s\S]*評分/);
+  assert.match(traditional.cloudBody, /文字作答模式[\s\S]*可編輯[\s\S]*傳送/);
+});
+
+test("publishes the v3 consent contract and aligned privacy disclosure", () => {
+  assert.equal(STT_CONSENT_VERSION, "voice-input-v3");
+
+  const english = informationPageCopyFor("en", "privacy");
+  assert.match(
+    english.sections.flatMap((section) => section.paragraphs || []).join(" "),
+    /Finish answer & continue[\s\S]*submitted[\s\S]*score/i,
+  );
+
+  const traditional = informationPageCopyFor("zh-TW", "privacy");
+  assert.match(
+    traditional.sections.flatMap((section) => section.paragraphs || []).join(" "),
+    /完成回答並繼續[\s\S]*逐字稿[\s\S]*評分/,
+  );
+
+  const simplified = informationPageCopyFor("zh-CN", "privacy");
+  assert.match(simplified.title, /职业证据/);
+  assert.match(
+    simplified.sections.flatMap((section) => section.paragraphs || []).join(" "),
+    /完成回答并继续[\s\S]*逐字稿[\s\S]*评分/,
   );
 });
 
