@@ -4651,6 +4651,14 @@ input:focus {
   border-left: 3px solid #9bb5c5;
   color: var(--ink);
 }
+.open-question-library-heading .question-bank-release {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
 [dir="rtl"] .open-question-library-heading .question-bank-policy {
   padding-right: 10px;
   padding-left: 0;

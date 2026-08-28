@@ -3,7 +3,8 @@ import type { LocaleCode } from "./i18n";
 export const TTS_MODEL_ID = "eleven_v3";
 export const TTS_FALLBACK_MODEL_ID = "azure-dragon-hd-omni";
 export const TTS_FINAL_CLOUD_FALLBACK_MODEL_ID = "azure-standard-neural";
-export const TTS_MAX_CHARACTERS = 1_600;
+export const TTS_MAX_CHARACTERS = 900;
+export const TTS_VOICE_PROFILE_VERSION = "itvp1";
 
 const ELEVENLABS_TTS_ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech";
 
@@ -50,9 +51,8 @@ const ELEVENLABS_LANGUAGE_CODES = {
   fa: "fa",
 } satisfies Record<LocaleCode, string>;
 
-// Dragon HD Omni is Azure's multilingual, context-aware speech model. One
-// consistent interviewer persona is used across locales while <lang> locks the
-// pronunciation and accent to the language selected in InterviewThread.
+// This Dragon HD voice is English-trained and is intentionally restricted to
+// English. Non-English locales must never use it as a fallback.
 const AZURE_HD_INTERVIEW_VOICE =
   "en-US-Ava:DragonHDOmniLatestNeural";
 
@@ -104,6 +104,125 @@ const AZURE_VOICES = {
   fa: { language: "fa-IR", name: "fa-IR-DilaraNeural" },
 } satisfies Record<LocaleCode, AzureVoice>;
 
+// Stable, non-secret identifiers make the selected voice profile auditable in
+// response metadata without exposing provider voice IDs. Keep these IDs
+// unique and bump TTS_VOICE_PROFILE_VERSION whenever routing or reviewed voice
+// selections materially change.
+export const TTS_VOICE_PROFILE_IDS = {
+  en: "01",
+  ja: "02",
+  ko: "03",
+  "zh-CN": "04",
+  "zh-TW": "05",
+  es: "06",
+  fr: "07",
+  de: "08",
+  "pt-BR": "09",
+  it: "10",
+  nl: "11",
+  pl: "12",
+  tr: "13",
+  ru: "14",
+  uk: "15",
+  ar: "16",
+  he: "17",
+  hi: "18",
+  bn: "19",
+  ur: "20",
+  id: "21",
+  ms: "22",
+  th: "23",
+  vi: "24",
+  fil: "25",
+  sv: "26",
+  no: "27",
+  da: "28",
+  fi: "29",
+  cs: "30",
+  sk: "31",
+  hu: "32",
+  ro: "33",
+  el: "34",
+  bg: "35",
+  hr: "36",
+  sr: "37",
+  sl: "38",
+  sw: "39",
+  fa: "40",
+} as const satisfies Record<LocaleCode, string>;
+
+export type TtsVoiceProfileVariant =
+  | "elevenlabs-tts"
+  | "elevenlabs-dialogue"
+  | "azure-hd-en"
+  | "azure-native";
+
+const TTS_VOICE_PROFILE_VARIANT_IDS = {
+  "elevenlabs-tts": "a",
+  "elevenlabs-dialogue": "b",
+  "azure-hd-en": "c",
+  "azure-native": "d",
+} as const satisfies Record<TtsVoiceProfileVariant, string>;
+
+export function ttsVoiceProfileForLocale(locale: LocaleCode) {
+  const azure = AZURE_VOICES[locale];
+  return {
+    version: TTS_VOICE_PROFILE_VERSION,
+    profileId: TTS_VOICE_PROFILE_IDS[locale],
+    locale,
+    elevenLabsLanguage: ELEVENLABS_LANGUAGE_CODES[locale],
+    azureLanguage: azure.language,
+    azureNativeVoice: azure.name,
+    azureHdVoice: locale === "en" ? AZURE_HD_INTERVIEW_VOICE : null,
+  } as const;
+}
+
+export function ttsVoiceProfileHeader(
+  locale: LocaleCode,
+  variant: TtsVoiceProfileVariant,
+) {
+  const profile = ttsVoiceProfileForLocale(locale);
+  if (variant === "azure-hd-en" && !profile.azureHdVoice)
+    throw new Error("English Azure HD voice cannot be used for this locale.");
+  return `${profile.version}-${profile.profileId}-${TTS_VOICE_PROFILE_VARIANT_IDS[variant]}`;
+}
+
+export function ttsVoiceProfileCompleteness(
+  expectedLocales: readonly string[],
+) {
+  const configuredKeys = new Set<string>([
+    ...Object.keys(ELEVENLABS_LANGUAGE_CODES),
+    ...Object.keys(AZURE_VOICES),
+    ...Object.keys(TTS_VOICE_PROFILE_IDS),
+  ]);
+  const expectedKeys = new Set(expectedLocales);
+  const missing = expectedLocales.filter(
+    (locale) =>
+      !(locale in ELEVENLABS_LANGUAGE_CODES) ||
+      !(locale in AZURE_VOICES) ||
+      !(locale in TTS_VOICE_PROFILE_IDS),
+  );
+  const extra = [...configuredKeys].filter((locale) => !expectedKeys.has(locale));
+  const profileIds = Object.values(TTS_VOICE_PROFILE_IDS);
+  const duplicateProfileIds = profileIds.filter(
+    (profileId, index) => profileIds.indexOf(profileId) !== index,
+  );
+  return {
+    version: TTS_VOICE_PROFILE_VERSION,
+    expectedCount: expectedLocales.length,
+    configuredCount: Object.keys(TTS_VOICE_PROFILE_IDS).length,
+    missing,
+    extra,
+    duplicateProfileIds: [...new Set(duplicateProfileIds)],
+    complete:
+      expectedLocales.length === 40 &&
+      Object.keys(TTS_VOICE_PROFILE_IDS).length === 40 &&
+      missing.length === 0 &&
+      extra.length === 0 &&
+      duplicateProfileIds.length === 0,
+  } as const;
+}
+
 const localeKeys = new Set<string>(Object.keys(AZURE_VOICES));
 
 export function isTtsLocale(value: unknown): value is LocaleCode {
@@ -111,8 +230,7 @@ export function isTtsLocale(value: unknown): value is LocaleCode {
 }
 
 export function azureVoiceForLocale(locale: LocaleCode) {
-  void locale;
-  return AZURE_HD_INTERVIEW_VOICE;
+  return locale === "en" ? AZURE_HD_INTERVIEW_VOICE : null;
 }
 
 export function azureStandardVoiceForLocale(locale: LocaleCode) {
@@ -270,9 +388,12 @@ function azureSpeechRequest({
   if (!normalized) throw new Error("Speech text is empty.");
   const voice = AZURE_VOICES[locale];
   const spokenText = technicalSsml(normalized, locale);
+  const hdVoice = azureVoiceForLocale(locale);
+  if (model === "hd" && !hdVoice)
+    throw new Error("English Azure HD voice cannot be used for this locale.");
   const body =
     model === "hd"
-      ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${voice.language}"><voice name="${AZURE_HD_INTERVIEW_VOICE}" parameters="temperature=0.65;top_p=0.65;top_k=20;cfg_scale=1.4;enhancePronunciation=true"><lang xml:lang="${voice.language}"><p><s>${spokenText}</s></p></lang></voice></speak>`
+      ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${voice.language}"><voice name="${hdVoice}" parameters="temperature=0.65;top_p=0.65;top_k=20;cfg_scale=1.4;enhancePronunciation=true"><lang xml:lang="${voice.language}"><p><s>${spokenText}</s></p></lang></voice></speak>`
       : `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.language}"><voice name="${voice.name}"><prosody rate="-2%">${spokenText}</prosody></voice></speak>`;
 
   return {

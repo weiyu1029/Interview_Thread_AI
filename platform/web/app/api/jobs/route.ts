@@ -16,25 +16,38 @@ const PUBLIC_ERROR_MESSAGES: Record<string, string> = {
   provider_invalid_shape: "The provider returned an unexpected response.",
   provider_unavailable: "The approved source could not be loaded.",
 };
+const NO_STORE_HEADERS = { "Cache-Control": "no-store" } as const;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const provider = url.searchParams.get("provider") as ApprovedJobProvider | null;
   const reference = url.searchParams.get("reference") || "";
   if (!provider || !(provider in APPROVED_JOB_SOURCES)) {
-    return Response.json({ error: PUBLIC_ERROR_MESSAGES.source_provider_invalid }, { status: 400 });
+    return Response.json(
+      { error: PUBLIC_ERROR_MESSAGES.source_provider_invalid },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
   }
 
   try {
     const snapshot = await fetchJobSourceSnapshot(provider, reference);
+    const retrievedAt = snapshot.source.retrievedAt;
     return Response.json(
       {
         source: snapshot.source,
         jobs: snapshot.jobs,
         count: snapshot.jobs.length,
         completeSnapshot: snapshot.completeSnapshot,
+        retrievedAt,
+        freshness: {
+          retrievedAt,
+          updateMode: "on-demand",
+          sourceKind: "official-employer-board",
+          cached: false,
+          completeSnapshot: snapshot.completeSnapshot,
+        },
       },
-      { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=900" } },
+      { headers: NO_STORE_HEADERS },
     );
   } catch (error) {
     const code = jobSourceErrorCode(error);
@@ -45,6 +58,9 @@ export async function GET(request: Request) {
       : code === "source_host_unapproved"
         ? `That URL is not an official ${APPROVED_JOB_SOURCES[provider].name.replace(/ (Job Board|Postings|Job Postings) API(?: \(EU\))?$/, "")} job board.`
       : PUBLIC_ERROR_MESSAGES[code] || PUBLIC_ERROR_MESSAGES.provider_unavailable;
-    return Response.json({ error: message, code }, { status: clientError ? 400 : 502 });
+    return Response.json(
+      { error: message, code },
+      { status: clientError ? 400 : 502, headers: NO_STORE_HEADERS },
+    );
   }
 }

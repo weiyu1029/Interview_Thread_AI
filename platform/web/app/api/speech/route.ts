@@ -7,6 +7,7 @@ import {
   isElevenLabsVoiceId,
   isTtsLocale,
   normalizeTtsText,
+  ttsVoiceProfileHeader,
   TTS_FALLBACK_MODEL_ID,
   TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
   TTS_MAX_CHARACTERS,
@@ -362,6 +363,7 @@ export async function POST(request: Request) {
       model: string;
       provider: "elevenlabs" | "azure_speech";
       fallback: "none" | "azure-dragon-hd-omni" | "azure-standard-neural";
+      voiceProfile: string;
       request: ReturnType<
         | typeof buildElevenLabsSpeechRequest
         | typeof buildAzureSpeechRequest
@@ -373,6 +375,7 @@ export async function POST(request: Request) {
         model: TTS_MODEL_ID,
         provider: "elevenlabs",
         fallback: "none",
+        voiceProfile: ttsVoiceProfileHeader(locale, "elevenlabs-tts"),
         request: buildElevenLabsSpeechRequest({
           text,
           locale,
@@ -382,21 +385,11 @@ export async function POST(request: Request) {
       });
     }
     if (azureConfigured) {
-      const azureHdAttempt = {
-        model: TTS_FALLBACK_MODEL_ID,
-        provider: "azure_speech" as const,
-        fallback: "azure-dragon-hd-omni" as const,
-        request: buildAzureSpeechRequest({
-          text,
-          locale,
-          apiKey: azureApiKey!,
-          region: azureRegion!,
-        }),
-      };
       const azureNativeAttempt = {
         model: TTS_FINAL_CLOUD_FALLBACK_MODEL_ID,
         provider: "azure_speech" as const,
         fallback: "azure-standard-neural" as const,
+        voiceProfile: ttsVoiceProfileHeader(locale, "azure-native"),
         request: buildAzureStandardSpeechRequest({
           text,
           locale,
@@ -404,15 +397,24 @@ export async function POST(request: Request) {
           region: azureRegion!,
         }),
       };
-      // The multilingual HD persona is English-trained. Keep it for the
-      // English baseline, but prefer Azure's locale-native voice for every
-      // other language so a technically successful fallback never introduces
-      // an avoidable English accent.
-      attempts.push(
-        ...(locale === "en"
-          ? [azureHdAttempt, azureNativeAttempt]
-          : [azureNativeAttempt, azureHdAttempt]),
-      );
+      if (locale === "en") {
+        attempts.push({
+          model: TTS_FALLBACK_MODEL_ID,
+          provider: "azure_speech",
+          fallback: "azure-dragon-hd-omni",
+          voiceProfile: ttsVoiceProfileHeader(locale, "azure-hd-en"),
+          request: buildAzureSpeechRequest({
+            text,
+            locale,
+            apiKey: azureApiKey!,
+            region: azureRegion!,
+          }),
+        });
+      }
+      // Non-English locales receive only their exact locale-native Azure
+      // voice. The English-trained Ava Dragon voice is never constructed for
+      // them, even after the native provider attempt fails.
+      attempts.push(azureNativeAttempt);
     }
 
     const providerDeadline = Date.now() + PROVIDER_TOTAL_TIMEOUT_MS;
@@ -485,6 +487,7 @@ export async function POST(request: Request) {
                 "X-InterviewThread-Speech-Provider": attempt.provider,
                 "X-InterviewThread-Speech-Fallback": attempt.fallback,
                 "X-InterviewThread-Speech-Locale": locale,
+                "X-InterviewThread-Voice-Profile": attempt.voiceProfile,
                 "X-Request-ID": requestId,
               },
             });

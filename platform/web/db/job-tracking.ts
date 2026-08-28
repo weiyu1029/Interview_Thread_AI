@@ -691,4 +691,16 @@ export async function runJobTrackingRetention(db: D1Database) {
   };
 }
 
+export async function recordJobTrackingSchedulerHeartbeat(
+  db: D1Database,
+  phase: "started" | "succeeded",
+  ranAt = new Date().toISOString(),
+) {
+  await ensureJobTrackingStorage(db);
+  await db.prepare(
+    `INSERT INTO job_tracking_maintenance (key, ran_at) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET ran_at = excluded.ran_at`,
+  ).bind(`scheduler-${phase}`, ranAt).run();
+}
+
 export { JOB_TRACKING_DDL };

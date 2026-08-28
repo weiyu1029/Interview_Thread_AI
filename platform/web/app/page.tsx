@@ -57,6 +57,7 @@ import {
   jobSearchCapabilities as getJobSearchCapabilities,
   SENIORITY_LEVELS,
 } from "./job-search";
+import { jobTrackingCopyFor } from "./job-tracking-copy";
 import {
   allCountriesLabelFor,
   type JobSearchCopy,
@@ -120,6 +121,7 @@ import {
 } from "./technical-resources";
 import { technicalResourceCopyFor } from "./technical-resource-copy";
 import { questionBankPolicyCopyFor } from "./question-bank-policy-copy";
+import { QUESTION_BANK_RELEASE_METADATA } from "./question-bank-release";
 import {
   walkthroughCuesFor,
   walkthroughNarrationLabelFor,
@@ -2990,6 +2992,7 @@ export default function Home({
   const sttUi = sttCopyFor(locale);
   const voiceConsentUi = voiceConsentCopyFor(locale);
   const jobSearchUi = jobSearchCopyFor(locale);
+  const jobTrackingUi = jobTrackingCopyFor(locale);
   const homepage = homepageCopyFor(locale);
   const detail = detailFor(locale);
   const accountLabels = accountCopyFor(locale);
@@ -3764,6 +3767,14 @@ export default function Home({
   const proofQualifiedJobs = recommendedJobs.filter(
     (job) => job.alertEligible,
   );
+  const hasTrackedBoardSignal =
+    authenticated && trackedSourceCount > 0 && sourceJobs !== null;
+  const trackingLastSuccessLabel = trackingLastSuccessAt
+    ? new Date(trackingLastSuccessAt).toLocaleString(locale)
+    : jobTrackingUi.checking;
+  const trackedMarketDisclosure = locale === "en"
+    ? `${trackedSourceCount} official employer board${trackedSourceCount === 1 ? "" : "s"}; scheduled to refresh about every five minutes, subject to provider availability. Last successful refresh ${trackingLastSuccessLabel}. This describes only the companies you chose to track, not the global labor market.`
+    : `${trackedSourceCount} ${jobTrackingUi.sources} · ${jobTrackingUi.everyFiveMinutes}. ${jobTrackingUi.checked}: ${trackingLastSuccessLabel}. ${detail.sourcePolicy} ${detail.liveNote}`;
   const marketRows = useMemo(() => {
     if (sourceJobs) {
       const filtered = sourceJobs
@@ -7384,6 +7395,13 @@ export default function Home({
                     <p className="question-bank-policy">
                       {interviewStudioUi.questionBankPolicy}
                     </p>
+                    <small className="question-bank-release">
+                      {detail.checked}: {new Date(
+                        QUESTION_BANK_RELEASE_METADATA.sourceCheckedAt,
+                      ).toLocaleString(locale)}
+                      {" · "}
+                      {QUESTION_BANK_RELEASE_METADATA.releaseId}
+                    </small>
                   </div>
                   <span className="status-pill light">
                     {filteredOpenQuestions.length} {interviewStudioUi.questionsAvailable}
@@ -8772,18 +8790,40 @@ export default function Home({
                   <h2>{detail.marketTitle}</h2>
                 </div>
                 <span className="status-pill light">
-                  {detail.providerPreview}
+                  {hasTrackedBoardSignal
+                    ? locale === "en"
+                      ? "Tracked-board signal"
+                      : jobTrackingUi.eyebrow
+                    : sourceMeta
+                      ? sourceMeta.name
+                      : detail.exampleSnapshot}
                 </span>
               </div>
               <p className="data-disclosure">
-                <b>{sourceMeta ? sourceMeta.name : detail.exampleSnapshot}.</b>{" "}
-                {sourceMeta
-                  ? locale === "en"
-                    ? `This view covers ${sourceMeta.employer}'s published board only. It is not a total labor-market estimate; historical change needs comparable saved snapshots.`
-                    : detail.sourcePolicy
-                  : locale === "en"
-                    ? "These values demonstrate the interaction and are not live labor-market totals. Production replaces them with source, coverage, methodology, retrieval time, and comparable snapshots."
-                    : detail.sourcePolicy}
+                {hasTrackedBoardSignal ? (
+                  <>
+                    <b>
+                      {locale === "en"
+                        ? "Tracked-board signal."
+                        : `${jobTrackingUi.eyebrow}.`}
+                    </b>{" "}
+                    {trackedMarketDisclosure}
+                  </>
+                ) : sourceMeta ? (
+                  <>
+                    <b>{sourceMeta.name}.</b>{" "}
+                    {locale === "en"
+                      ? `This view covers ${sourceMeta.employer}'s published board only. It is not a total labor-market estimate; historical change needs comparable saved snapshots.`
+                      : detail.sourcePolicy}
+                  </>
+                ) : (
+                  <>
+                    <b>{detail.exampleSnapshot}.</b>{" "}
+                    {locale === "en"
+                      ? "Demonstration data only—not live job-market totals. Connect an official employer board to see a current tracked-board signal with its coverage and refresh time."
+                      : detail.sourcePolicy}
+                  </>
+                )}
               </p>
               <div className="source-grid">
                 {JOB_SOURCE_STATUS.map((source) => (
@@ -8884,7 +8924,15 @@ export default function Home({
               <div className="market-kpis">
                 <article>
                   <span>
-                    {detail.exampleOpenings}
+                    {hasTrackedBoardSignal
+                      ? locale === "en"
+                        ? "Current published roles"
+                        : jobTrackingUi.activeJobs
+                      : sourceMeta
+                        ? locale === "en"
+                          ? "Published roles"
+                          : detail.exampleOpenings
+                        : detail.exampleOpenings}
                   </span>
                   <b>{compactNumber(totalOpenings, locale)}</b>
                   <small>
@@ -8927,11 +8975,15 @@ export default function Home({
                     <div>
                       <h3>{detail.openingsByIndustry}</h3>
                       <p>
-                        {sourceMeta
+                        {hasTrackedBoardSignal
+                          ? locale === "en"
+                            ? `Tracked-board signal · ${trackedSourceCount} source${trackedSourceCount === 1 ? "" : "s"} · scheduled about every 5 minutes · last successful refresh ${trackingLastSuccessLabel}`
+                            : `${trackedSourceCount} ${jobTrackingUi.sources} · ${jobTrackingUi.everyFiveMinutes} · ${jobTrackingUi.checked}: ${trackingLastSuccessLabel}`
+                          : sourceMeta
                           ? locale === "en"
                             ? `${sourceMeta.coverage} · retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}`
                             : `${detail.sourcePolicy} · ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}`
-                          : detail.sourcePolicy}
+                          : `${detail.exampleSnapshot} · ${detail.sourcePolicy}`}
                       </p>
                     </div>
                     <span>{timeRangeLabelFor(locale, timeRange)}</span>
@@ -8994,7 +9046,19 @@ export default function Home({
                         </article>
                       ))}
                   </div>
-                  <small>{detail.liveNote}</small>
+                  <small>
+                    {hasTrackedBoardSignal
+                      ? locale === "en"
+                        ? "Approximately five-minute tracked-board signal; not a global labor-market estimate."
+                        : `${jobTrackingUi.everyFiveMinutes} · ${detail.sourcePolicy}`
+                      : sourceMeta
+                        ? locale === "en"
+                          ? "Current single-board snapshot; historical momentum requires comparable saved snapshots."
+                          : `${detail.liveNote} · ${detail.sourcePolicy}`
+                        : locale === "en"
+                          ? `Demo only · ${detail.liveNote}`
+                          : `${detail.exampleSnapshot} · ${detail.sourcePolicy}`}
+                  </small>
                 </section>
               </div>
             </>

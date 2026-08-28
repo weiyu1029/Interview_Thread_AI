@@ -11,13 +11,24 @@ const PROJECT_ROOT = new URL("../", import.meta.url);
 
 test("all 40 supported locales have complete job-tracking copy", () => {
   assert.equal(LANGUAGES.length, 40);
-  const englishFields = Object.keys(jobTrackingCopyFor("en")).sort();
+  const englishCopy = jobTrackingCopyFor("en");
+  const englishFields = Object.keys(englishCopy).sort();
+  const freshnessFields = ["eyebrow", "sources", "activeJobs", "checked", "everyFiveMinutes"];
   assert.equal(englishFields.length, 36);
   for (const [locale] of LANGUAGES) {
     const copy = jobTrackingCopyFor(locale);
     assert.deepEqual(Object.keys(copy).sort(), englishFields, `${locale} has the full copy schema`);
     for (const [field, value] of Object.entries(copy)) {
       assert.ok(value.trim(), `${locale}.${field} must not be empty`);
+    }
+    if (locale !== "en") {
+      for (const field of freshnessFields) {
+        assert.notEqual(
+          copy[field],
+          englishCopy[field],
+          `${locale}.${field} must not expose the English freshness label`,
+        );
+      }
     }
   }
 });
@@ -397,4 +408,58 @@ test("job-tracking APIs require authentication and mark user data private", asyn
   const database = await readFile(new URL("db/job-tracking.ts", PROJECT_ROOT), "utf8");
   assert.match(database, /changes\.id ASC\s+LIMIT 101/);
   assert.match(database, /changesHasMore:/);
+});
+
+test("public job snapshots bypass stale caches and expose retrieval freshness", async () => {
+  const route = await readFile(new URL("app/api/jobs/route.ts", PROJECT_ROOT), "utf8");
+
+  assert.match(route, /const retrievedAt = snapshot\.source\.retrievedAt/);
+  assert.match(route, /retrievedAt,\s*\n\s*freshness:\s*\{/);
+  assert.match(route, /updateMode:\s*"on-demand"/);
+  assert.match(route, /sourceKind:\s*"official-employer-board"/);
+  assert.match(route, /cached:\s*false/);
+  assert.match(route, /"Cache-Control":\s*"no-store"/);
+  assert.equal(
+    [...route.matchAll(/headers: NO_STORE_HEADERS/g)].length,
+    3,
+    "success, validation, and provider-error responses must all be non-cacheable",
+  );
+  assert.match(route, /status: clientError \? 400 : 502, headers: NO_STORE_HEADERS/);
+  assert.doesNotMatch(route, /stale-while-revalidate/);
+  assert.doesNotMatch(route, /max-age=300/);
+});
+
+test("market insights distinguish tracked-board signals from demonstration data", async () => {
+  const page = await readFile(new URL("app/page.tsx", PROJECT_ROOT), "utf8");
+
+  assert.match(
+    page,
+    /const hasTrackedBoardSignal =\s*authenticated && trackedSourceCount > 0 && sourceJobs !== null/,
+    "tracked jobs must not depend on ad-hoc sourceMeta",
+  );
+  assert.match(page, /Tracked-board signal/);
+  assert.match(page, /scheduled to refresh about every five minutes/);
+  assert.match(page, /not the global labor market/);
+  assert.match(page, /trackingLastSuccessLabel/);
+  assert.match(page, /trackedSourceCount/);
+  assert.match(page, /Demonstration data only—not live job-market totals/);
+  assert.match(page, /jobTrackingCopyFor\(locale\)/);
+  assert.match(page, /jobTrackingUi\.everyFiveMinutes/);
+  assert.match(page, /jobTrackingUi\.checked/);
+  assert.match(page, /detail\.sourcePolicy/);
+});
+
+test("the five-minute scheduler records started and successful heartbeats", async () => {
+  const worker = await readFile(new URL("worker/index.ts", PROJECT_ROOT), "utf8");
+  const database = await readFile(
+    new URL("db/job-tracking.ts", PROJECT_ROOT),
+    "utf8",
+  );
+
+  assert.match(worker, /recordJobTrackingSchedulerHeartbeat/);
+  assert.match(worker, /"started"/);
+  assert.match(worker, /"succeeded"/);
+  assert.match(worker, /new Date\(controller\.scheduledTime\)\.toISOString\(\)/);
+  assert.match(database, /scheduler-\$\{phase\}/);
+  assert.match(database, /ON CONFLICT\(key\) DO UPDATE SET ran_at = excluded\.ran_at/);
 });

@@ -1,0 +1,64 @@
+name: Question bank source monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: interviewthread-question-bank-source-monitor
+  cancel-in-progress: true
+
+jobs:
+  approved-source-revisions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: platform/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check approved upstream revisions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          node scripts/check-approved-question-sources.mjs
+          --output artifacts/question-bank-upstream-report.json
+      - name: Upload candidate-only revision report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: question-bank-upstream-report
+          path: platform/web/artifacts/question-bank-upstream-report.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Summarize review candidates
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module -e '
+            import { appendFileSync, readFileSync } from "node:fs";
+            const report = JSON.parse(readFileSync("artifacts/question-bank-upstream-report.json", "utf8"));
+            const lines = [
+              "## Approved question-source revision check",
+              "",
+              `- Based on release: ${report.basedOnReleaseId}`,
+              `- Sources checked: ${report.summary.sourcesChecked}`,
+              `- Candidate revisions: ${report.summary.candidateRevisions}`,
+              `- Failed checks: ${report.summary.failedChecks}`,
+              "- Publishing: disabled; every detected revision requires review",
+              "",
+              ...report.sources.map((source) =>
+                `- ${source.id}: ${source.status}${source.compareUrl ? ` — ${source.compareUrl}` : ""}`
+              ),
+              "",
+            ];
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n"));
+          '
+

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "qb-2026-08-27.50e9ad6",
+  "publishedAt": "2026-08-28T00:56:37.000Z",
+  "sourceCheckedAt": "2026-08-28T00:56:37.000Z",
+  "counts": {
+    "english": 4362,
+    "eachOtherLocale": 2025,
+    "supportedLocales": 40
+  },
+  "policy": {
+    "freshnessClaim": "Versioned, review-gated releases",
+    "sourceDiscovery": "Approved repositories only",
+    "publishing": "Upstream changes become candidates and are never published automatically",
+    "humanReviewRequired": true,
+    "automaticUpstreamPublishing": false,
+    "unreviewedRealTimeCrawler": false
+  },
+  "sources": [
+    {
+      "id": "interviewthread",
+      "repository": "weiyu1029/Interview_Thread_AI",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/weiyu1029/Interview_Thread_AI/blob/main/LICENSE",
+      "approvedRevision": "50e9ad683aa7870099c245b2025b21747d9d668c",
+      "records": 2025,
+      "monitorUpstream": false,
+      "reviewMode": "maintained-in-repository"
+    },
+    {
+      "id": "system-design-primer",
+      "repository": "donnemartin/system-design-primer",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://github.com/donnemartin/system-design-primer/blob/master/LICENSE.txt",
+      "approvedRevision": null,
+      "records": 10,
+      "monitorUpstream": false,
+      "reviewMode": "manual-excerpts-require-revision-pinning"
+    },
+    {
+      "id": "frontend-interview-questions",
+      "repository": "h5bp/front-end-developer-interview-questions",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/h5bp/front-end-developer-interview-questions/blob/main/LICENSE.md",
+      "approvedRevision": null,
+      "records": 8,
+      "monitorUpstream": false,
+      "reviewMode": "manual-excerpts-require-revision-pinning"
+    },
+    {
+      "id": "javascript-questions",
+      "repository": "lydiahallie/javascript-questions",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE",
+      "approvedRevision": null,
+      "records": 8,
+      "monitorUpstream": false,
+      "reviewMode": "manual-excerpts-require-revision-pinning"
+    },
+    {
+      "id": "data-science-interview-questions",
+      "repository": "ajitsingh98/Data-Science-Interview-Questions-Answers",
+      "trackingRef": "main",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers/blob/main/LICENSE",
+      "approvedRevision": "ffd17a108d7087035568747eafc88c07f5b6bc6c",
+      "records": 1494,
+      "monitorUpstream": true,
+      "reviewMode": "candidate-only"
+    },
+    {
+      "id": "ai-llm-interview-guide",
+      "repository": "bettyguo/ai-llm-interview-guide",
+      "trackingRef": "main",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://github.com/bettyguo/ai-llm-interview-guide/blob/main/LICENSE",
+      "approvedRevision": "4dc2fa6e76e003aef029361cfc4ca44d16696faf",
+      "records": 491,
+      "monitorUpstream": true,
+      "reviewMode": "candidate-only"
+    },
+    {
+      "id": "ai-interview-questions",
+      "repository": "landedjobs/ai-interview-questions",
+      "trackingRef": "main",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/landedjobs/ai-interview-questions/blob/main/LICENSE",
+      "approvedRevision": "401541b7e89b67686e5eaaa8b9523f1b99f0f096",
+      "records": 326,
+      "monitorUpstream": true,
+      "reviewMode": "candidate-only"
+    }
+  ]
+}

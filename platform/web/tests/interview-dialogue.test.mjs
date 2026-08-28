@@ -217,6 +217,14 @@ test("built dialogue route returns conversational audio with safe response metad
     ELEVENLABS_DIALOGUE_MODEL_ID,
   );
   assert.equal(response.headers.get("x-interviewthread-speech-fallback"), "none");
+  assert.match(
+    response.headers.get("x-interviewthread-voice-profile") ?? "",
+    /^itvp\d+-\d{2}-b$/,
+  );
+  assert.notEqual(
+    response.headers.get("x-interviewthread-voice-profile"),
+    TEST_VOICE_ID,
+  );
   assert.equal(
     upstream.input,
     "https://api.elevenlabs.io/v1/text-to-dialogue/stream?output_format=mp3_44100_128",

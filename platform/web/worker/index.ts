@@ -3,7 +3,10 @@ import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } fr
 import handler from "vinext/server/app-router-entry";
 import { deliverPendingJobAlertDigests } from "../app/job-alert-delivery.ts";
 import { runDueJobSyncs } from "../app/job-tracking-sync.ts";
-import { runJobTrackingRetention } from "../db/job-tracking.ts";
+import {
+  recordJobTrackingSchedulerHeartbeat,
+  runJobTrackingRetention,
+} from "../db/job-tracking.ts";
 
 interface Env {
   ASSETS: Fetcher;
@@ -53,11 +56,16 @@ const worker = {
     return handler.fetch(request, env, ctx);
   },
   async scheduled(
-    _controller: ScheduledController,
+    controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext,
   ) {
     ctx.waitUntil((async () => {
+      await recordJobTrackingSchedulerHeartbeat(
+        env.DB,
+        "started",
+        new Date(controller.scheduledTime).toISOString(),
+      );
       const deadline = Date.now() + 4 * 60_000;
       let processed = 0;
       do {
@@ -66,6 +74,7 @@ const worker = {
       } while (processed === 20 && Date.now() < deadline);
       await deliverPendingJobAlertDigests(env.DB, env);
       await runJobTrackingRetention(env.DB);
+      await recordJobTrackingSchedulerHeartbeat(env.DB, "succeeded");
     })());
   },
 };
