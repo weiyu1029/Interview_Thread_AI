@@ -30,6 +30,7 @@ import { homepageCopyFor } from "./homepage-copy";
 import { BrandMark } from "./BrandMark";
 import { faqCopyFor, optionalCareerSourceCopyFor } from "./faq-copy";
 import { MobileNav } from "./MobileNav";
+import { JobTrackingPanel } from "./JobTrackingPanel";
 import { SiteFooter } from "./SiteFooter";
 import { parseDocuments } from "./document-parser";
 import { localizedPath } from "./intl-routing";
@@ -2906,6 +2907,8 @@ export default function Home({
   const [sourceMeta, setSourceMeta] = useState<ApprovedSourceMeta | null>(null);
   const [sourceLoading, setSourceLoading] = useState(false);
   const [sourceError, setSourceError] = useState("");
+  const [trackedSourceCount, setTrackedSourceCount] = useState(0);
+  const [trackingLastSuccessAt, setTrackingLastSuccessAt] = useState<string | null>(null);
   const [tracker, setTracker] = useState<TrackerItem[]>([]);
   const [radarThreshold, setRadarThreshold] = useState(78);
   const [autoTrackRadar, setAutoTrackRadar] = useState(true);
@@ -8079,7 +8082,11 @@ export default function Home({
                   <h2>{detail.recommendationsTitle}</h2>
                 </div>
                 <span className="status-pill light">
-                  {sourceMeta
+                  {trackedSourceCount
+                    ? locale === "en"
+                      ? "5-minute tracked feed"
+                      : detail.liveNote
+                    : sourceMeta
                     ? locale === "en"
                       ? "Live employer feed"
                       : detail.liveNote
@@ -8130,7 +8137,11 @@ export default function Home({
                 <p className="application-assistance-note">{modeMessage}</p>
               </section>
               <p className="data-disclosure">
-                {sourceMeta
+                {trackedSourceCount
+                  ? locale === "en"
+                    ? `${trackedSourceCount} official employer boards are scheduled for checks about every five minutes, subject to provider availability. Last successful check ${trackingLastSuccessAt ? new Date(trackingLastSuccessAt).toLocaleString(locale) : "pending"}. InterviewThread monitors listings only and never applies on your behalf.`
+                    : `${detail.sourcePolicy} ${trackingLastSuccessAt ? new Date(trackingLastSuccessAt).toLocaleString(locale) : ""}`
+                  : sourceMeta
                   ? locale === "en"
                     ? `${sourceMeta.coverage}. ${sourceMeta.detailCoverage || "Full posting descriptions where the provider exposes them."} Retrieved ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}.`
                     : `${detail.sourcePolicy} ${new Date(sourceMeta.retrievedAt).toLocaleString(locale)}.`
@@ -8138,7 +8149,33 @@ export default function Home({
                     ? "Example openings are labeled. Connect an employer's official public ATS board below for current published roles."
                     : detail.sourcePolicy}
               </p>
-              <section className="source-connector" aria-labelledby="approved-source-title">
+              <JobTrackingPanel
+                authenticated={authenticated}
+                locale={locale}
+                signInPath={signInPath}
+                onJobs={(jobs, hasSources) => {
+                  setSourceJobs(hasSources ? jobs.map((job) => ({
+                    ...job,
+                    company: job.company || "",
+                    region: job.region || "Worldwide",
+                    country: job.country || "Unspecified",
+                    city: job.city || "Location not specified",
+                    workStyle: job.workStyle || "Unspecified",
+                    industry: job.industry || "Other",
+                    description: job.description || "",
+                    isLive: true,
+                  })) as Job[] : null);
+                }}
+                onSourceSummary={({ sourceCount, lastSuccessAt }) => {
+                  setTrackedSourceCount(sourceCount);
+                  setTrackingLastSuccessAt(lastSuccessAt);
+                }}
+              />
+              <section
+                className="source-connector"
+                aria-labelledby="approved-source-title"
+                hidden={authenticated}
+              >
                 <div className="source-connector-heading">
                   <div>
                     <p className="eyebrow">

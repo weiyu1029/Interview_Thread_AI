@@ -572,9 +572,11 @@ test("ships product metadata, multilingual speech, account auth, and a social ca
   assert.match(page, /Ashby/i);
   assert.match(page, /No page scraping and no automatic application/i);
   const jobsRoute = await readFile(new URL("../app/api/jobs/route.ts", import.meta.url), "utf8");
-  assert.match(jobsRoute, /includeGreenhouseContent/);
-  assert.match(jobsRoute, /lightweight listing/);
-  assert.match(jobsRoute, /detailCoverage/);
+  const jobsGateway = await readFile(new URL("../app/job-source-gateway.ts", import.meta.url), "utf8");
+  assert.match(jobsRoute, /fetchJobSourceSnapshot/);
+  assert.match(jobsGateway, /includeGreenhouseContent/);
+  assert.match(jobsGateway, /Posting descriptions were omitted/);
+  assert.match(jobsGateway, /detailCoverage/);
   assert.doesNotMatch(page, /🎯|💬|📋|🧭|📊/u);
   assert.equal(i18n.match(/\["[^"]+",\s*"[^"]+"\]/g)?.length, 40);
   assert.match(i18n, /RTL_LOCALES.*ar.*he.*ur.*fa/);
