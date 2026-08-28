@@ -3,7 +3,7 @@ import { speechLocaleFor } from "./interview-speech.ts";
 
 export const STT_API_VERSION = "2025-10-15";
 export const ELEVENLABS_STT_MODEL_ID = "scribe_v2";
-export const STT_CONSENT_VERSION = "voice-input-v2";
+export const STT_CONSENT_VERSION = "voice-input-v3";
 export const STT_MAX_AUDIO_BYTES = 12 * 1024 * 1024;
 export const STT_MAX_TRANSCRIPT_CHARACTERS = 20_000;
 export const STT_MAX_VOCABULARY_TERMS = 80;

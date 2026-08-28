@@ -533,8 +533,8 @@ test("speech route gives a guest natural voice and falls back server-side when H
   assert.equal(response.status, 200);
   assert.equal(
     fetchCount,
-    2,
-    "a non-English locale without a native ElevenLabs voice must start at Azure",
+    1,
+    "a non-English locale without an ElevenLabs locale override must start with Azure's locale-native voice",
   );
   assert.equal(
     response.headers.get("x-interviewthread-speech-model"),

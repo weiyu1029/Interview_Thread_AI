@@ -30,6 +30,7 @@ Non-secret values:
 - `EMAIL_PARTNERSHIPS_TO=partnerships@interviewthreadai.com`
 - `ELEVENLABS_VOICE_ID=<reviewed default multilingual voice ID>`
 - `ELEVENLABS_VOICE_IDS_JSON=<optional JSON map of InterviewThread locale to reviewed voice ID>`
+- `ELEVENLABS_DIALOGUE_ENABLED=true` to enable signed-in Voice-mode question delivery
 - `TTS_DAILY_CHARACTER_LIMIT=<global UTC-day character budget; default 50000>`
 - `AZURE_SPEECH_REGION=<Azure Speech resource region>`
 - `AZURE_SPEECH_ENDPOINT=https://<resource>.cognitiveservices.azure.com`
@@ -46,13 +47,21 @@ Never print or copy secret values into tickets, chat, logs or CI output.
 
 ## Natural read-aloud production configuration
 
-The cloud read-aloud order is deliberately fixed:
+Normal question read-aloud uses this deliberately fixed order:
 
 1. ElevenLabs `eleven_v3` with the locale-specific voice ID when configured.
 2. Azure `en-US-Ava:DragonHDOmniLatestNeural` with the requested language.
 3. The reviewed Azure standard neural voice for that locale.
 4. Browser or device speech, initiated by the client only after the cloud API
    cannot return audio.
+
+Signed-in **Voice interview** mode first sends the current question to
+`/api/interview-dialogue`, which uses ElevenLabs
+`eleven_v3_conversational` when `ELEVENLABS_DIALOGUE_ENABLED=true`. That route
+is for natural question delivery only; it does not receive the candidate's
+answer and does not decide the follow-up. Any failure falls back to the normal
+read-aloud chain above. Transcript correction remains a separate, consented
+request.
 
 `ELEVENLABS_VOICE_ID` is the required English baseline voice. A single voice
 does not guarantee native pronunciation in every language, so production must

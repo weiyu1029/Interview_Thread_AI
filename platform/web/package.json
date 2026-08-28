@@ -12,6 +12,7 @@
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "walkthrough:captions": "node scripts/generate-walkthrough-captions.mjs",
+    "questions:generate": "node scripts/generate-open-interview-bank.mjs",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

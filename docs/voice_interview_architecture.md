@@ -8,17 +8,29 @@ another locale is never resumed. The system must never invent an achievement;
 every topic comes from resume evidence, an identified gap, or a clearly labeled
 case prompt.
 
-The current open-source experience works without an API key:
+The current open-source experience works without an API key, with managed cloud
+speech added only after explicit consent:
 
 - Questions progress through context, ownership, decision, outcome, and
   reflection.
-- Submitting an answer immediately generates the next question.
+- Text mode submits only when the user presses **Submit answer**. Voice mode
+  submits only after **Finish answer & continue**; a turn identifier prevents
+  recognition callbacks from sending the same answer twice.
+- The interview engine scores the completed answer, asks a supported follow-up
+  when evidence is still shallow, and opens a new topic after a sufficiently
+  developed answer.
 - After reflection, the engine moves to the next evidence topic.
 - The user can skip to the next follow-up or start a new topic at any time.
 - Browser speech synthesis chooses the best installed voice for the exact BCP 47
   locale, and browser speech recognition is locked to the same locale.
 - The displayed question remains unchanged; a separate speech-normalization
   layer expands abbreviations such as SQL, API, KPI, CEO, COO, HR, and JD.
+- Signed-in Voice mode may send only the current question to the same-origin
+  dialogue route for ElevenLabs `eleven_v3_conversational` delivery. The voice
+  model speaks the question; InterviewThread's deterministic, evidence-aware
+  logic decides whether to follow up or change topic.
+- The microphone is turn-based, stops before question audio is played, and is
+  not designed as an always-listening background agent.
 
 ## Recommended hosted voice stack
 
@@ -54,5 +66,7 @@ therefore measured with a versioned evaluation set for all 40 locales:
    each follow-up is supported by evidence.
 5. Regression gates by locale, browser, operating system, and microphone class.
 
-The UI must always provide text editing before submission, show the active speech
-locale, and preserve a text-only fallback when a browser or model is unavailable.
+The UI must always show the active speech locale and preserve a text-only
+fallback when a browser or model is unavailable. Text mode must allow editing
+before submission; Voice mode must require an explicit finish action and show
+the finalized transcript in the conversation after submission.

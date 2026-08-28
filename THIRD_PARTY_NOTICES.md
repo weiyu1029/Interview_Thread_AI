@@ -34,3 +34,77 @@ Product research also reviewed Resume Matcher, Reactive Resume, OpenResume, JobS
 - License: MIT
 - License text: https://github.com/lydiahallie/javascript-questions/blob/master/LICENSE
 - Changes: selected concepts were adapted into open-ended spoken interview prompts and tagged with filtering metadata.
+
+## Data Science Interview Questions & Answers
+
+- Source: https://github.com/ajitsingh98/Data-Science-Interview-Questions-Answers
+- Source commit: `ffd17a108d7087035568747eafc88c07f5b6bc6c`
+- Copyright: Copyright (c) 2022 Ajit Kumar Singh
+- License: MIT
+- Changes: question headings were selected, normalized for spoken practice, deduplicated, and tagged with source path, role, stage, and difficulty metadata.
+
+```text
+MIT License
+
+Copyright (c) 2022 Ajit Kumar Singh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## AI & LLM Interview Guide
+
+- Source: https://github.com/bettyguo/ai-llm-interview-guide
+- Canonical attribution URL: https://github.com/bettyguo/llm-interview-prep
+- Source commit: `4dc2fa6e76e003aef029361cfc4ca44d16696faf`
+- Attribution: Betty Guo (Dongxin Guo / 郭东欣). *llm-interview-prep*. University of Hong Kong, 2026.
+- License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+- License text: https://creativecommons.org/licenses/by/4.0/legalcode
+- Changes: question headings from `prep/**/questions.md` were selected, punctuation and Markdown were normalized, duplicates were removed, and role, stage, difficulty, path, and commit metadata were added.
+
+## Landed AI Interview Questions
+
+- Source: https://github.com/landedjobs/ai-interview-questions
+- Source commit: `401541b7e89b67686e5eaaa8b9523f1b99f0f096`
+- Copyright: Copyright (c) 2026 Landed (b100x)
+- License: MIT
+- Changes: numbered question headings were selected, normalized for spoken practice, deduplicated, and tagged with source path, role, stage, and difficulty metadata.
+
+```text
+MIT License
+
+Copyright (c) 2026 Landed (b100x)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

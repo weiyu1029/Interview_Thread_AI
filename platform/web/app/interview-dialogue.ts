@@ -54,7 +54,7 @@ export function buildElevenLabsDialogueRequest({
     normalized.length > DIALOGUE_MAX_CHARACTERS
   )
     throw new Error("Dialogue text is invalid.");
-  const spokenText = normalizeTechnicalTermsForSpeech(normalized);
+  const spokenText = normalizeTechnicalTermsForSpeech(normalized, locale);
   const query = new URLSearchParams({ output_format: "mp3_44100_128" });
   // ElevenLabs documents Zero Retention Mode as an Enterprise-only feature.
   // The flag is sent only when the deployment explicitly enables it.
